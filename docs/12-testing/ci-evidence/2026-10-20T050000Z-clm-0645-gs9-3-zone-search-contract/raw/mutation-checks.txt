@@ -1,0 +1,10 @@
+# CLM-0645 — mutation checks on PostgresGeographyRepository.searchActiveZones (Postgres 18 local, DATABASE_URL=127.0.0.1:5433)
+# Each mutation applied temporarily, integration file run, original restored (git diff confirms only the intended change remains).
+
+M1 · remove LIKE escaping (pattern = `%${query}%`):
+   × Geography Postgres integration > searchZones: LIKE metacharacters are literal
+      Tests  1 failed | 8 passed (9)
+
+M2 · drop `eq(geoZones.status, "active")` from WHERE:
+   × Geography Postgres integration > searchZones: inactive zones are never returned
+      Tests  1 failed | 8 passed (9)

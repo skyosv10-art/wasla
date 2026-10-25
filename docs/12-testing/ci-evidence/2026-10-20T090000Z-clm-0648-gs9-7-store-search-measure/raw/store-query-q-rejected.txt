@@ -1,0 +1,6 @@
+# CLM-0648 — parseStoreQuery (services/marketplace/src/http/requests.ts L427) measured on main 7166987
+# via a throwaway vitest file (not committed) calling the exported function directly
+MEASURE {"q":"متجر"} → rejected MARKETPLACE_VALIDATION_FAILED حقلٌ غيرُ مقبول: q — المتوقَّع one of state, owner_public_id, category_slug, cursor, limit.
+MEASURE {"name":"متجر"} → rejected MARKETPLACE_VALIDATION_FAILED حقلٌ غيرُ مقبول: name — المتوقَّع one of state, owner_public_id, category_slug, cursor, limit.
+MEASURE {"q":"متجر","state":"approved"} → rejected MARKETPLACE_VALIDATION_FAILED حقلٌ غيرُ مقبول: q — المتوقَّع one of state, owner_public_id, category_slug, cursor, limit.
+MEASURE {"state":"approved"} → accepted {"state":"approved"}

@@ -1,0 +1,8 @@
+# مِسبارٌ مؤقّتٌ غيرُ مُودَعٍ (services/orders/src/__tests__/http/zz-probe-clm0608.test.ts — حُذفَ بعدَ التشغيلِ)
+# الأساسُ: شجرةُ main 343cf8a2 (services/orders لم يتغيّرْ في المكدَّسِ) · harness الخدمةِ الحقيقيُّ + inject موقَّعٌ
+# طلبٌ A → completed (السائقُ WS-0000000101) · طلبٌ B → driver_cancelled (السائقُ WS-0000000102)
+PROBE WS-0000000101 200 [["completed",null]]
+PROBE WS-0000000102 200 [["driver_cancelled",null]]      # ← رغمَ ?status=completed
+PROBE period=decade 200 0                                 # ← لا 400 رغمَ enum [today, week, month] required في العقدِ
+PROBE b status driver_cancelled err null sameDriver false
+Tests 1 passed (1)

@@ -1,0 +1,149 @@
+ ✓ src/__tests__/session-init.test.ts > initSessionFromTelegram > outside Telegram fails as not_in_telegram without any network call
+ ✓ src/__tests__/session-init.test.ts > initSessionFromTelegram > posts init_data to /edge/session and stores the session in memory as ready
+ ✓ src/__tests__/session-init.test.ts > initSessionFromTelegram > an edge rejection fails as edge_rejected and stores no session
+ ✓ src/__tests__/session-init.test.ts > initSessionFromTelegram > a network error fails as network instead of rejecting
+ ✓ src/__tests__/session-init.test.ts > initSessionFromTelegram > an unparseable expires_at fails as invalid_response
+ ✓ src/__tests__/session-init.test.ts > initSessionFromTelegram > concurrent calls share a single request
+ ✓ src/__tests__/session-init.test.ts > startSessionLifecycle > re-initializes automatically when the session expires
+ ✓ src/__tests__/session-init.test.ts > startSessionLifecycle > re-initializes once when a 401 clears the session
+ ✓ src/__tests__/session-init.test.ts > startSessionLifecycle > stops re-initializing after the budget and fails as retry_limit (no loop)
+ ✓ src/__tests__/session-init.test.ts > startSessionLifecycle > does not retry on its own after a failed init
+ ✓ src/__tests__/session-init.test.ts > startSessionLifecycle > a manual retry after failure starts a new session
+ ✓ src/__tests__/session-init.test.ts > startSessionLifecycle > logout clears the session without re-initializing
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > renders loading state
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > renders error state with retry
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > renders profile info when loaded
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > shows suspension reason when suspended
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > renders profile form with editable fields
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > shows service kind checkboxes
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > toggles service kind on checkbox click
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > calls updateProfile on save button
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > shows save error when present
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > shows save success when saveSuccess is true
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > save button shows submitting text when saving
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > disables save button while saving
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > renders loading state
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > renders error state with retry
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > renders empty state when no vehicles
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > renders vehicle cards
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > shows retire button for active vehicles
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > shows set-primary button for non-primary active vehicles
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > does not show set-primary for primary vehicles
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > shows add vehicle form when button clicked
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > calls addVehicle on form submit
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > calls patchVehicle on retire button
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > calls patchVehicle on set-primary button
+ ✓ src/__tests__/Vehicles.test.tsx > Vehicles screen > shows action error when present
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > renders loading state
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > renders error state with retry
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > renders empty state when no documents
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > renders document cards
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > shows document status
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > shows rejection reason for rejected documents
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > shows add document form when button clicked
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > calls submitDocument on form submit
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > shows action error when present
+ ✓ src/__tests__/Documents.test.tsx > Documents screen > disables submit button when storage_ref is empty
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > renders title and period buttons
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > shows loading state
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > shows error state
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > shows empty state when no jobs
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > shows summary with count and total
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > renders job list entries
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > calls fetchEarnings on mount and when period changes
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > calls setPeriod when period button clicked
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > disables period buttons while loading
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > marks active period with aria-pressed
+ ✓ src/__tests__/Earnings.test.tsx > Earnings screen > fetches earnings when period changes via useEffect
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > renders empty state when no job_id provided
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > renders loading state while fetching
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > renders error state when fetch fails
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > renders job details when job is loaded
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > shows start_trip button when status is assigned
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > shows the complete transition button when status is in_progress
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > shows no transition button when status is completed
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > calls transitionOrder when transition button is clicked
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > shows cancel form when cancel button is clicked
+ ✓ src/__tests__/JobDetail.test.tsx > JobDetail screen > does not show cancel button for completed jobs
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > renders loading state
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > renders error state with retry
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > renders empty state when no zones
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > renders zone checkboxes for existing zones
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > checkboxes are checked for existing zones
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > toggles zone selection on checkbox click
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > calls saveZones on save button
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > save button is disabled when no zones selected
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > shows save error when present
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > shows save success when saveSuccess is true
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > save button shows submitting text when saving
+ ✓ src/__tests__/Zones.test.tsx > Zones screen > re-orders zones by preference_rank on save
+ ✓ src/__tests__/App-session.test.tsx > App session states > shows the failure reason and a retry button instead of loading when init failed
+ ✓ src/__tests__/App-session.test.tsx > App session states > names the not-in-Telegram case explicitly
+ ✓ src/__tests__/App-session.test.tsx > App session states > shows loading only while an init is in progress
+ ✓ src/__tests__/Offers.test.tsx > Offers screen > renders empty state when no job_id provided
+ ✓ src/__tests__/Offers.test.tsx > Offers screen > renders loading state while fetching offers
+ ✓ src/__tests__/Offers.test.tsx > Offers screen > renders error state when fetch fails
+ ✓ src/__tests__/Offers.test.tsx > Offers screen > renders empty state when offers list is empty
+ ✓ src/__tests__/Offers.test.tsx > Offers screen > renders offer cards for pending offers
+ ✓ src/__tests__/Offers.test.tsx > Offers screen > calls acceptOffer when accept button is clicked
+ ✓ src/__tests__/Offers.test.tsx > Offers screen > shows reject reason form when reject button is clicked
+ ✓ src/__tests__/Home.test.tsx > Home screen > renders the app name
+ ✓ src/__tests__/Home.test.tsx > Home screen > renders navigation items
+ ✓ src/__tests__/Home.test.tsx > Home screen > renders links with correct hrefs
+ ✓ src/__tests__/dispatch.test.ts > dispatchStore — fetchOffers > fetches offers and populates the list
+ ✓ src/__tests__/dispatch.test.ts > dispatchStore — fetchOffers > handles API errors gracefully
+ ✓ src/__tests__/dispatch.test.ts > dispatchStore — acceptOffer > accepts an offer and updates the list
+ ✓ src/__tests__/dispatch.test.ts > dispatchStore — acceptOffer > returns false on API error
+ ✓ src/__tests__/dispatch.test.ts > dispatchStore — transitionOrder > calls the order transition endpoint with driver actor
+ ✓ src/__tests__/dispatch.test.ts > dispatchStore — transitionOrder > includes reason_code for terminal transitions
+ ✓ src/__tests__/dispatch.test.ts > dispatchStore — cancelJob > cancels a job and updates activeJob
+ ✓ src/__tests__/dispatch.test.ts > dispatchStore — startPolling / stopPolling > starts polling and sets up timer for the job
+ ✓ src/__tests__/dispatch.test.ts > dispatchStore — startPolling / stopPolling > does not restart polling if already polling the same job
+ ✓ src/__tests__/frontend-quality.test.tsx > locale selection (?locale=) > defaults to Arabic RTL
+ ✓ src/__tests__/frontend-quality.test.tsx > locale selection (?locale=) > accepts ?locale=en and switches document lang/dir
+ ✓ src/__tests__/frontend-quality.test.tsx > locale selection (?locale=) > ur stays RTL
+ ✓ src/__tests__/frontend-quality.test.tsx > locale selection (?locale=) > rejects unknown locales back to Arabic
+ ✓ src/__tests__/frontend-quality.test.tsx > offline banner > is hidden while online and appears on the offline event
+ ✓ src/__tests__/frontend-quality.test.tsx > api client network error mapping > maps a fetch TypeError rejection to network_error (status 0)
+ ✓ src/__tests__/frontend-quality.test.tsx > api client network error mapping > maps an aborted request to timeout (status 408)
+ ✓ src/__tests__/earnings.test.ts > Earnings store > fetches earnings successfully
+ ✓ src/__tests__/earnings.test.ts > Earnings store > handles fetch error
+ ✓ src/__tests__/earnings.test.ts > Earnings store > sets error when no driver session
+ ✓ src/__tests__/earnings.test.ts > Earnings store > calls correct API path with period query
+ ✓ src/__tests__/earnings.test.ts > Earnings store > computes summary with zero jobs
+ ✓ src/__tests__/earnings.test.ts > Earnings store > clears errors
+ ✓ src/__tests__/earnings.test.ts > Earnings store > sets period
+ ✓ src/__tests__/vehicles.test.ts > Vehicles store > fetchVehicles populates vehicles on success
+ ✓ src/__tests__/vehicles.test.ts > Vehicles store > fetchVehicles sets error on failure
+ ✓ src/__tests__/vehicles.test.ts > Vehicles store > addVehicle sends POST with Idempotency-Key
+ ✓ src/__tests__/vehicles.test.ts > Vehicles store > addVehicle sets actionError on failure
+ ✓ src/__tests__/vehicles.test.ts > Vehicles store > patchVehicle sends PATCH request
+ ✓ src/__tests__/vehicles.test.ts > Vehicles store > patchVehicle sets actionError on failure
+ ✓ src/__tests__/vehicles.test.ts > Vehicles store > clearErrors resets error states
+ ✓ src/__tests__/vehicles.test.ts > Vehicles store > addVehicle returns false when no driverId
+ ✓ src/__tests__/zones.test.ts > Zones store > fetchZones populates zones on success
+ ✓ src/__tests__/zones.test.ts > Zones store > fetchZones sets error on failure
+ ✓ src/__tests__/zones.test.ts > Zones store > saveZones sends PUT with full zone list
+ ✓ src/__tests__/zones.test.ts > Zones store > saveZones sets saveError on failure
+ ✓ src/__tests__/zones.test.ts > Zones store > clearErrors resets all error states
+ ✓ src/__tests__/zones.test.ts > Zones store > setAvailableZones updates availableZones
+ ✓ src/__tests__/zones.test.ts > Zones store > saveZones returns false when no driverId
+ ✓ src/__tests__/zones.test.ts > Zones store > saveZones handles empty zones list in response
+ ✓ src/__tests__/documents.test.ts > Documents store > fetchDocuments populates documents on success
+ ✓ src/__tests__/documents.test.ts > Documents store > fetchDocuments sets error on failure
+ ✓ src/__tests__/documents.test.ts > Documents store > submitDocument sends POST with Idempotency-Key
+ ✓ src/__tests__/documents.test.ts > Documents store > submitDocument sets actionError on failure
+ ✓ src/__tests__/documents.test.ts > Documents store > clearErrors resets error states
+ ✓ src/__tests__/documents.test.ts > Documents store > submitDocument returns false when no driverId
+ ✓ src/__tests__/profile.test.ts > Profile store > fetchProfile populates profile on success
+ ✓ src/__tests__/profile.test.ts > Profile store > fetchProfile sets error on failure
+ ✓ src/__tests__/profile.test.ts > Profile store > updateProfile sends PATCH request
+ ✓ src/__tests__/profile.test.ts > Profile store > updateProfile sets saveError on failure
+ ✓ src/__tests__/profile.test.ts > Profile store > clearErrors resets all error states
+ ✓ src/__tests__/profile.test.ts > Profile store > updateProfile returns false when no driverId
+ ✓ src/__tests__/session.test.ts > session store > starts unauthenticated
+ ✓ src/__tests__/session.test.ts > session store > sets session and becomes authenticated
+ ✓ src/__tests__/session.test.ts > session store > clears session and becomes unauthenticated
+ ✓ src/__tests__/session.test.ts > session store > is not authenticated when token is expired
+ Test Files  18 passed (18)
+      Tests  147 passed (147)

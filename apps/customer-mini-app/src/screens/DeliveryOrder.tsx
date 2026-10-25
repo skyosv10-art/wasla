@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useOrderFormStore, buildOrderRequest, validateOrderForm, type VehicleClass, type PriceMode } from "../store/order-form";
 import { apiClient } from "../api/client";
 import { useSessionStore } from "../store/session";
+import { SavedPlacePicker } from "../components/SavedPlacePicker";
 
 const VEHICLE_CLASSES: VehicleClass[] = ["sedan", "suv", "van", "pickup", "motorcycle", "truck_small"];
 const PRICE_MODES: PriceMode[] = ["negotiable", "customer_offer"];
@@ -13,6 +14,8 @@ export function DeliveryOrder() {
   const store = useOrderFormStore();
   const { token, customerId } = useSessionStore();
   const [formError, setFormError] = useState<string | null>(null);
+  const [pickupPlaceId, setPickupPlaceId] = useState("");
+  const [dropoffPlaceId, setDropoffPlaceId] = useState("");
   const [shipmentType, setShipmentType] = useState<string>("");
   const [shipmentDesc, setShipmentDesc] = useState<string>("");
   const [weightKg, setWeightKg] = useState<string>("");
@@ -91,13 +94,31 @@ export function DeliveryOrder() {
       <h1>{t("delivery_order.title")}</h1>
 
       {/* Pickup */}
+      <SavedPlacePicker
+        id="d-pickup-place"
+        label={t("ride_order.pickup_saved_place")}
+        testId="d-pickup-place-select"
+        selectedPlaceId={pickupPlaceId}
+        onSelect={(place) => {
+          store.setPickupZoneId(place.zone_id);
+          store.setPickupLabel(place.label);
+          store.setPickupSource("saved_place");
+          setPickupPlaceId(place.place_id);
+        }}
+      />
       <div className="form-group">
         <label htmlFor="d-pickup-zone">{t("ride_order.pickup_zone")}</label>
         <input
           id="d-pickup-zone"
           type="text"
           value={store.pickupZoneId}
-          onChange={(e) => store.setPickupZoneId(e.target.value)}
+          onChange={(e) => {
+            // CLM-0622: drop the picker-filled label on a manual zone edit.
+            if (pickupPlaceId) store.setPickupLabel("");
+            store.setPickupZoneId(e.target.value);
+            store.setPickupSource("manual_zone");
+            setPickupPlaceId("");
+          }}
           placeholder={t("ride_order.zone_placeholder")}
           aria-label={t("ride_order.pickup_zone")}
           data-testid="d-pickup-zone-input"
@@ -117,13 +138,31 @@ export function DeliveryOrder() {
       </div>
 
       {/* Dropoff */}
+      <SavedPlacePicker
+        id="d-dropoff-place"
+        label={t("ride_order.dropoff_saved_place")}
+        testId="d-dropoff-place-select"
+        selectedPlaceId={dropoffPlaceId}
+        onSelect={(place) => {
+          store.setDropoffZoneId(place.zone_id);
+          store.setDropoffLabel(place.label);
+          store.setDropoffSource("saved_place");
+          setDropoffPlaceId(place.place_id);
+        }}
+      />
       <div className="form-group">
         <label htmlFor="d-dropoff-zone">{t("ride_order.dropoff_zone")}</label>
         <input
           id="d-dropoff-zone"
           type="text"
           value={store.dropoffZoneId}
-          onChange={(e) => store.setDropoffZoneId(e.target.value)}
+          onChange={(e) => {
+            // CLM-0622: drop the picker-filled label on a manual zone edit.
+            if (dropoffPlaceId) store.setDropoffLabel("");
+            store.setDropoffZoneId(e.target.value);
+            store.setDropoffSource("manual_zone");
+            setDropoffPlaceId("");
+          }}
           placeholder={t("ride_order.zone_placeholder")}
           aria-label={t("ride_order.dropoff_zone")}
           data-testid="d-dropoff-zone-input"
@@ -287,7 +326,7 @@ export function DeliveryOrder() {
       {store.submitStatus === "success" && store.submitResult && (
         <div className="success-message" data-testid="d-submit-success">
           <p>{t("ride_order.order_submitted")}</p>
-          <p>{t("ride_order.order_id")}: {store.submitResult.order_request_id}</p>
+          <p>{t("ride_order.order_id")}: {store.submitResult.id}</p>
         </div>
       )}
       {store.submitStatus === "error" && store.submitError && (

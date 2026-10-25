@@ -1,0 +1,7 @@
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > loads orders on mount
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > renders orders list
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > shows empty state when no orders
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > filters orders by status
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > sends limit=5 on every load: mount, filter change and filter reset (G-S9.10)
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > shows error on failure
+      Tests  6 passed (6)

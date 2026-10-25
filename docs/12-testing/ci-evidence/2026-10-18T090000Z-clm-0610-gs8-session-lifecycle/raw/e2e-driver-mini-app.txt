@@ -1,0 +1,36 @@
+  ✓   1 [chromium] › e2e/accessibility.spec.ts:15:3 › Accessibility — axe-core audit › home screen has no WCAG A/AA violations
+  ✓   2 [chromium] › e2e/accessibility.spec.ts:26:3 › Accessibility — axe-core audit › offers screen has no WCAG A/AA violations
+  ✓   3 [chromium] › e2e/accessibility.spec.ts:37:3 › Accessibility — axe-core audit › job detail screen has no WCAG A/AA violations
+  ✓   4 [chromium] › e2e/accessibility.spec.ts:48:3 › Accessibility — axe-core audit › earnings screen has no WCAG A/AA violations
+  ✓   5 [chromium] › e2e/accessibility.spec.ts:59:3 › Accessibility — axe-core audit › vehicles screen has no WCAG A/AA violations
+  ✓   6 [chromium] › e2e/accessibility.spec.ts:70:3 › Accessibility — axe-core audit › zones screen has no WCAG A/AA violations
+  ✓   7 [chromium] › e2e/accessibility.spec.ts:81:3 › Accessibility — axe-core audit › documents screen has no WCAG A/AA violations
+  ✓   8 [chromium] › e2e/accessibility.spec.ts:92:3 › Accessibility — axe-core audit › profile screen has no WCAG A/AA violations
+  ✓   9 [chromium] › e2e/auth-session.spec.ts:11:3 › Session security › fresh browser outside Telegram shows an explicit session error, not endless loading
+  ✓  10 [chromium] › e2e/auth-session.spec.ts:19:3 › Session security › a rejected edge session is shown with retry, and retry recovers the app
+  ✓  11 [chromium] › e2e/auth-session.spec.ts:53:3 › Session security › no API calls are made without a session token
+  ✓  12 [chromium] › e2e/auth-session.spec.ts:73:3 › Session security › localStorage does not contain session token
+  ✓  13 [chromium] › e2e/auth-session.spec.ts:86:3 › Session security › sessionStorage does not contain session token
+  ✓  14 [chromium] › e2e/auth-session.spec.ts:99:3 › Session security › authenticated session shows app content
+  ✓  15 [chromium] › e2e/auth-session.spec.ts:108:3 › Session security › API calls carry Authorization Bearer header
+  ✓  16 [chromium] › e2e/frontend-quality.spec.ts:7:3 › Frontend quality (M3-06) › locale override ?locale=en switches document lang/dir and renders English
+  ✓  17 [chromium] › e2e/frontend-quality.spec.ts:17:3 › Frontend quality (M3-06) › offline banner appears when the network drops and clears on reconnect
+  ✓  18 [chromium] › e2e/frontend-quality.spec.ts:37:3 › Frontend quality (M3-06) › no horizontal overflow at 375px
+  ✓  19 [chromium] › e2e/navigation.spec.ts:13:3 › Navigation smoke › home shows menu items
+  ✓  20 [chromium] › e2e/navigation.spec.ts:19:3 › Navigation smoke › navigates to offers screen
+  ✓  21 [chromium] › e2e/navigation.spec.ts:24:3 › Navigation smoke › navigates to job detail screen
+  ✓  22 [chromium] › e2e/navigation.spec.ts:29:3 › Navigation smoke › navigates to earnings screen
+  ✓  23 [chromium] › e2e/navigation.spec.ts:34:3 › Navigation smoke › navigates to vehicles screen
+  ✓  24 [chromium] › e2e/navigation.spec.ts:39:3 › Navigation smoke › navigates to zones screen
+  ✓  25 [chromium] › e2e/navigation.spec.ts:44:3 › Navigation smoke › navigates to documents screen
+  ✓  26 [chromium] › e2e/navigation.spec.ts:49:3 › Navigation smoke › navigates to profile screen
+  ✓  27 [chromium] › e2e/navigation.spec.ts:54:3 › Navigation smoke › clicking menu items navigates correctly
+  ✓  28 [chromium] › e2e/offer-flow.spec.ts:13:3 › Offer flow › offers screen renders without errors
+  ✓  29 [chromium] › e2e/offer-flow.spec.ts:18:3 › Offer flow › job detail screen renders without errors
+  ✓  30 [chromium] › e2e/offer-flow.spec.ts:23:3 › Offer flow › earnings screen shows period buttons
+  ✓  31 [chromium] › e2e/offer-flow.spec.ts:30:3 › Offer flow › period buttons switch active state
+  ✓  32 [chromium] › e2e/offer-flow.spec.ts:41:3 › Offer flow › documents screen renders without errors
+  ✓  33 [chromium] › e2e/offer-flow.spec.ts:46:3 › Offer flow › profile screen renders without errors
+  ✓  34 [chromium] › e2e/offer-flow.spec.ts:51:3 › Offer flow › vehicles screen renders without errors
+  ✓  35 [chromium] › e2e/offer-flow.spec.ts:56:3 › Offer flow › zones screen renders without errors
+  35 passed

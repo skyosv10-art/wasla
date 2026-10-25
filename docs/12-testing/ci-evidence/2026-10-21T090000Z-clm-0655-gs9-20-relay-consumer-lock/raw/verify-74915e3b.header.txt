@@ -1,0 +1,3 @@
+# cmd: bash scripts/verify.sh · commit: 74915e3b5a8798d9163d63dbcba6ceef61b32769 · clone: full (partialclonefilter=[]) · node v20.20.2 · pnpm 9.15.9 · DATABASE_URL=unset · started 2026-10-21T17:30:34Z
+# finished rc=0 · log: verify-74915e3b.log (3694 lines) · summary: governance suite 695/0 · gate 11 passed · 1 declared skip (PostgreSQL integration suites — CI matrix) → partial, not complete
+# baseline: BASELINE_DIRTY_REASON="..." bash scripts/baseline.sh --log docs/12-testing/ci-evidence/2026-10-21T090000Z-clm-0655-gs9-20-relay-consumer-lock/raw/verify-74915e3b.log --stdout > BASELINE.json ; then bash scripts/checks/validate-baseline.sh

@@ -1,0 +1,226 @@
+ ✓ src/__tests__/http-profile.test.ts > تسجيل السائق > ينشئ 201 ثم يعيد 200 للمفتاح والحمولة نفسيهما بالملف نفسه
+ ✓ src/__tests__/http-profile.test.ts > تسجيل السائق > يرفض المفتاح نفسه بحمولة مختلفة بـ409 ولا يغيّر الملف
+ ✓ src/__tests__/http-profile.test.ts > تسجيل السائق > لا يقلب ترتيب الحقول إلى حمولة مختلفة
+ ✓ src/__tests__/http-profile.test.ts > تسجيل السائق > مفتاحان مختلفان لنفس المعرّف: الثاني تعارض تسجيل لا تعارض مفتاح
+ ✓ src/__tests__/http-profile.test.ts > تسجيل السائق > لا يخزّن اسم السائق في سجلّ منع التكرار
+ ✓ src/__tests__/http-profile.test.ts > تسجيل السائق > يرفض الرأس المفقود برمزه الخاص لا برمز التحقق العام
+ ✓ src/__tests__/http-profile.test.ts > تسجيل السائق > يرفض المفتاح القصير والمكرر والحقل الزائد
+ ✓ src/__tests__/http-profile.test.ts > تسجيل السائق > يرفض المعرّف العام المخالف للنمط قبل لمس المخزن
+ ✓ src/__tests__/http-profile.test.ts > قراءة الملف وتعديله > يعيد الملف بمفاتيح العقد ويرفض المجهول بـ404
+ ✓ src/__tests__/http-profile.test.ts > قراءة الملف وتعديله > يميّز الحقل الغائب من الحقل الصريح بقيمة فارغة
+ ✓ src/__tests__/http-profile.test.ts > قراءة الملف وتعديله > يرفض التعديل الفارغ والمنطقة المجهولة
+ ✓ src/__tests__/http-profile.test.ts > قراءة الملف وتعديله > يستبدل المناطق ويعيدها مغلَّفة بمفتاح zones
+ ✓ src/__tests__/http-profile.test.ts > قراءة الملف وتعديله > يرفض رتبة مكرّرة وقائمة بحقل زائد
+ ✓ src/__tests__/http-profile.test.ts > قراءة الملف وتعديله > قوائم السائق المجهول 404 لا قائمة فارغة
+ ✓ src/__tests__/http-profile.test.ts > الإتاحة والإيقاف والإعادة > يقبل available و offline ويرفض busy
+ ✓ src/__tests__/http-profile.test.ts > الإتاحة والإيقاف والإعادة > يوقف بسبب ثم يعيد، ويرفض الإيقاف المكرّر والإعادة لغير موقوف
+ ✓ src/__tests__/http-profile.test.ts > الإتاحة والإيقاف والإعادة > يرفض جسماً غير فارغ في الإعادة
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > لا هوية → 401 بمغلف عقد السائقين (error.code مسطَّح) ولا يُسمّى سبب الرفض
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > هوية منتحلة بسر آخر → 401 لا 403 ولا 500
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > رمز منتهٍ → 401
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > جمهور آخر → 401 بكود الجمهور
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > رمز موقَّع لمسار آخر → 401
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > هوية صحيحة بالصلاحية والمُنتَفِع → يعبر الطلب إلى المجال (200)
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > هوية صحيحة وصلاحية ناقصة → 403 لا 401
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > رمز صحيح بلا مُنتَفِع → 403 عند الوسيط قبل أن يُسأل المخزن
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > مُنتَفِعٌ يخالف :waslaPublicId → 404 لا 403 ولا 200 (ADR-009)
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > الرمز نفسه مرتين → 401 في الثانية (إعادة · ADR-021)
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > مخزن الآثار لا يجيب → 503 برمز الحدّ لا برمز تعذّرِ السائق
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > مسار مجهول → 401 قبل 404
+ ✓ src/__tests__/service-identity.test.ts > حد السائقين — مصفوفة المصادقة الداخلة > /health مفتوحٌ بقصدٍ: يُجيب بلا هوية
+ ✓ src/__tests__/availability-eligibility-boundaries.test.ts > PUT /drivers/:id/availability — boundaries > the owner with drivers:availability:write switches available → offline → available
+ ✓ src/__tests__/availability-eligibility-boundaries.test.ts > PUT /drivers/:id/availability — boundaries > without drivers:availability:write → 403 and the declaration is unchanged
+ ✓ src/__tests__/availability-eligibility-boundaries.test.ts > PUT /drivers/:id/availability — boundaries > a token for another driver → 404 (not 403) and the declaration is unchanged
+ ✓ src/__tests__/availability-eligibility-boundaries.test.ts > PUT /drivers/:id/availability — boundaries > busy is not declarable by the driver → 400 on declared_availability, unchanged
+ ✓ src/__tests__/availability-eligibility-boundaries.test.ts > GET /drivers/:id/eligibility — boundaries > the owner with drivers:eligibility:read gets the verdict with every reason
+ ✓ src/__tests__/availability-eligibility-boundaries.test.ts > GET /drivers/:id/eligibility — boundaries > without drivers:eligibility:read → 403
+ ✓ src/__tests__/availability-eligibility-boundaries.test.ts > GET /drivers/:id/eligibility — boundaries > a token for another driver → 404 (not 403)
+ ✓ src/__tests__/http-documents.test.ts > وثائق السائق > ينشئ 201 ثم يعيد 200 للمفتاح نفسه، ويرفض حمولة مختلفة بـ409
+ ✓ src/__tests__/http-documents.test.ts > وثائق السائق > لا تعيد الوثيقة حقلاً غير مُعلَن، ولا مرجع التخزين لغير محلّه
+ ✓ src/__tests__/http-documents.test.ts > وثائق السائق > تعيد القائمة الوثائق كلها بما فيها المستبدلة
+ ✓ src/__tests__/http-documents.test.ts > وثائق السائق > تقبل المراجعة verified وتحوّل الحقل decision إلى حالة الوثيقة
+ ✓ src/__tests__/http-documents.test.ts > وثائق السائق > ترفض rejected بلا سبب، وverified مع سبب
+ ✓ src/__tests__/http-documents.test.ts > وثائق السائق > ترفض وثيقة مجهولة بـ404 ومعرّفاً غير UUID بـ400
+ ✓ src/__tests__/http-documents.test.ts > وثائق السائق > ترفض نوع وثيقة مجهولاً وحقلاً زائداً ورأساً مفقوداً
+ ✓ src/__tests__/http-vehicles.test.ts > مركبات السائق > ينشئ 201 ثم يعيد 200 للمفتاح نفسه بالمركبة نفسها
+ ✓ src/__tests__/http-vehicles.test.ts > مركبات السائق > يرفض المفتاح نفسه بحمولة مختلفة
+ ✓ src/__tests__/http-vehicles.test.ts > مركبات السائق > لا يعيد المركبة حقلاً غير مُعلَن في العقد
+ ✓ src/__tests__/http-vehicles.test.ts > مركبات السائق > يتقاعد بالتعديل ويرفض التنشيط ومعرّفاً غير UUID
+ ✓ src/__tests__/http-vehicles.test.ts > مركبات السائق > يرفض التعديل الفارغ ومركبة مجهولة بـ404
+ ✓ src/__tests__/http-vehicles.test.ts > مركبات السائق > يرفض التسجيل بلا رأس منع تكرار وبصنف مجهول
+ ✓ src/__tests__/http-vehicles.test.ts > مركبات السائق > مركبة لسائق مجهول 404 قبل أي كتابة
+ ✓ src/__tests__/http-errors.test.ts > شكل الخطأ > يعيد الغلاف المتداخل مع معرّف التتبّع دائماً
+ ✓ src/__tests__/http-errors.test.ts > شكل الخطأ > يعيد معرّف التتبّع الذي أرسله المتصل نفسه
+ ✓ src/__tests__/http-errors.test.ts > شكل الخطأ > يرفض معرّف تتبّع أطول من الحد
+ ✓ src/__tests__/http-errors.test.ts > شكل الخطأ > لا يعيد صدى المعرّف المرفوض ولا المفتاح المرفوض
+ ✓ src/__tests__/http-errors.test.ts > شكل الخطأ > يترجم الجسم غير الصالح ونوع المحتوى الخاطئ إلى رمز تحقق واحد
+ ✓ src/__tests__/http-errors.test.ts > شكل الخطأ > يحوّل الخطأ غير المصنَّف إلى 503 بلا تفاصيل داخلية
+ ✓ src/__tests__/http-errors.test.ts > شكل الخطأ > يوصل منفذاً إلزامياً معطّلاً إلى 503 باسمه لا بالتخمين
+ ✓ src/__tests__/http-errors.test.ts > شكل الخطأ > لا يُنتج 502 من أي مسار بعد تقاعد رمز فشل النشر
+ ✓ src/__tests__/http-errors.test.ts > شكل الخطأ > يترك مسار Fastify المجهول 404 كما هو
+ ✓ src/__tests__/http-eligibility.test.ts > قراءة الأهليّة > تعيد الحكم مع كل الأسباب لا أوّلها
+ ✓ src/__tests__/http-eligibility.test.ts > قراءة الأهليّة > ترفض السائق المجهول بـ404 ولا تُرجع حكم unknown
+ ✓ src/__tests__/http-eligibility.test.ts > قراءة الأهليّة > لا تسجّل سطر أهليّة للسائق المجهول
+ ✓ src/__tests__/http-eligibility.test.ts > نبضة الانتهاء > تعيد عدّاداتها الأربعة وتطلب رأس منع التكرار
+ ✓ src/__tests__/http-eligibility.test.ts > نبضة الانتهاء > ترفض جسماً غير فارغ ولا تخزّن سجلّ إعادة للمفتاح
+ ✓ src/__tests__/http-eligibility.test.ts > نبضة الانتهاء > تُحدِّث مؤشّر آخر نبضة الذي يقرأه /health
+ ✓ src/__tests__/http-eligibility.test.ts > الصحّة > degraded على الذاكرة، ومفاتيح العقد فقط
+ ✓ src/__tests__/user-assertion-forwarding.test.ts > HttpCandidacyPort — تمريرُ التفويضِ > داخلَ سياقِ تفويضٍ لصاحبِ الترشيحِ: obo والترويسةُ كما وصلا
+ ✓ src/__tests__/user-assertion-forwarding.test.ts > HttpCandidacyPort — تمريرُ التفويضِ > تفويضٌ لسائقٍ آخرَ لا يُنسَبُ إلى هذا الترشيحِ ⇒ نداءٌ نظاميٌّ
+ ✓ src/__tests__/user-assertion-forwarding.test.ts > HttpCandidacyPort — تمريرُ التفويضِ > خارجَ أيِّ سياقٍ (النبضةُ) ⇒ نداءٌ نظاميٌّ كما كانَ
+ ✓ src/__tests__/user-assertion-forwarding.test.ts > حدُّ السائقينَ — التفويضُ الواردُ يصلُ إلى المطابقةِ بلا تحقُّقٍ ولا رفضٍ > PUT availability بـobo وترويسةٍ ⇒ نداءاتُ المطابقةِ تحملُهما؛ وبلا ترويسةٍ لا شيءَ
+ ✓ src/__tests__/user-assertion-forwarding.test.ts > حدُّ السائقينَ — التفويضُ الواردُ يصلُ إلى المطابقةِ بلا تحقُّقٍ ولا رفضٍ > ترويسةٌ مشوَّهةٌ لا تُغيِّرُ الجوابَ في P1 — drivers لا يتحقّقُ ولا يرفضُ
+ ✓ src/__tests__/http-admin-list.test.ts > GET /drivers — admin list > returns an empty list when no drivers are registered
+ ✓ src/__tests__/http-admin-list.test.ts > GET /drivers — admin list > returns registered drivers
+ ✓ src/__tests__/http-admin-list.test.ts > GET /drivers — admin list > respects limit and offset query parameters
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: المسارات المسجَّلة والعقد > كلّ عملية في العقد لها مسار مسجَّل فعلاً
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: المسارات المسجَّلة والعقد > كلّ مسار مسجَّل مُعلَن في العقد — لا نقطة نهاية غير موثَّقة
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: المسارات المسجَّلة والعقد > العقد يُعلن ثلاثة عشر مساراً، وهو العدد الذي تعهّدت به MR 4/6
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: قوائم مفاتيح الطلب > DriverRegistration: المفاتيح المقبولة هي حقول العقد نفسها
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: قوائم مفاتيح الطلب > DriverProfilePatch: المفاتيح المقبولة هي حقول العقد نفسها
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: قوائم مفاتيح الطلب > VehicleRegistration: المفاتيح المقبولة هي حقول العقد نفسها
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: قوائم مفاتيح الطلب > VehiclePatch: المفاتيح المقبولة هي حقول العقد نفسها
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: قوائم مفاتيح الطلب > DocumentSubmission: المفاتيح المقبولة هي حقول العقد نفسها
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: قوائم مفاتيح الطلب > DocumentReview: المفاتيح المقبولة هي حقول العقد نفسها
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: قوائم مفاتيح الطلب > AvailabilityUpdate: المفاتيح المقبولة هي حقول العقد نفسها
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: قوائم مفاتيح الطلب > SuspensionRequest: المفاتيح المقبولة هي حقول العقد نفسها
+ ✓ src/__tests__/http-drift.test.ts > حارس التباعد: قوائم مفاتيح الطلب > عنصر المنطقة: المفاتيح المقبولة هي حقول العقد الضمنية نفسها
+ ✓ src/__tests__/outbound-ports.test.ts > دليل المناطق عبر HTTP > يقرأ المنطقة النشِطة من مسار الجغرافيا المعلن
+ ✓ src/__tests__/outbound-ports.test.ts > دليل المناطق عبر HTTP > يستثني المنطقة المعطَّلة: موجودة في الهرم ولا يجوز تأليف عمل فيها
+ ✓ src/__tests__/outbound-ports.test.ts > دليل المناطق عبر HTTP > 404 غياب لا تعطّل
+ ✓ src/__tests__/outbound-ports.test.ts > دليل المناطق عبر HTTP > يستدعي مرة واحدة لكل معرّف مميّز لا لكل تكرار
+ ✓ src/__tests__/outbound-ports.test.ts > دليل المناطق عبر HTTP > يرفع DRIVER_UNAVAILABLE لا غياباً عند 500
+ ✓ src/__tests__/outbound-ports.test.ts > دليل المناطق عبر HTTP > يرفع DRIVER_UNAVAILABLE لا غياباً عند جسم غير مقروء
+ ✓ src/__tests__/outbound-ports.test.ts > دليل المناطق عبر HTTP > يرفع DRIVER_UNAVAILABLE لا غياباً عند حالة منطقة غير مفهومة
+ ✓ src/__tests__/outbound-ports.test.ts > دليل المناطق عبر HTTP > يرفع DRIVER_UNAVAILABLE لا غياباً عند انقطاع شبكة
+ ✓ src/__tests__/outbound-ports.test.ts > دليل المناطق عبر HTTP > فشل معرّف واحد يُفشل البحث كلّه: الكتابة تحتاج جواباً مغلقاً
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > يقرأ حالة التوافر الحالية من المطابقة
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > يوقّع القراءة والنشر معاً: لا نداء صادر بلا هوية (M1-03)
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > 404 يعني لا صفّ بعد، لا تعطّلاً
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > ترمي القراءة عند 500 ولا تُعيد null
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > ترمي القراءة عند حالة توافر مجهولة ولا تُعيد null
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > ترمي القراءة عند حالة ناقصة ولا تُعيد null
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > ترمي القراءة عند انقطاع ولا تُعيد null
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > ينشر استبدالاً كاملاً بمصدر أهليّة محسوب لا مدّعى
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > يمنح كل محاولة مفتاحاً جديداً حتى لو تكرر المحتوى نفسه
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > المفتاح فريد حتى تحت ساعة مجمَّدة ومحتوى متطابق (بوابة الطور 05)
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > يمرّر معرّف التتبّع ليصير trace_id في المطابقة، ويحذف الرأس إذا لم يوجد
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > يعيد رفضاً مسجَّلاً برمز المطابقة عند 400
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > يعيد رفضاً مسجَّلاً برمز المطابقة عند 409
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > يعيد رفضاً مسجَّلاً برمز المطابقة عند 422
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > يعيد رمزاً يحمل الحالة إذا رفضت المطابقة بلا رمز مقروء
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > ترمي عند 503 ليصير الأثر unavailable لا rejected
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > ترمي عند 500 ليصير الأثر unavailable لا rejected
+ ✓ src/__tests__/outbound-ports.test.ts > منفذ الترشيح عبر HTTP > ترمي عند انقطاع ليصير الأثر unavailable لا rejected
+ ✓ src/__tests__/outbound-ports.test.ts > تعطّل المطابقة لا يُسقط كتابة محلية > فشل القراءة يُسجَّل محاولة unavailable ولا يرمي
+ ✓ src/__tests__/outbound-ports.test.ts > تعطّل المطابقة لا يُسقط كتابة محلية > القراءة المعطّلة تمنع النشر أصلاً: لا يجوز الكتابة فوق busy بلا معرفة
+ ✓ src/__tests__/outbound-ports.test.ts > تعطّل المطابقة لا يُسقط كتابة محلية > القراءة السليمة تحفظ busy ولا ترفعه إلى available
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: أكواد الأسباب > ترتيب التبليغ هو الكتالوج المنشور نفسه، لا نسخة منه
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: أكواد الأسباب > كلّ كود سبب مذكور في errors.md، وكلّ مذكور فيه مُصدَّر
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: أكواد الأسباب > كلّ حالة أهليّة وكلّ مُحرّك مذكور في التعريف الرسميّ أو في العقد
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: أكواد الأسباب > شروط التعريف الرسميّ كلّها ممثّلة بكود سبب
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: أكواد الأسباب > أنواع الوثائق المرتبطة بمركبة هي ما ينصّ عليه قيد النطاق في القاعدة
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: أكواد الأسباب > كلّ نوع حدث مُصدَّر موصوف في events.json والعكس
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: أكواد الأسباب > كلّ كود خطأ مُصدَّر موثّق في errors.md والعكس، والمتقاعد موثّق وغير مُصدَّر
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: أكواد الأسباب > كل مصنع خطأ مُصدَّر مستخدَم في مسار إنتاج واحد على الأقل
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > DriverProfile: كلّ حقل مطلوب في العقد يُنتجه المُطابِق
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > DriverProfile: كلّ حقل يُنتجه المُطابِق مُعلَن في العقد
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > ServiceZone: كلّ حقل مطلوب في العقد يُنتجه المُطابِق
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > ServiceZone: كلّ حقل يُنتجه المُطابِق مُعلَن في العقد
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > Vehicle: كلّ حقل مطلوب في العقد يُنتجه المُطابِق
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > Vehicle: كلّ حقل يُنتجه المُطابِق مُعلَن في العقد
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > DriverDocument: كلّ حقل مطلوب في العقد يُنتجه المُطابِق
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > DriverDocument: كلّ حقل يُنتجه المُطابِق مُعلَن في العقد
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > EligibilityTickResult: كلّ حقل مطلوب في العقد يُنتجه المُطابِق
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > EligibilityTickResult: كلّ حقل يُنتجه المُطابِق مُعلَن في العقد
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > HealthStatus: كلّ حقل مطلوب في العقد يُنتجه المُطابِق
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > HealthStatus: كلّ حقل يُنتجه المُطابِق مُعلَن في العقد
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > EligibilityView: كلّ حقل مطلوب في العقد يُنتجه المُطابِق
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > EligibilityView: كلّ حقل يُنتجه المُطابِق مُعلَن في العقد
+ ✓ src/__tests__/contract-drift.test.ts > حارس التباعد: المُطابِقات مقابل OpenAPI > سجلّ النشر يخرج بمفاتيح snake_case فقط
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة الوثيقة > الانتقالات المسموحة فقط، و superseded نهائيّة
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة الوثيقة > لا تُراجَع وثيقة مرّتين
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة الوثيقة > الإيداع الجديد يُخلِف النسخة الحيّة ولا يمسحها
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة الوثيقة > مفتاح تكرار مُعاد بحمولة مختلفة يُرفض
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة الوثيقة > وثيقة مركبة بلا مركبة تُرفض قبل أن تلمس المخزن
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة الوثيقة > وثيقة شخصيّة مع مركبة تُرفض كذلك — النطاق يعمل في الاتّجاهين
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة الوثيقة > تاريخ انتهاء قبل الإصدار يُرفض
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة الوثيقة > تاريخ غير موجود فعلاً يُرفض لا يُقبَل شكلاً
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة المركبة > active → retired فقط، ولا رجعة
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة المركبة > أوّل مركبة تصبح أساسيّة تلقائيّاً
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة المركبة > الترقية تُنزل الأخت في نفس الخطوة — أساسيّة واحدة دائماً
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة المركبة > سحب المركبة الأساسيّة يمسح العلَم في نفس الخطوة
+ ✓ src/__tests__/state-machines.test.ts > آلة حالة المركبة > وثائق مركبة مسحوبة تُرفض
+ ✓ src/__tests__/state-machines.test.ts > قيود المخزن تُحاكى بالاسم > أساسيّتان في حفظة واحدة تُشعل ux_driver_vehicles_one_primary
+ ✓ src/__tests__/state-machines.test.ts > قيود المخزن تُحاكى بالاسم > إيقاف بلا سبب يُشعل ck_driver_profiles_suspension_reason
+ ✓ src/__tests__/state-machines.test.ts > قيود المخزن تُحاكى بالاسم > القيد المُشتعل ليس DriverError — لأنّه عيب فينا لا في المتصل
+ ✓ src/__tests__/state-machines.test.ts > الإيقاف والإعادة > الإيقاف يمنع كتابات السائق ولا يمنع المراجعة
+ ✓ src/__tests__/state-machines.test.ts > الإيقاف والإعادة > إيقاف مُوقَف و إعادة غير مُوقَف يُرفضان
+ ✓ src/__tests__/state-machines.test.ts > الإيقاف والإعادة > الإعادة لا تَهَب أهليّة — يعود إلى ما تسمح به وثائقه
+ ✓ src/__tests__/state-machines.test.ts > الإيقاف والإعادة > الإيقاف لا يمسّ verification_status
+ ✓ src/__tests__/publication.test.ts > سجلّ الأهليّة > يُقيَّد الصفّ عند التغيّر فقط
+ ✓ src/__tests__/publication.test.ts > سجلّ الأهليّة > أوّل صفّ يُقيَّد عند التسجيل، فلا يبدأ التاريخ فارغاً
+ ✓ src/__tests__/publication.test.ts > سجلّ الأهليّة > تغيّر الأسباب وحدها تغيّرٌ يُقيَّد، وإن بقيت الحالة
+ ✓ src/__tests__/publication.test.ts > سجلّ الأهليّة > لكلّ صفّ سجلّ حدث مقابل — لا تغيّر صامت
+ ✓ src/__tests__/publication.test.ts > النشر إلى المطابقة > لا يرفع سائقاً من busy — الجاهزيّة الحاليّة تُصان
+ ✓ src/__tests__/publication.test.ts > النشر إلى المطابقة > يُصان busy عبر مسار النشر الكامل
+ ✓ src/__tests__/publication.test.ts > النشر إلى المطابقة > فشل النقل يُقيَّد ولا يُرجِع الحالة المحليّة
+ ✓ src/__tests__/publication.test.ts > النشر إلى المطابقة > رفض المطابقة يُقيَّد بكوده لا بكودنا
+ ✓ src/__tests__/publication.test.ts > النشر إلى المطابقة > last_published_state لا يتقدّم إلّا بنشر ناجح
+ ✓ src/__tests__/publication.test.ts > النشر إلى المطابقة > إيداع وثيقة لا يُعيد النشر بلا تغيّر في الحكم
+ ✓ src/__tests__/publication.test.ts > نبضة الانتهاء > تُسقط الأهليّة عند مرور تاريخ الانتهاء
+ ✓ src/__tests__/publication.test.ts > نبضة الانتهاء > occurred_for هو لحظة الانتهاء لا لحظة تشغيل النبضة
+ ✓ src/__tests__/publication.test.ts > نبضة الانتهاء > النبضة لا تختار سائقاً لم يحن موعده
+ ✓ src/__tests__/publication.test.ts > نبضة الانتهاء > النبضة لا تدور على نفس السائق أبداً
+ ✓ src/__tests__/publication.test.ts > نبضة الانتهاء > النبضة لا تنشر سائقاً لم يتغيّر حكمه
+ ✓ src/__tests__/publication.test.ts > نبضة الانتهاء > سائق بلا ملفّ: unknown، ولا يُكتب شيء
+ ✓ src/__tests__/privacy.test.ts > حارس الخصوصيّة في الأحداث > لا لوحة ولا مؤشّر ملفّ ولا اسم ولا هويّة مراجع في أيّ حمولة حدث
+ ✓ src/__tests__/privacy.test.ts > حارس الخصوصيّة في الأحداث > ولا حتى بأسماء الحقول — الحقل الغائب لا يُضاف يوماً بالخطأ
+ ✓ src/__tests__/privacy.test.ts > حارس الخصوصيّة في الأحداث > كلّ حمولة تحمل occurred_for — لحظة السريان لا لحظة الإنتاج
+ ✓ src/__tests__/privacy.test.ts > حارس الخصوصيّة في الأحداث > المغلّف كامل في كلّ حدث
+ ✓ src/__tests__/eligibility.test.ts > eligibility truth table > يمنح الأهليّة عند تحقّق كلّ الشروط
+ ✓ src/__tests__/eligibility.test.ts > eligibility truth table > يمنع بلا مركبة أساسيّة، ولا يبلّغ عن وثائق المركبة
+ ✓ src/__tests__/eligibility.test.ts > eligibility truth table > يمنع بلا نطاق خدمة
+ ✓ src/__tests__/eligibility.test.ts > eligibility truth table > يمنع بلا نوع خدمة، وبمجموعة وثائق مطلوبة فارغة
+ ✓ src/__tests__/eligibility.test.ts > eligibility truth table > يعيد السبب الأوّل وحده عند الإيقاف — الإيقاف يقطع القائمة
+ ✓ src/__tests__/eligibility.test.ts > eligibility truth table > يجمع كلّ الأسباب لا أوّلها، بترتيب الكتالوج المنشور
+ ✓ src/__tests__/eligibility.test.ts > eligibility truth table > يميّز بين ناقص ومعلّق ومرفوض لكلّ نوع وثيقة
+ ✓ src/__tests__/eligibility.test.ts > eligibility truth table > يفضّل المعلّق على المرفوض لنفس النوع
+ ✓ src/__tests__/eligibility.test.ts > eligibility truth table > يبلّغ PROFILE_NOT_VERIFIED وحده حين لا يوجد سبب أخصّ منه
+ ✓ src/__tests__/eligibility.test.ts > انتهاء الصلاحيّة على الحدّ > صالحة قبل اللحظة، ساقطة عندها وبعدها — تفشل مبكّراً لا متأخّراً
+ ✓ src/__tests__/eligibility.test.ts > انتهاء الصلاحيّة على الحدّ > مهلة السماح تُمدّد الحدّ بعدد أيّامها بالضبط
+ ✓ src/__tests__/eligibility.test.ts > انتهاء الصلاحيّة على الحدّ > وثيقة بلا تاريخ انتهاء لا تنتهي، ولا تُنتج موعد مراجعة
+ ✓ src/__tests__/eligibility.test.ts > انتهاء الصلاحيّة على الحدّ > موعد المراجعة هو أقرب انقلاب مستقبليّ، ويتجاهل ما مضى
+ ✓ src/__tests__/eligibility.test.ts > انتهاء الصلاحيّة على الحدّ > المعلّقة لا تُنتج موعد مراجعة — لا شيء ينتهي قبل قبوله
+ ✓ src/__tests__/eligibility.test.ts > evaluateEligibility نقيّة > لا تقرأ الساعة — نفس اللقطة تُنتج نفس الحكم مرّتين
+ ✓ src/__tests__/eligibility.test.ts > evaluateEligibility نقيّة > الجاهزيّة المعلنة لا تدخل في الحكم
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_profiles' is projected under its contract name
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_service_zones' is projected under its contract name
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_vehicles' is projected under its contract name
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_documents' is projected under its contract name
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_eligibility_policies' is projected under its contract name
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_eligibility_log' is projected under its contract name
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_candidacy_publications' is projected under its contract name
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_outbox' is projected under its contract name
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_idempotency' is projected under its contract name
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_profiles' exposes exactly the contract's columns
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_service_zones' exposes exactly the contract's columns
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_vehicles' exposes exactly the contract's columns
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_documents' exposes exactly the contract's columns
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_eligibility_policies' exposes exactly the contract's columns
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_eligibility_log' exposes exactly the contract's columns
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_candidacy_publications' exposes exactly the contract's columns
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_outbox' exposes exactly the contract's columns
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > 'driver_idempotency' exposes exactly the contract's columns
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > covers every table the contract declares
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > declares no foreign key across a service boundary (ADR-011: opaque refs)
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > keeps one primary vehicle and one live document per type
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > scopes the one-live-per-type index by vehicle through a stable COALESCE
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > refuses a state change with no reason
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > keeps a retired vehicle from being the primary one
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > keeps the idempotency key length identical to the domain validator
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > stores no driver-written text in the outbox projection
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > keeps the storage reference opaque and stores no document bytes
+ ✓ src/__tests__/schema-drift.test.ts > Drizzle projection ↔ canonical DDL > names only constraints that exist, in both infrastructure adapters
+ Test Files  17 passed (17)
+      Tests  224 passed (224)

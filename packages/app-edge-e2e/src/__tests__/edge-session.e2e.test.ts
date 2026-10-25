@@ -38,8 +38,8 @@ describe("app-edge-e2e — سقالةُ الأدلةِ (CLM-0524)", () => {
       revokeSession: async () => {
         throw new Error("لا يُستدعى");
       },
-      identityUrl: "http://identity.test",
-      requestSigner: () => ({}),
+      serviceUrlFor: () => "",
+      requestSignerFor: () => () => ({}),
       allowlistUrl: "file:///dev/null",
       enabled: false,
       allowedOrigins: [],

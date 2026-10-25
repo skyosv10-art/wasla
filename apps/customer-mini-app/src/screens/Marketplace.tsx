@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { apiClient } from "../api/client";
 import { useSessionStore } from "../store/session";
+import { StoreSearch } from "../components/StoreSearch";
 
 interface Store {
   store_id: string;
@@ -144,6 +145,9 @@ export function Marketplace() {
         </div>
       ) : (
         <>
+          {/* G-S9.7 (CLM-0649): name search over the search service's derived model. */}
+          <StoreSearch testId="store-search" onSelect={(store) => handleStoreClick(store.store_slug)} />
+
           {stores.length === 0 && !loading && (
             <div className="empty-state" data-testid="stores-empty">
               {t("marketplace.no_stores")}

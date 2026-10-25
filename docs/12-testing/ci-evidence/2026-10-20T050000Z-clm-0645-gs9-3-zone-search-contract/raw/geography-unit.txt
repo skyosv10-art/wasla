@@ -1,0 +1,9 @@
+ ✓ src/__tests__/zone-search.test.ts (23 tests) 265ms
+ ✓ src/__tests__/service-identity.test.ts (13 tests) 124ms
+ ✓ src/__tests__/http/app.test.ts (16 tests) 152ms
+ ✓ src/__tests__/user-assertion-ownership.test.ts (8 tests) 145ms
+ ✓ src/__tests__/user-location.test.ts (11 tests) 10ms
+ ✓ src/__tests__/hierarchy.test.ts (10 tests) 8ms
+ ✓ src/__tests__/locale.test.ts (4 tests) 3ms
+      Tests  85 passed (85)
+

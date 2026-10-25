@@ -1,0 +1,16 @@
+ ✓ src/__tests__/http-app.test.ts (12 tests) 113ms
+ ✓ src/__tests__/store-search.test.ts (35 tests) 124ms
+ ✓ src/__tests__/relay-acknowledgement.test.ts (14 tests) 107ms
+ ✓ src/__tests__/service-identity.test.ts (12 tests) 129ms
+ ✓ src/__tests__/relay-dead-letters.test.ts (13 tests) 99ms
+ ✓ src/__tests__/relay-requeue.test.ts (10 tests) 95ms
+ ✓ src/__tests__/schema-drift.test.ts (21 tests) 25ms
+ ✓ src/__tests__/relay.test.ts (9 tests) 7ms
+ ✓ src/__tests__/http-requests.test.ts (12 tests) 6ms
+ ✓ src/__tests__/projector.test.ts (9 tests) 5ms
+ ✓ src/__tests__/ranking.test.ts (9 tests) 4ms
+ ✓ src/__tests__/query.test.ts (9 tests) 4ms
+ ✓ src/__tests__/event-coverage.test.ts (3 tests) 4ms
+ ✓ src/__tests__/visibility.test.ts (6 tests) 3ms
+ Test Files  14 passed (14)
+      Tests  174 passed (174)

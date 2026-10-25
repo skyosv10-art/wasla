@@ -1,0 +1,2 @@
+  ✓ plan: live→target per service · docs-only target still deploys the undeployed change · ambiguity deploys · closure premise holds
+  ✓ self-test: 11/11 mutations caught

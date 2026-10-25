@@ -64,4 +64,6 @@ export * from "./infrastructure/relay-acknowledgement-store.js";
  */
 export * from "./infrastructure/marketplace-event-source.js";
 export * from "./infrastructure/projection-store.js";
-export * from "./infrastructure/catalog-read-port.js";
+export * from "./infrastructure/http-marketplace-catalog.js";
+export * from "./infrastructure/store-search-reader.js";
+export * from "./domain/store-search.js";

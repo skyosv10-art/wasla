@@ -92,7 +92,11 @@ row = (
 )
 s = s.replace("<!-- app-port-exemptions:start -->\n```\n", "<!-- app-port-exemptions:start -->\n```\n" + row, 1)
 s = s.replace("EXEMPTIONS = 0", "EXEMPTIONS = 1", 1)
-s = s.replace("ROOT_WIRED_PORTS = 16", "ROOT_WIRED_PORTS = 15", 1)
+# العددُ يُقرأُ من الوثيقةِ لا يُكتَبُ هنا حرفاً (CLM-0650): رقمٌ منسوخٌ في الحالةِ
+# كانَ مصدرَ حقيقةٍ ثانياً يُسقِطُها كلّما أُضيفَ منفذٌ (16→17 في CLM-0649).
+import re
+m = re.search(r"ROOT_WIRED_PORTS = (\d+)", s)
+s = s.replace(m.group(0), f"ROOT_WIRED_PORTS = {int(m.group(1)) - 1}", 1)
 s = s.replace("HARNESSES_SCANNED = 10", "HARNESSES_SCANNED = 10", 1)
 open(p, "w", encoding="utf-8").write(s)
 MUT
@@ -136,7 +140,8 @@ fi
 _pw_restore
 
 # ── البابُ 5: الأرقامُ المنشورةُ تُطابِقُ القياسَ ───────────────────────────
-sed -i 's/OPTIONAL_PORTS = 16/OPTIONAL_PORTS = 9/' "$PW_DOC"
+# أيُّ رقمٍ غيرُ المقيسِ — يُشتقُّ من المنشورِ نفسِه (CLM-0650) فلا يصيرُ المنشورُ 9 فتمرَّ الطفرةُ صامتةً.
+sed -Ei 's/OPTIONAL_PORTS = ([0-9]+)/OPTIONAL_PORTS = \19/' "$PW_DOC"
 if _pw_mutated "$PW_DOC" "$PW_BK/doc"; then
   t 'رقمٌ منشورٌ يُخالِفُ القياسَ يُسقِطُ الفحصَ' fail bash "$PW"
 fi

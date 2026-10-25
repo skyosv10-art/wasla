@@ -1,0 +1,116 @@
+# vitest admin-portal @ 9e1c622dfa835279f8436bf7332df85779d3aca1 — total=101 passed=101 failed=0 pending=0
+## src/__tests__/audit-screen.test.tsx
+passed	AuditLog screen renders title and filter bar
+passed	AuditLog screen renders empty state when no events
+passed	AuditLog screen renders events table when events exist
+passed	AuditLog screen shows loading state
+passed	AuditLog screen shows error message
+passed	AuditLog screen renders all action options in filter dropdown
+passed	AuditLog screen calls fetchEvents on mount
+## src/__tests__/audit.test.ts
+passed	audit store has correct initial state
+passed	audit store fetchEvents stores events and total
+passed	audit store fetchEvents sets error on failure
+passed	audit store fetchEvents merges overrides into filters
+passed	audit store setFilter updates a single filter
+passed	audit store clearFilters resets to defaults
+passed	audit store fetchEvents sets error when no session token
+## src/__tests__/dashboard.test.tsx
+passed	Dashboard renders dashboard title
+passed	Dashboard renders stat cards
+passed	Dashboard renders alert cards
+## src/__tests__/drivers-screen.test.tsx
+passed	Drivers screen renders title
+passed	Drivers screen renders search input, status filter, and verification filter
+passed	Drivers screen renders search button
+passed	Drivers screen shows empty state when no drivers
+passed	Drivers screen renders driver rows when drivers exist
+passed	Drivers screen shows loading state
+passed	Drivers screen shows error state with retry
+## src/__tests__/drivers.test.ts
+passed	drivers store starts with empty state
+passed	drivers store fetches drivers successfully
+passed	drivers store handles fetch error
+passed	drivers store fetches driver documents successfully
+passed	drivers store approves document successfully
+passed	drivers store rejects document with reason code
+passed	drivers store suspends driver successfully
+passed	drivers store reinstates driver successfully
+passed	drivers store sets search and filter values
+passed	drivers store clears selected driver and documents
+passed	drivers store clears errors
+## src/__tests__/frontend-quality.test.tsx
+passed	locale selection (?locale=) defaults to Arabic RTL
+passed	locale selection (?locale=) accepts ?locale=en and switches document lang/dir
+passed	locale selection (?locale=) ur stays RTL
+passed	locale selection (?locale=) rejects unknown locales back to Arabic
+passed	offline banner is hidden while online and appears on the offline event
+passed	api client network error mapping maps a fetch TypeError rejection to network_error (status 0)
+passed	api client network error mapping maps an aborted request to timeout (status 408)
+## src/__tests__/moderation-screen.test.tsx
+passed	Moderation screen renders title and store slug search bar for admin
+passed	Moderation screen denies access for non-admin
+passed	Moderation screen fetches store reviews on search
+passed	Moderation screen renders store review ledger rows when present
+passed	Moderation screen requires a reason code before recording a reject store decision
+passed	Moderation screen records a product decision with reason when rejecting
+passed	Moderation screen publishes and archives a product by id
+## src/__tests__/orders-screen.test.tsx
+passed	Orders screen renders search form and title
+passed	Orders screen renders empty state when no results
+passed	Orders screen calls searchByPublicId on search submit
+passed	Orders screen renders search results table
+passed	Orders screen renders detail view when order is selected
+passed	Orders screen shows loading state
+passed	Orders screen shows error message
+## src/__tests__/orders.test.ts
+passed	orders store has correct initial state
+passed	orders store searchByPublicId sets loading then stores result
+passed	orders store searchByPublicId sets error on failure
+passed	orders store fetchDetail stores order detail
+passed	orders store fetchDetail sets error on failure
+passed	orders store fetchHistory stores status history entries
+passed	orders store fetchHistory sets error on failure
+passed	orders store clearSearch resets search state
+passed	orders store clearDetail resets detail and history state
+passed	orders store searchByPublicId sets error when no session token
+## src/__tests__/partners-screen.test.tsx
+passed	Partners screen renders title and search bar for admin
+passed	Partners screen shows access denied for non-admin role
+passed	Partners screen searches for a store and fetches data
+passed	Partners screen shows lifecycle info when data is loaded
+passed	Partners screen shows reinstate button when state is suspended
+passed	Partners screen shows suspend dialog when suspend button is clicked
+passed	Partners screen shows issued key after issuing credential
+passed	Partners screen displays error messages
+## src/__tests__/session.test.ts
+passed	session store starts unauthenticated
+passed	session store sets session and authenticates
+passed	session store clears session on clearSession
+passed	session store is unauthenticated when expired
+## src/__tests__/support-screen.test.tsx
+passed	Support screen renders the ticket list with title
+passed	Support screen renders state filter buttons
+passed	Support screen shows no tickets message when list is empty
+passed	Support screen renders ticket rows when tickets exist
+passed	Support screen calls fetchTickets on mount
+passed	Support screen calls setStateFilter and fetchTickets when filter is clicked
+passed	Support screen shows detail view when ticket is selected
+## src/__tests__/users-screen.test.tsx
+passed	Users screen renders title
+passed	Users screen renders search input and status filter
+passed	Users screen renders search button
+passed	Users screen shows empty state when no users
+passed	Users screen renders user rows when users exist
+passed	Users screen shows loading state
+passed	Users screen shows error state with retry
+## src/__tests__/users.test.ts
+passed	users store starts with empty state
+passed	users store fetches users successfully
+passed	users store handles fetch error
+passed	users store suspends user successfully
+passed	users store handles suspend error
+passed	users store reinstates user successfully
+passed	users store sets search query and status filter
+passed	users store clears selected user
+passed	users store clears errors

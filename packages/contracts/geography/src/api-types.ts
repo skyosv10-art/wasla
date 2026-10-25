@@ -89,6 +89,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/geo/zones/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * البحث عن منطقة فرعية صالحة بالاسم (G-S9.3 · CLM-0645)
+         * @description يُرجع **المناطق الفرعية النشطة فقط** (`status = active`) التي يحوي أحدُ أسمائها
+         *     المترجمة (ar/en/ur) نصَّ `q` — مطابقةٌ جزئيّةٌ لا تتأثّر بحالة الأحرف. هذا هو
+         *     معيارُ الصلاحية نفسُه الذي تطبّقه خدمة العملاء على `zone_id` في الطلب
+         *     (`requireActiveZone` · منطقة غير نشطة تُرفض)، فلا يُعرض للاختيار ما سيُرفض.
+         *     الترتيب حتمي: `code` ثم `id`. الاسم المُرجع مُترجم بـ`locale` مع fallback إلى `ar`
+         *     (ADR-006). لا تطبيع للتشكيل أو الهمزات في هذا الإصدار. الرمزان `%` و`_` والشرطة المائلة العكسية
+         *     في `q` تُعامَل حرفيًّا (تُهرَّب قبل المطابقة).
+         */
+        get: operations["searchZones"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/geo/zones/{zoneId}": {
         parameters: {
             query?: never;
@@ -479,6 +505,36 @@ export interface operations {
             401: components["responses"]["AuthUnauthorized"];
             403: components["responses"]["AuthForbidden"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    searchZones: {
+        parameters: {
+            query: {
+                /** @description نص البحث بعد قصّ المسافات الطرفية — من 2 إلى 64 حرفًا. */
+                q: string;
+                limit?: number;
+                /** @description اللغة المطلوبة للاسم (ar=en=ur). الافتراضي ar. */
+                locale?: components["parameters"]["Locale"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description المناطق النشطة المطابقة مع مسار الهرم (قد تكون فارغة) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneDetail"][];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["AuthUnauthorized"];
+            403: components["responses"]["AuthForbidden"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

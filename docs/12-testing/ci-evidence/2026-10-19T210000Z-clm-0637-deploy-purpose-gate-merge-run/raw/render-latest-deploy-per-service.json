@@ -1,0 +1,146 @@
+[
+ {
+  "name": "wasla-admin-app",
+  "latest_deploy_created": "2026-10-19T01:35:11.679967Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-alertmanager",
+  "latest_deploy_created": "2026-10-19T01:35:13.24699Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-audit",
+  "latest_deploy_created": "2026-10-19T01:35:14.975804Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-customer-app",
+  "latest_deploy_created": "2026-10-19T07:25:22.465727Z",
+  "status": "build_failed",
+  "commit": "f64d4228"
+ },
+ {
+  "name": "wasla-customer-bot",
+  "latest_deploy_created": "2026-10-19T01:35:18.427456Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-customers",
+  "latest_deploy_created": "2026-10-19T01:35:20.045894Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-delivery",
+  "latest_deploy_created": "2026-10-19T01:35:21.590152Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-dispatch",
+  "latest_deploy_created": "2026-10-19T01:35:23.155746Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-driver-app",
+  "latest_deploy_created": "2026-10-19T01:35:24.614525Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-driver-bot",
+  "latest_deploy_created": "2026-10-19T01:35:26.134878Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-drivers",
+  "latest_deploy_created": "2026-10-19T01:35:27.742917Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-geography",
+  "latest_deploy_created": "2026-10-19T01:35:29.302574Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-identity",
+  "latest_deploy_created": "2026-10-19T01:35:30.876279Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-marketplace",
+  "latest_deploy_created": "2026-10-19T01:35:32.417494Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-matching",
+  "latest_deploy_created": "2026-10-19T01:35:33.960437Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-negotiations",
+  "latest_deploy_created": "2026-10-19T01:35:35.46435Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-observability",
+  "latest_deploy_created": "2026-10-19T01:35:37.03445Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-orders",
+  "latest_deploy_created": "2026-10-19T01:35:38.546394Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-otel-collector",
+  "latest_deploy_created": "2026-10-19T01:35:40.080265Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-partner-bot",
+  "latest_deploy_created": "2026-10-19T01:35:41.737616Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-prometheus",
+  "latest_deploy_created": "2026-10-19T01:35:43.281519Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-reputation",
+  "latest_deploy_created": "2026-10-19T01:35:44.833172Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-search",
+  "latest_deploy_created": "2026-10-19T01:35:46.378251Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ },
+ {
+  "name": "wasla-subscriptions",
+  "latest_deploy_created": "2026-10-19T01:35:47.89465Z",
+  "status": "build_failed",
+  "commit": "c386a98e"
+ }
+]

@@ -9,18 +9,23 @@ test.describe("Navigation smoke", () => {
     await seedSession(page);
   });
 
-  test("home shows all 8 menu items", async ({ page }) => {
+  // ADR-072 D1 (G-S7 · owner decision 2026-10-18): Home is exactly the seven
+  // items of CMS §3.1; saved places moved to Profile. (Was: "home shows all 8
+  // menu items", which included saved places.)
+  test("home shows exactly the seven spec menu items and no saved-places entry", async ({ page }) => {
     await gotoRoute(page, "home");
 
-    // Verify all menu items are present
+    const links = page.locator(".home nav a");
+    await expect(links).toHaveCount(7);
     await expect(page.getByText("اطلب مشوار")).toBeVisible();
     await expect(page.getByText("اطلب توصيل")).toBeVisible();
-    await expect(page.getByText("الأماكن المحفوظة")).toBeVisible();
     await expect(page.getByText("تصفح المتاجر")).toBeVisible();
     await expect(page.getByText("ابحث")).toBeVisible();
     await expect(page.getByText("طلباتي")).toBeVisible();
     await expect(page.getByText("سمعتي")).toBeVisible();
     await expect(page.getByText("حسابي")).toBeVisible();
+    await expect(page.getByText("الأماكن المحفوظة")).toHaveCount(0);
+    await expect(page.locator('.home a[href="#/places"]')).toHaveCount(0);
   });
 
   test("navigates to ride order screen", async ({ page }) => {

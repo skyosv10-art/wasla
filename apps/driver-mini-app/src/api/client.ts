@@ -2,7 +2,9 @@ import { useSessionStore } from "../store/session";
 
 // ADR-045 Decision 5 (reuses ADR-044): API client using fetch (no Axios).
 // Adds Authorization: Bearer to every request.
-// Handles 401 by triggering session re-initialization.
+// Handles 401 by clearing the session; `startSessionLifecycle` (session-init.ts)
+// observes the cleared session and re-initializes it within a bounded budget
+// (G-S8 · CLM-0610).
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 

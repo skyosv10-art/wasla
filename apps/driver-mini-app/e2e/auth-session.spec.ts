@@ -5,13 +5,49 @@ import { seedSession, gotoRoute, mockDriverApis } from "./helpers";
 // ADR-045 Decision 4: Session token in memory only, no localStorage.
 
 test.describe("Session security", () => {
-  test("fresh browser shows loading state without session", async ({ page }) => {
-    // No session seeded — app should show loading state
+  // G-S8 (CLM-0610): outside Telegram there is no session source, so the app
+  // says so with a retry instead of parking on «جارٍ التحميل» forever. (Was:
+  // "fresh browser shows loading state without session".)
+  test("fresh browser outside Telegram shows an explicit session error, not endless loading", async ({ page }) => {
     await page.goto("http://localhost:4174/");
 
-    // The loading text should be visible
-    await expect(page.locator(".app-loading")).toBeVisible();
-    await expect(page.getByText("جارٍ التحميل")).toBeVisible();
+    await expect(page.getByTestId("session-error")).toHaveText("افتح التطبيق من تلغرام لبدء الجلسة");
+    await expect(page.getByTestId("session-retry")).toBeVisible();
+    await expect(page.locator(".app-loading")).toHaveCount(0);
+  });
+
+  test("a rejected edge session is shown with retry, and retry recovers the app", async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { Telegram: unknown }).Telegram = {
+        WebApp: { initData: "query_id=e2e&hash=abc", ready: () => undefined },
+      };
+    });
+    let calls = 0;
+    await page.route("**/edge/session", (route) => {
+      calls += 1;
+      if (calls === 1) {
+        route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ code: "EDGE_UNAVAILABLE", message: "x" }) });
+        return;
+      }
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          token: "e2e-edge-token",
+          wasla_public_id: "WS-1234567890",
+          expires_at: new Date(Date.now() + 3_600_000).toISOString(),
+          session_id: "s-e2e",
+        }),
+      });
+    });
+
+    await page.goto("http://localhost:4174/");
+    await expect(page.getByTestId("session-error")).toHaveText("تعذّر بدء الجلسة");
+    expect(calls).toBe(1);
+
+    await page.getByTestId("session-retry").click();
+    await expect(page.locator(".app")).toBeVisible();
+    expect(calls).toBe(2);
   });
 
   test("no API calls are made without a session token", async ({ page }) => {

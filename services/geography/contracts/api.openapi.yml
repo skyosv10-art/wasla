@@ -151,6 +151,49 @@ paths:
         '404': {$ref: '#/components/responses/NotFound'}
         '503': {$ref: '#/components/responses/ServiceUnavailable'}
 
+  /geo/zones/search:
+    get:
+      tags: [geography]
+      summary: البحث عن منطقة فرعية صالحة بالاسم (G-S9.3 · CLM-0645)
+      description: |
+        يُرجع **المناطق الفرعية النشطة فقط** (`status = active`) التي يحوي أحدُ أسمائها
+        المترجمة (ar/en/ur) نصَّ `q` — مطابقةٌ جزئيّةٌ لا تتأثّر بحالة الأحرف. هذا هو
+        معيارُ الصلاحية نفسُه الذي تطبّقه خدمة العملاء على `zone_id` في الطلب
+        (`requireActiveZone` · منطقة غير نشطة تُرفض)، فلا يُعرض للاختيار ما سيُرفض.
+        الترتيب حتمي: `code` ثم `id`. الاسم المُرجع مُترجم بـ`locale` مع fallback إلى `ar`
+        (ADR-006). لا تطبيع للتشكيل أو الهمزات في هذا الإصدار. الرمزان `%` و`_` والشرطة المائلة العكسية
+        في `q` تُعامَل حرفيًّا (تُهرَّب قبل المطابقة).
+      operationId: searchZones
+      security:
+        - ServiceAuth:
+            - geography:zone:read
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: نص البحث بعد قصّ المسافات الطرفية — من 2 إلى 64 حرفًا.
+          schema: {type: string, minLength: 2, maxLength: 64}
+        - name: limit
+          in: query
+          required: false
+          schema: {type: integer, minimum: 1, maximum: 20, default: 10}
+        - $ref: '#/components/parameters/Locale'
+      responses:
+        '200':
+          description: المناطق النشطة المطابقة مع مسار الهرم (قد تكون فارغة)
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 20
+                items: {$ref: '#/components/schemas/ZoneDetail'}
+        '400': {$ref: '#/components/responses/ValidationError'}
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+
   /geo/zones/{zoneId}:
     get:
       tags: [geography]

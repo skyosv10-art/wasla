@@ -1,0 +1,31 @@
+audit with an empty registry on cd5a8648-tree: 30 findings
+packages/channel-edge/src/create-channel-edge.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+packages/customer-e2e/src/harness.ts: runtime fs use {'readFile': 1} / out-of-package paths ['packages/services/customers/contracts/schema.sql'] not registered in scripts/deploy/runtime-reads.json
+packages/delivery-e2e/src/harness.ts: runtime fs use {'readFileSync': 2} / out-of-package paths ['packages/services/delivery/contracts/schema.sql', 'packages/services/delivery/contracts/events.json'] not registered in scripts/deploy/runtime-reads.json
+packages/dispatch-e2e/src/harness.ts: runtime fs use {'readFile': 2} / out-of-package paths ['packages/services/matching/contracts/schema.sql', 'packages/services/dispatch/contracts/schema.sql'] not registered in scripts/deploy/runtime-reads.json
+packages/driver-e2e/src/harness.ts: runtime fs use {'readFile': 1} / out-of-package paths ['packages/services/drivers/contracts/schema.sql'] not registered in scripts/deploy/runtime-reads.json
+packages/marketplace-e2e/src/harness.ts: runtime fs use {'readFileSync': 1} / out-of-package paths ['packages/services/marketplace/contracts/events.json'] not registered in scripts/deploy/runtime-reads.json
+packages/negotiation-e2e/src/harness.ts: runtime fs use {'readFile': 1} / out-of-package paths ['packages/services/negotiations/contracts/schema.sql'] not registered in scripts/deploy/runtime-reads.json
+packages/order-e2e/src/harness.ts: runtime fs use {'readFile': 1} / out-of-package paths ['packages/services/orders/contracts/schema.sql'] not registered in scripts/deploy/runtime-reads.json
+packages/search-e2e/src/harness.ts: runtime fs use {'readFileSync': 2} / out-of-package paths ['services/search/contracts/schema.sql', 'services/marketplace/contracts/schema.sql'] not registered in scripts/deploy/runtime-reads.json
+packages/tick-scheduler/src/scheduler.ts: runtime fs use {'mkdir': 1, 'open': 1, 'rm': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/audit/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/billing/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/customers/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/delivery/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/dispatch/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/drivers/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/geography/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/identity/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/marketplace/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/matching/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/negotiations/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/observability/src/config.ts: runtime fs use {'readFileSync': 1} / out-of-package paths ['infra/observability/targets'] not registered in scripts/deploy/runtime-reads.json
+services/orders/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/partners/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/reputation/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/search/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/subscriptions/src/db/migrate.ts: runtime fs use {'readFile': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+services/support/src/db/migrate.ts: runtime fs use {'readFileSync': 1} / out-of-package paths [] not registered in scripts/deploy/runtime-reads.json
+bots/customer-bot/src/edge.ts: runtime fs use {} / out-of-package paths ['packages/channel-edge/allowlist/customer-mini-app.json'] not registered in scripts/deploy/runtime-reads.json
+bots/driver-bot/src/edge.ts: runtime fs use {} / out-of-package paths ['packages/channel-edge/allowlist/driver-mini-app.json'] not registered in scripts/deploy/runtime-reads.json

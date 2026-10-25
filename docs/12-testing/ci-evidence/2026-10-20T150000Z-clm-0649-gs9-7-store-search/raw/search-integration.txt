@@ -1,0 +1,13 @@
+ ✓ src/__tests__/store-search.integration.test.ts (22 tests) 1119ms
+ ✓ src/__tests__/search-index-reader.integration.test.ts (12 tests) 334ms
+ ✓ src/__tests__/migrations.integration.test.ts (4 tests) 571ms
+ ✓ src/__tests__/relay.integration.test.ts (4 tests) 202ms
+ ✓ src/__tests__/relay-concurrent-dedupe.integration.test.ts (3 tests) 181ms
+ ✓ src/__tests__/relay-acknowledgement.integration.test.ts (7 tests) 141ms
+ ✓ src/__tests__/relay-requeue.integration.test.ts (6 tests) 120ms
+ ✓ src/__tests__/migration-upgrade-with-data.integration.test.ts (4 tests) 114ms
+ ✓ src/__tests__/relay-dead-letters.integration.test.ts (6 tests) 125ms
+ ✓ src/__tests__/outbox-drain.integration.test.ts (7 tests) 103ms
+ ✓ src/__tests__/relay-commit-order.integration.test.ts (2 tests) 121ms
+ Test Files  11 passed (11)
+      Tests  77 passed (77)

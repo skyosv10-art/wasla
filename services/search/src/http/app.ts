@@ -41,6 +41,7 @@ import type {
   SearchRelayRequeuePort,
   SearchIndexHealthPort,
   SearchProductsReadPort,
+  SearchStoresReadPort,
 } from "../ports.js";
 import {
   SEARCH_DEAD_LETTER_LEDGERS,
@@ -65,6 +66,7 @@ import {
   sendSearchError,
 } from "./errors.js";
 import { parseSearchRequest } from "./requests.js";
+import { parseStoreSearchRequest } from "../domain/store-search.js";
 import { toSearchPage } from "./mappers.js";
 import {
   registerServiceIdentity,
@@ -75,6 +77,12 @@ import {
 
 export interface SearchHttpDeps {
   readonly searchReadPort: SearchProductsReadPort;
+  /**
+   * Store-name search (G-S9.7 · ADR-025 §6). Optional so existing compositions
+   * keep compiling; when absent `GET /search/stores` answers 503 — never an
+   * empty page that would look like "no store matches".
+   */
+  readonly storeSearchReadPort?: SearchStoresReadPort;
   /**
    * Readiness probe for `GET /search/ready`. Optional so existing callers keep
    * compiling; when absent the route reports `503` — a service that cannot
@@ -302,6 +310,24 @@ export function buildSearchHttpApp(deps: SearchHttpDeps): SearchHttpApp {
       sort: parsed.sort,
     });
     return reply.status(200).send(toSearchPage(page));
+  });
+
+  // G-S9.7 (CLM-0649 · ADR-025 §6): store-name search. Undeclared query keys,
+  // bad bounds and bad locales are 400 (parseStoreSearchRequest); eligibility
+  // is derived inside the read port's SQL, and the response is the three-field
+  // public projection rebuilt here field by field — nothing else can leak.
+  app.get("/search/stores", { config: internalScoped(SEARCH_SCOPES.storesRead) }, async (request, reply) => {
+    const parsed = parseStoreSearchRequest((request.query ?? {}) as Record<string, unknown>);
+    if (deps.storeSearchReadPort === undefined) {
+      throw new SearchUnavailableError("SEARCH_INDEX_DEGRADED", "لا منفذَ بحثِ متاجرَ مُركَّبٌ");
+    }
+    const page = await deps.storeSearchReadPort.searchStores(parsed);
+    return reply.status(200).send({
+      items: page.items.map((i) => ({ store_slug: i.store_slug, title: i.title, category_slug: i.category_slug })),
+      page: page.page,
+      page_size: page.page_size,
+      total: page.total,
+    });
   });
 
   /*

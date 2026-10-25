@@ -23,6 +23,7 @@
  * `{ error: {...} }`. The contract `ErrorResponse` (api-types.ts) is the source.
  */
 
+import { StoreSearchValidationError } from "../domain/store-search.js";
 import type { FastifyReply } from "fastify";
 
 /** A validation failure (400). Code MUST be a `validation_error` code from errors.md. */
@@ -109,7 +110,9 @@ export function sendSearchError(
   error: unknown,
   traceId: string,
 ): FastifyReply {
-  if (error instanceof SearchValidationError) {
+  // G-S9.7 (CLM-0649): the store-search parser is domain code and throws its own
+  // typed error; it maps to the same 400 shape here — one translator, no try/catch.
+  if (error instanceof SearchValidationError || error instanceof StoreSearchValidationError) {
     return reply.status(400).send(body(error.code, error.message, traceId));
   }
   if (error instanceof SearchNotFoundError) {

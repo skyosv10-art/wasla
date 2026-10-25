@@ -1,0 +1,85 @@
+# vitest customer-mini-app @ 9e1c622dfa835279f8436bf7332df85779d3aca1 — total=72 passed=72 failed=0 pending=0
+## src/__tests__/DeliveryOrder.test.tsx
+passed	DeliveryOrder screen renders all form fields including shipment details
+passed	DeliveryOrder screen shows shipment type options
+passed	DeliveryOrder screen validates and shows error when pickup zone is empty
+passed	DeliveryOrder screen calls preview API with delivery order_type and shipment
+passed	DeliveryOrder screen calls submit API with Idempotency-Key header
+## src/__tests__/Home.test.tsx
+passed	Home renders the app name
+passed	Home renders all seven menu items
+passed	Home renders navigation links with correct hash routes
+## src/__tests__/Marketplace.test.tsx
+passed	Marketplace screen loads stores on mount
+passed	Marketplace screen renders stores list
+passed	Marketplace screen shows empty state when no stores
+passed	Marketplace screen shows error on failure
+passed	Marketplace screen loads products when store is clicked
+## src/__tests__/MyOrders.test.tsx
+passed	MyOrders screen loads orders on mount
+passed	MyOrders screen renders orders list
+passed	MyOrders screen shows empty state when no orders
+passed	MyOrders screen filters orders by status
+passed	MyOrders screen shows error on failure
+## src/__tests__/Profile.test.tsx
+passed	Profile screen loads profile on mount
+passed	Profile screen renders profile form with loaded data
+passed	Profile screen saves profile via PUT
+passed	Profile screen shows error on save failure
+passed	Profile screen allows changing preferred language
+## src/__tests__/Reputation.test.tsx
+passed	Reputation screen loads score and ratings on mount
+passed	Reputation screen renders score card
+passed	Reputation screen shows no ratings state
+passed	Reputation screen renders ratings list
+## src/__tests__/RideOrder.test.tsx
+passed	RideOrder screen renders all form fields
+passed	RideOrder screen shows offered price field only when price_mode is customer_offer
+passed	RideOrder screen validates and shows error when pickup zone is empty
+passed	RideOrder screen calls preview API and shows result
+passed	RideOrder screen calls submit API with Idempotency-Key header
+passed	RideOrder screen disables buttons while submitting
+passed	RideOrder screen shows error message when preview fails
+passed	RideOrder screen shows error message when submit fails
+## src/__tests__/SavedPlaces.test.tsx
+passed	SavedPlaces screen loads places on mount
+passed	SavedPlaces screen shows empty state when no places
+passed	SavedPlaces screen renders places list
+passed	SavedPlaces screen adds a new place
+passed	SavedPlaces screen deletes a place
+passed	SavedPlaces screen shows error when adding without label
+## src/__tests__/Search.test.tsx
+passed	Search screen renders search input and button
+passed	Search screen disables search button when query is empty
+passed	Search screen calls search API with query params
+passed	Search screen shows no results state
+passed	Search screen renders search results
+passed	Search screen shows error on failure
+## src/__tests__/frontend-quality.test.tsx
+passed	locale selection (?locale=) defaults to Arabic RTL
+passed	locale selection (?locale=) accepts ?locale=en and switches document lang/dir
+passed	locale selection (?locale=) ur stays RTL
+passed	locale selection (?locale=) rejects unknown locales back to Arabic
+passed	offline banner is hidden while online and appears on the offline event
+passed	api client network error mapping maps a fetch TypeError rejection to network_error (status 0)
+passed	api client network error mapping maps an aborted request to timeout (status 408)
+## src/__tests__/order-form.test.ts
+passed	order-form store initializes with default values
+passed	order-form store updates pickup zone and clears preview
+passed	order-form store updates vehicle class and clears preview
+passed	order-form store builds correct order request body
+passed	order-form store builds order request with null offered_price for negotiable mode
+passed	order-form store validates: missing pickup zone
+passed	order-form store validates: missing dropoff zone
+passed	order-form store validates: same pickup and dropoff zone
+passed	order-form store validates: customer_offer with no price
+passed	order-form store validates: customer_offer with zero price
+passed	order-form store validates: notes too long
+passed	order-form store validates: valid form returns null
+passed	order-form store resetForm restores defaults
+## src/__tests__/session.test.ts
+passed	Session Store starts unauthenticated
+passed	Session Store stores token in memory only
+passed	Session Store does not persist to localStorage
+passed	Session Store clears session on clearSession()
+passed	Session Store reports expired session

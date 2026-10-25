@@ -1,0 +1,112 @@
+== K1 constant qMaxLength 200→64
+file: packages/contracts/search/src/store-search.ts
+  (packages/contracts/search && pnpm exec vitest run) exit 1 · Tests  3 failed | 22 passed (25)
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the shared constants ARE the approved decision (CLM-0652 · ADR-025 §6.8) — q 1..200 · page ≥ 1 · page_size 1..50 = 20 8ms
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > OpenAPI q / page / page_size bounds match the shared constants exactly 1ms
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the customer app's StoreSearch mirrors the same bounds (it cannot import this package — no app depends on @wasla/* today) 1ms
+  (services/search && pnpm exec vitest run src/__tests__/store-search.test.ts) exit 1 · Tests  2 failed | 43 passed (45)
+    × parseStoreSearchRequest — bounds come from the shared contract > q: 200 characters accepted, 201 rejected (after trim) 7ms
+    × parseStoreSearchRequest — bounds come from the shared contract > counts characters, not UTF-16 units (200 emoji are 200, not 400; 201 are too long) 1ms
+  verdict: KILLED
+
+== K2 constant pageSizeDefault 20→10
+file: packages/contracts/search/src/store-search.ts
+  (packages/contracts/search && pnpm exec vitest run) exit 1 · Tests  3 failed | 22 passed (25)
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the shared constants ARE the approved decision (CLM-0652 · ADR-025 §6.8) — q 1..200 · page ≥ 1 · page_size 1..50 = 20 8ms
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > OpenAPI q / page / page_size bounds match the shared constants exactly 1ms
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the customer app's StoreSearch mirrors the same bounds (it cannot import this package — no app depends on @wasla/* today) 1ms
+  (services/search && pnpm exec vitest run src/__tests__/store-search.test.ts) exit 1 · Tests  1 failed | 44 passed (45)
+    × parseStoreSearchRequest — bounds come from the shared contract > defaults: locale ar · page 1 · page_size 20 (absent page_size selects 20) 10ms
+  (services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts) exit 1 · Tests  2 failed | 22 passed (24)
+    × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > paging: default page_size 20, page_size 1 and 50, pages past the end and a page at 2^53-1 (bigint offset) keep the true total 519ms
+    × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > GET /search/stores over the real reader: three public fields only, scope enforced 109ms
+  verdict: KILLED
+
+== K3 constant pageSizeMax 50→20
+file: packages/contracts/search/src/store-search.ts
+  (packages/contracts/search && pnpm exec vitest run) exit 1 · Tests  3 failed | 22 passed (25)
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the shared constants ARE the approved decision (CLM-0652 · ADR-025 §6.8) — q 1..200 · page ≥ 1 · page_size 1..50 = 20 8ms
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > OpenAPI q / page / page_size bounds match the shared constants exactly 2ms
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the response page wrapper carries the same bounds (page unbounded, page_size ≤ 50) 1ms
+  (services/search && pnpm exec vitest run src/__tests__/store-search.test.ts) exit 1 · Tests  1 failed | 44 passed (45)
+    × parseStoreSearchRequest — bounds come from the shared contract > page_size: 1 and 50 accepted; 0, 51, negative and non-integers rejected 6ms
+  (services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts) exit 1 · Tests  2 failed | 22 passed (24)
+    × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > paging: default page_size 20, page_size 1 and 50, pages past the end and a page at 2^53-1 (bigint offset) keep the true total 510ms
+    × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > GET /search/stores over the real reader: three public fields only, scope enforced 101ms
+  verdict: KILLED
+
+== K4 constant qMinLength 1→2
+file: packages/contracts/search/src/store-search.ts
+  (packages/contracts/search && pnpm exec vitest run) exit 1 · Tests  3 failed | 22 passed (25)
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the shared constants ARE the approved decision (CLM-0652 · ADR-025 §6.8) — q 1..200 · page ≥ 1 · page_size 1..50 = 20 9ms
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > OpenAPI q / page / page_size bounds match the shared constants exactly 1ms
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the customer app's StoreSearch mirrors the same bounds (it cannot import this package — no app depends on @wasla/* today) 1ms
+  (services/search && pnpm exec vitest run src/__tests__/store-search.test.ts) exit 1 · Tests  1 failed | 44 passed (45)
+    × parseStoreSearchRequest — bounds come from the shared contract > q: one character after trim is valid if it stays non-empty after normalization 7ms
+  (services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts) exit 1 · Tests  2 failed | 22 passed (24)
+    × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > q bounds on PostgreSQL: one character finds by containment; a 200-character name is matched exactly 64ms
+    × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > GET /search/stores over the real reader: three public fields only, scope enforced 95ms
+  verdict: KILLED
+
+== K5 service re-adds page upper bound 50
+file: services/search/src/domain/store-search.ts
+  (services/search && pnpm exec vitest run src/__tests__/store-search.test.ts) exit 1 · Tests  1 failed | 44 passed (45)
+    × parseStoreSearchRequest — bounds come from the shared contract > page: integer ≥ 1 with no upper bound; zero, negative and non-integers rejected 6ms
+  (services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts) exit 1 · Tests  2 failed | 22 passed (24)
+    × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > paging: default page_size 20, page_size 1 and 50, pages past the end and a page at 2^53-1 (bigint offset) keep the true total 526ms
+    × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > GET /search/stores over the real reader: three public fields only, scope enforced 107ms
+  verdict: KILLED
+
+== K6 service accepts page 0 (min 0)
+file: services/search/src/domain/store-search.ts
+  (services/search && pnpm exec vitest run src/__tests__/store-search.test.ts) exit 1 · Tests  2 failed | 43 passed (45)
+    × parseStoreSearchRequest — bounds come from the shared contract > page: integer ≥ 1 with no upper bound; zero, negative and non-integers rejected 8ms
+    × GET /search/stores — HTTP > 400 {"q":"نور","page":"0"} → SEARCH_PAGE_OUT_OF_RANGE 9ms
+  verdict: KILLED
+
+== K7 OpenAPI page_size default 20→10
+file: services/search/contracts/api.openapi.yml
+  (packages/contracts/search && pnpm exec vitest run) exit 1 · Tests  1 failed | 24 passed (25)
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > OpenAPI q / page / page_size bounds match the shared constants exactly 8ms
+  verdict: KILLED
+
+== K8 OpenAPI re-adds page maximum 50
+file: services/search/contracts/api.openapi.yml
+  (packages/contracts/search && pnpm exec vitest run) exit 1 · Tests  1 failed | 24 passed (25)
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > OpenAPI q / page / page_size bounds match the shared constants exactly 6ms
+  verdict: KILLED
+
+== K9 app min length 1→2
+file: apps/customer-mini-app/src/components/StoreSearch.tsx
+  (apps/customer-mini-app && pnpm exec vitest run src/__tests__/StoreSearch.test.tsx) exit 1 · Tests  1 failed | 8 passed (9)
+    × StoreSearch component > a single character (after trim) is a valid query and reaches the service 1013ms
+  (packages/contracts/search && pnpm exec vitest run) exit 1 · Tests  1 failed | 24 passed (25)
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the customer app's StoreSearch mirrors the same bounds (it cannot import this package — no app depends on @wasla/* today) 7ms
+  verdict: KILLED
+
+== K10 app page size 20→10
+file: apps/customer-mini-app/src/components/StoreSearch.tsx
+  (apps/customer-mini-app && pnpm exec vitest run src/__tests__/StoreSearch.test.tsx) exit 1 · Tests  4 failed | 5 passed (9)
+    × StoreSearch component > calls the contract path with the trimmed, encoded query, the UI locale and bounded paging — no state/owner filter 53ms
+    × StoreSearch component > a single character (after trim) is a valid query and reaches the service 14ms
+    × StoreSearch component > 200 code points are sent; 201 are refused client-side and the input is capped at 200 12ms
+    × StoreSearch component > uses the UI language as locale (ur) 7ms
+  (packages/contracts/search && pnpm exec vitest run) exit 1 · Tests  1 failed | 24 passed (25)
+    × search contracts — store-name search (G-S9.7 · ADR-025 §6) > the customer app's StoreSearch mirrors the same bounds (it cannot import this package — no app depends on @wasla/* today) 8ms
+  verdict: KILLED
+
+== K11 app drops the 200 upper check
+file: apps/customer-mini-app/src/components/StoreSearch.tsx
+  (apps/customer-mini-app && pnpm exec vitest run src/__tests__/StoreSearch.test.tsx) exit 1 · Tests  1 failed | 8 passed (9)
+    × StoreSearch component > 200 code points are sent; 201 are refused client-side and the input is capped at 200 1018ms
+  verdict: KILLED
+
+== K12 service stops rejecting undeclared keys
+file: services/search/src/domain/store-search.ts
+  (services/search && pnpm exec vitest run src/__tests__/store-search.test.ts) exit 1 · Tests  3 failed | 42 passed (45)
+    × parseStoreSearchRequest — bounds come from the shared contract > undeclared keys are rejected by name, never ignored 7ms
+    × GET /search/stores — HTTP > 400 {"q":"نور","owner_public_id":"WS-1"} → SEARCH_UNKNOWN_PARAMETER 5ms
+    × GET /search/stores — HTTP > 400 {"q":"نور","state":"approved"} → SEARCH_UNKNOWN_PARAMETER 8ms
+  (services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts) exit 1 · Tests  1 failed | 23 passed (24)
+    × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > GET /search/stores over the real reader: three public fields only, scope enforced 148ms
+  verdict: KILLED

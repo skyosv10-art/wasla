@@ -35,6 +35,7 @@ export const SEARCH_TABLES = [
   "search_marketplace_product_state",
   "search_marketplace_store_state",
   "search_product_index",
+  "search_store_index",
 ] as const;
 
 /**

@@ -1,0 +1,4 @@
+قياسٌ مؤقّتٌ (ملفُّ اختبارٍ مؤقّتٌ أُزيلَ بعدَ التشغيلِ — لا يدخلُ المستودعَ)، على 3d613e17 + تغييرِ CLM-0616:
+POST طلبٌ واحدٌ → status=submitted
+GET /customers/WS-…/order-requests?status=failed&limit=5 → 200 · items=1 · statuses=["submitted"]
+⇒ الخدمةُ لا تقرأُ `status` (العقدُ listOrderRequests لا يعلنُه) — G-S9.15.

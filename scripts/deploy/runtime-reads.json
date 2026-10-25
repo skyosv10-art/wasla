@@ -1,0 +1,248 @@
+{
+  "$comment": [
+    "CLM-0628 · CLM-0630 · RISK-0068 — files whose runtime code calls the file system or names a path outside its package.",
+    "Read by scripts/deploy/render_plan.py (reads → deploy inputs of every service whose closure contains the file; `unresolved` → those services always deploy) and audited by scripts/deploy/runtime_reads.py via scripts/checks/validate-render-deploy-plan.sh.",
+    "`calls` is the measured fingerprint `fn(<argument text>) → <resolved target>`; any change fails the audit until re-reviewed. Policy: runtime-input equivalence, not image-byte equivalence (the image is COPY . .)."
+  ],
+  "files": {
+    "bots/customer-bot/src/edge.ts": {
+      "calls": [],
+      "reads": [
+        "packages/channel-edge/allowlist/customer-mini-app.json"
+      ],
+      "why": "allowlistUrl literal, cwd-relative repo path inside packages/channel-edge (in this bot's closure). buildAppWithEdge is exported but not wired into src/main.ts at CLM-0628; cwd at runtime is the bot dir (entrypoint.sh cd), so wiring it needs a path fix first — observation, not changed here. CLM-0630: as the delegated value it resolves cwd-relative to bots/<bot>/packages/channel-edge/… (inside the bot package, nonexistent today); the repo-root reading stays registered as the conservative candidate"
+    },
+    "bots/driver-bot/src/edge.ts": {
+      "calls": [],
+      "reads": [
+        "packages/channel-edge/allowlist/driver-mini-app.json"
+      ],
+      "why": "allowlistUrl literal, cwd-relative repo path inside packages/channel-edge (in this bot's closure). buildAppWithEdge is exported but not wired into src/main.ts at CLM-0628; cwd at runtime is the bot dir (entrypoint.sh cd), so wiring it needs a path fix first — observation, not changed here. CLM-0630: as the delegated value it resolves cwd-relative to bots/<bot>/packages/channel-edge/… (inside the bot package, nonexistent today); the repo-root reading stays registered as the conservative candidate"
+    },
+    "packages/channel-edge/src/create-channel-edge.ts": {
+      "calls": [
+        "readFileSync(allowlistUrl, \"utf-8\") → unresolved (parameter `allowlistUrl` of loadAllowlist)"
+      ],
+      "reads": [],
+      "delegated": [
+        "allowlistUrl"
+      ],
+      "why": "readFileSync(allowlistUrl) — parameter of loadAllowlist fed by options.allowlistUrl; delegated (CLM-0630): every runtime `allowlistUrl:` value in other files must resolve and be covered there (bots/*/src/edge.ts)"
+    },
+    "packages/customer-e2e/src/harness.ts": {
+      "calls": [
+        "readFile(CUSTOMER_SCHEMA_SQL, \"utf-8\") → repo:services/customers/contracts/schema.sql"
+      ],
+      "reads": [
+        "services/customers/contracts/schema.sql"
+      ],
+      "why": "test-harness package (not a dependency of any deployed service): reads service contracts cwd-relative (../../services/…) for e2e setup"
+    },
+    "packages/delivery-e2e/src/harness.ts": {
+      "calls": [
+        "readFileSync(DELIVERY_SCHEMA_PATH, \"utf8\") → repo:services/delivery/contracts/schema.sql",
+        "readFileSync(CONTRACT_PATH, \"utf8\") → repo:services/delivery/contracts/events.json"
+      ],
+      "reads": [
+        "services/delivery/contracts/events.json",
+        "services/delivery/contracts/schema.sql"
+      ],
+      "why": "test-harness package (not a dependency of any deployed service): reads service contracts cwd-relative (../../services/…) for e2e setup"
+    },
+    "packages/dispatch-e2e/src/harness.ts": {
+      "calls": [
+        "readFile(MATCHING_SCHEMA_SQL, \"utf-8\") → repo:services/matching/contracts/schema.sql",
+        "readFile(DISPATCH_SCHEMA_SQL, \"utf-8\") → repo:services/dispatch/contracts/schema.sql"
+      ],
+      "reads": [
+        "services/dispatch/contracts/schema.sql",
+        "services/matching/contracts/schema.sql"
+      ],
+      "why": "test-harness package (not a dependency of any deployed service): reads service contracts cwd-relative (../../services/…) for e2e setup"
+    },
+    "packages/driver-e2e/src/harness.ts": {
+      "calls": [
+        "readFile(DRIVER_SCHEMA_SQL, \"utf-8\") → repo:services/drivers/contracts/schema.sql"
+      ],
+      "reads": [
+        "services/drivers/contracts/schema.sql"
+      ],
+      "why": "test-harness package (not a dependency of any deployed service): reads service contracts cwd-relative (../../services/…) for e2e setup"
+    },
+    "packages/marketplace-e2e/src/harness.ts": {
+      "calls": [
+        "readFileSync(CONTRACT_PATH, \"utf8\") → repo:services/marketplace/contracts/events.json"
+      ],
+      "reads": [
+        "services/marketplace/contracts/events.json"
+      ],
+      "why": "test-harness package (not a dependency of any deployed service): reads service contracts cwd-relative (../../services/…) for e2e setup"
+    },
+    "packages/negotiation-e2e/src/harness.ts": {
+      "calls": [
+        "readFile(NEGOTIATION_SCHEMA_SQL, \"utf-8\") → repo:services/negotiations/contracts/schema.sql"
+      ],
+      "reads": [
+        "services/negotiations/contracts/schema.sql"
+      ],
+      "why": "test-harness package (not a dependency of any deployed service): reads service contracts cwd-relative (../../services/…) for e2e setup"
+    },
+    "packages/order-e2e/src/harness.ts": {
+      "calls": [
+        "readFile(ORDER_SCHEMA_SQL, \"utf-8\") → repo:services/orders/contracts/schema.sql"
+      ],
+      "reads": [
+        "services/orders/contracts/schema.sql"
+      ],
+      "why": "test-harness package (not a dependency of any deployed service): reads service contracts cwd-relative (../../services/…) for e2e setup"
+    },
+    "packages/search-e2e/src/harness.ts": {
+      "calls": [
+        "readFileSync(resolve(__dirname, \"../../../services/search/contracts/schema.sql\"), \"utf8\") → repo:services/search/contracts/schema.sql",
+        "readFileSync(resolve(__dirname, \"../../../services/marketplace/contracts/schema.sql\"), \"utf8\") → repo:services/marketplace/contracts/schema.sql"
+      ],
+      "reads": [
+        "services/marketplace/contracts/schema.sql",
+        "services/search/contracts/schema.sql"
+      ],
+      "why": "test-harness package (not a dependency of any deployed service): reads service contracts cwd-relative (../../services/…) for e2e setup"
+    },
+    "packages/tick-scheduler/src/scheduler.ts": {
+      "calls": [
+        "mkdir(lockDir, { recursive: true }) → write",
+        "open(lockPath, \"wx\") → write",
+        "rm(lockPath, { force: true }) → write"
+      ],
+      "reads": [],
+      "why": "mkdir/open/rm on the scheduler's own lock file under a runtime directory, not a repository file; no repo read"
+    },
+    "services/audit/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/audit/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/billing/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/billing/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/customers/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/customers/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/delivery/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/delivery/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/dispatch/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/dispatch/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/drivers/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/drivers/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/geography/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/geography/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/identity/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/identity/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/marketplace/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/marketplace/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/matching/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/matching/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/negotiations/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/negotiations/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/observability/src/config.ts": {
+      "calls": [
+        "readFileSync(`${dir}/${name}.targets`, 'utf8') → prefix:infra/observability/targets/"
+      ],
+      "reads": [
+        "infra/observability/targets/"
+      ],
+      "why": "CLM-0628 measured counterexample: TARGETS_DIR = new URL('../../../infra/observability/targets/', import.meta.url) — outside @wasla/observability-collector; read at startup to select the per-environment scrape targets (ADR-068). Declared so a .targets change redeploys wasla-observability. CLM-0630: resolved as prefix:infra/observability/targets/ — `dir` defaults to TARGETS_DIR (no runtime caller passes it) and `name` is rejected unless ENV_NAME /^[a-z0-9-]+$/ matches, so it cannot leave the directory."
+    },
+    "services/orders/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/orders/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/partners/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/partners/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/reputation/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/reputation/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/search/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/search/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/subscriptions/src/db/migrate.ts": {
+      "calls": [
+        "readFile(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/subscriptions/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    },
+    "services/support/src/db/migrate.ts": {
+      "calls": [
+        "readFileSync(SCHEMA_CONTRACT_PATH, \"utf8\") → repo:services/support/contracts/schema.sql"
+      ],
+      "reads": [],
+      "why": "reads <package>/contracts/schema.sql via SERVICE_ROOT = src/db/../.. — inside the package, already in the closure"
+    }
+  }
+}

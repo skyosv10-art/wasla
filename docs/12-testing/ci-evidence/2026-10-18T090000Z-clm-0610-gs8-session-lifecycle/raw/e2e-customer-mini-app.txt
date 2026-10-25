@@ -1,0 +1,38 @@
+  ✓   1 [chromium] › e2e/accessibility.spec.ts:43:3 › Accessibility — axe-core audit › home screen has no WCAG A/AA violations
+  ✓   2 [chromium] › e2e/accessibility.spec.ts:53:3 › Accessibility — axe-core audit › ride order screen has no WCAG A/AA violations
+  ✓   3 [chromium] › e2e/accessibility.spec.ts:63:3 › Accessibility — axe-core audit › delivery order screen has no WCAG A/AA violations
+  ✓   4 [chromium] › e2e/accessibility.spec.ts:73:3 › Accessibility — axe-core audit › saved places screen has no WCAG A/AA violations
+  ✓   5 [chromium] › e2e/accessibility.spec.ts:84:3 › Accessibility — axe-core audit › marketplace screen has no WCAG A/AA violations
+  ✓   6 [chromium] › e2e/accessibility.spec.ts:95:3 › Accessibility — axe-core audit › search screen has no WCAG A/AA violations
+  ✓   7 [chromium] › e2e/accessibility.spec.ts:105:3 › Accessibility — axe-core audit › my orders screen has no WCAG A/AA violations
+  ✓   8 [chromium] › e2e/accessibility.spec.ts:116:3 › Accessibility — axe-core audit › reputation screen has no WCAG A/AA violations
+  ✓   9 [chromium] › e2e/accessibility.spec.ts:127:3 › Accessibility — axe-core audit › profile screen has no WCAG A/AA violations
+  ✓  10 [chromium] › e2e/auth-session.spec.ts:12:3 › Session security › fresh browser outside Telegram shows an explicit session error, not endless loading
+  ✓  11 [chromium] › e2e/auth-session.spec.ts:20:3 › Session security › a rejected edge session is shown with retry, and retry recovers the app
+  ✓  12 [chromium] › e2e/auth-session.spec.ts:54:3 › Session security › no API calls are made without a session token
+  ✓  13 [chromium] › e2e/auth-session.spec.ts:70:3 › Session security › localStorage does not contain session token
+  ✓  14 [chromium] › e2e/auth-session.spec.ts:84:3 › Session security › sessionStorage does not contain session token
+  ✓  15 [chromium] › e2e/auth-session.spec.ts:97:3 › Session security › authenticated session shows app content
+  ✓  16 [chromium] › e2e/frontend-quality.spec.ts:7:3 › Frontend quality (M3-06) › locale override ?locale=en switches document lang/dir and renders English
+  ✓  17 [chromium] › e2e/frontend-quality.spec.ts:17:3 › Frontend quality (M3-06) › offline banner appears when the network drops and clears on reconnect
+  ✓  18 [chromium] › e2e/frontend-quality.spec.ts:37:3 › Frontend quality (M3-06) › no horizontal overflow at 375px
+  ✓  19 [chromium] › e2e/navigation.spec.ts:15:3 › Navigation smoke › home shows exactly the seven spec menu items and no saved-places entry
+  ✓  20 [chromium] › e2e/navigation.spec.ts:31:3 › Navigation smoke › navigates to ride order screen
+  ✓  21 [chromium] › e2e/navigation.spec.ts:37:3 › Navigation smoke › navigates to delivery order screen
+  ✓  22 [chromium] › e2e/navigation.spec.ts:42:3 › Navigation smoke › navigates to saved places screen
+  ✓  23 [chromium] › e2e/navigation.spec.ts:47:3 › Navigation smoke › navigates to marketplace screen
+  ✓  24 [chromium] › e2e/navigation.spec.ts:52:3 › Navigation smoke › navigates to search screen
+  ✓  25 [chromium] › e2e/navigation.spec.ts:57:3 › Navigation smoke › navigates to my orders screen
+  ✓  26 [chromium] › e2e/navigation.spec.ts:62:3 › Navigation smoke › navigates to reputation screen
+  ✓  27 [chromium] › e2e/navigation.spec.ts:67:3 › Navigation smoke › navigates to profile screen
+  ✓  28 [chromium] › e2e/navigation.spec.ts:72:3 › Navigation smoke › clicking menu items navigates correctly
+  ✓  29 [chromium] › e2e/order-flow.spec.ts:50:3 › Order flow — ride order › preview order sends Bearer token
+  ✓  30 [chromium] › e2e/order-flow.spec.ts:68:3 › Order flow — ride order › submit order sends Bearer token and Idempotency-Key
+  ✓  31 [chromium] › e2e/order-flow.spec.ts:89:3 › Order flow — ride order › submit error shows error message
+  ✓  32 [chromium] › e2e/order-flow.spec.ts:116:3 › Order flow — ride order › form validation prevents submit with empty fields
+  ✓  33 [chromium] › e2e/places-flow.spec.ts:68:3 › Places flow › loads saved places with Bearer token
+  ✓  34 [chromium] › e2e/places-flow.spec.ts:76:3 › Places flow › adds a new place with Bearer token
+  ✓  35 [chromium] › e2e/places-flow.spec.ts:91:3 › Places flow › deletes a place with Bearer token
+  ✓  36 [chromium] › e2e/places-flow.spec.ts:104:3 › Places flow › shows empty state when no places
+  ✓  37 [chromium] › e2e/places-flow.spec.ts:123:3 › Places flow › reaches saved places from Profile, then adds and deletes a place
+  37 passed

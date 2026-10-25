@@ -1,0 +1,21 @@
+   ✓ MyOrders screen > loads orders on mount 31ms
+   ✓ MyOrders screen > renders orders list 36ms
+   ✓ MyOrders screen > shows empty state when no orders 8ms
+   ✓ MyOrders screen > filters orders by status 13ms
+   ✓ MyOrders screen > sends limit=5 on every load: mount, filter change and filter reset (G-S9.10) 13ms
+   ✓ MyOrders screen > shows error on failure 6ms
+   ✓ MyOrders screen > opens the detail view with status and route when an order is clicked 19ms
+   ✓ MyOrders screen > returns to the list from the detail view 14ms
+   ✓ MyOrders screen > shows the not-found message when the detail request returns 404 11ms
+   ✓ MyOrders screen > polls the list every STATUS_POLL_INTERVAL_MS while the screen is open 11ms
+   ✓ MyOrders screen > does not poll while the tab is hidden 5ms
+   ✓ MyOrders screen > refreshes the open detail view periodically 11ms
+   ✓ MyOrders screen > keeps the previous list when a poll fails (silent refresh) 5ms
+   × MyOrders detail — stale responses > A→B: a late response for A does not replace B's details 33ms
+   × MyOrders detail — stale responses > A→B with B still loading: A's late response neither shows A nor ends B's loading 16ms
+   × MyOrders detail — stale responses > A→B: a late 404 for A does not put an error on B 19ms
+   × MyOrders detail — stale responses > closing before the response arrives: the late response neither reopens the view nor answers a later open 14ms
+   ✓ MyOrders detail — stale responses > closing before the response arrives: the list stays and no detail view appears 11ms
+   × MyOrders detail — stale responses > a periodic refresh for A that lands after switching to B does not replace B 21ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  5 failed | 14 passed (19)

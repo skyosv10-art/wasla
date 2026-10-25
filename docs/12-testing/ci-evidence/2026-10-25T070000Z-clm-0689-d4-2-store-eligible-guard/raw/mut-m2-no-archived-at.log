@@ -1,0 +1,10 @@
+
+ RUN  v4.1.12 <worktree>/services/search
+
+ ✓ src/__tests__/store-search-journey.integration.test.ts (8 tests) 334ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  07:05:07
+   Duration  1.24s (transform 582ms, setup 0ms, import 738ms, tests 334ms, environment 0ms)
+

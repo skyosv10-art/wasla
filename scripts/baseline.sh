@@ -233,5 +233,6 @@ w(f"\nالبصمة: {d['fingerprint']}\nالمرجع: {d['reference']}\n")
 PY
 
 printf '%s✓ الأساس:%s %s/baseline.json · %s/baseline.txt\n' "$GRN" "$RST" "$OUT_DIR" "$OUT_DIR"
-printf '  %sالبصمة: %s%s\n' "$DIM" "$(python3 -c "import json,sys;print(json.load(open(sys.argv[1],encoding='utf-8'))['fingerprint'])" "$OUT_DIR/baseline.json")" "$RST"
+fp=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1],encoding='utf-8'))['fingerprint'].replace('sha256:','',1))" "$OUT_DIR/baseline.json")
+printf '  %sالبصمة: sha256:%s%s\n' "$DIM" "$fp" "$RST"
 exit 0

@@ -325,6 +325,48 @@ describe.runIf(PG_ENABLED)("SearchIndexReader (integration)", () => {
    * read model that is actually missing — so the unreachable case drops the
    * table rather than mocking a rejection.
    */
+  // ── RISK-0071 · CLM-0657: LIKE metacharacters in q match literally ──────────
+  // Isolated from the other match paths: metacharacters live in `sku` (no
+  // trigram there) and titles share no trigram with the query, so only the
+  // ILIKE predicates can produce — or wrongly widen — the match.
+  const LIT_A = "00000000-0000-0000-0000-00000000a001";
+  const LIT_B = "00000000-0000-0000-0000-00000000b002";
+  async function literalPair(skuA: string, skuB: string, titleA = "منتج أول", titleB = "منتج ثان") {
+    await seedRow(visibleProduct({ product_id: LIT_A, sku: skuA, title_ar: titleA, title_en: null }));
+    await seedRow(visibleProduct({ product_id: LIT_B, sku: skuB, title_ar: titleB, title_en: null }));
+  }
+  async function ids(q: string): Promise<string[]> {
+    const page = await new SearchIndexReader(fixture.pool).search({
+      q, locale: "ar", categorySlug: null, page: 1, pageSize: 20, sort: "relevance",
+    });
+    return page.items.map((i) => i.product_id).sort();
+  }
+
+  it("RISK-0071: `%` in q is a literal percent, not a wildcard (sku)", async () => {
+    await literalPair("ab%cd", "abXYcd");
+    expect(await ids("b%c")).toEqual([LIT_A]);
+  });
+
+  it("RISK-0071: `_` in q is a literal underscore, not a single-char wildcard (sku)", async () => {
+    await literalPair("x_y", "xzy");
+    expect(await ids("x_y")).toEqual([LIT_A]);
+  });
+
+  it("RISK-0071: `\\` in q is a literal backslash, not an escape of the next char (sku)", async () => {
+    await literalPair("p\\q", "pq");
+    expect(await ids("p\\q")).toEqual([LIT_A]);
+  });
+
+  it("RISK-0071: q = `%` alone matches only titles containing a percent sign (title_ar)", async () => {
+    await literalPair("sku-a", "sku-b", "خصم ٥٠%", "سماعة بلوتوث");
+    expect(await ids("%")).toEqual([LIT_A]);
+  });
+
+  it("RISK-0071: q = `_` alone matches only titles containing an underscore (title_ar)", async () => {
+    await literalPair("sku-a", "sku-b", "رمز_خاص", "سماعة بلوتوث");
+    expect(await ids("_")).toEqual([LIT_A]);
+  });
+
   it("readiness probe reports the index reachable with a document count", async () => {
     await seedRow(visibleProduct());
     const probe = new SearchIndexHealthProbe(fixture.pool, { error: () => {} });

@@ -76,6 +76,10 @@ run_step "أهدافُ المراقبةِ لكلِّ بيئة (CLM-0499 · ADR-0
 run_step "هدفُ نشرِ Render مُعلَنٌ (CLM-0501 · INC-0005)" \
   bash scripts/checks/validate-render-deploy-target.sh
 
+# ── 1-د1ب2) النشرُ الانتقائيُّ من الالتزامِ الحيِّ لا من آخرِ دفعةٍ (CLM-0626 · RISK-0068) ──
+run_step "نشرُ Render الانتقائيُّ: الحيُّ ← المستهدَفُ (CLM-0626 · RISK-0068)" \
+  bash scripts/checks/validate-render-deploy-plan.sh
+
 # ── 1-د1ج) مصادرُ مضيفاتِ Render مُصنَّفة، وأدواتُ القديمِ ترفض (CLM-0502 · P5-9) ──
 run_step "مصادرُ مضيفاتِ Render وأدواتُ القديم (CLM-0502 · P5-9)" \
   bash scripts/checks/validate-render-host-sources.sh

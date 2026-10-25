@@ -1,0 +1,19 @@
+=== /tmp/dd-fail-17.log
+11:⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+13: FAIL  src/__tests__/relay-concurrent-dedupe.integration.test.ts > M2-07 search crash/retry/dedupe proof — concurrent relay, crash recovery, PK dedupe > two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state
+14:AssertionError: exactly one index doc — no duplicates: expected +0 to be 1 // Object.is equality
+22: ❯ src/__tests__/relay-concurrent-dedupe.integration.test.ts:252:68
+34:      Tests  1 failed | 6 passed (7)
+=== /tmp/mm-fail-4.log
+11:⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+13: FAIL  src/__tests__/relay-concurrent-dedupe.integration.test.ts > M2-07 search crash/retry/dedupe proof — concurrent relay, crash recovery, PK dedupe > two concurrent relay instances leave one consumed-events row per outbox_id and correct projection state
+14:AssertionError: exactly one index doc — no duplicates: expected +0 to be 1 // Object.is equality
+22: ❯ src/__tests__/relay-concurrent-dedupe.integration.test.ts:249:68
+34:      Tests  1 failed | 6 passed (7)
+
+# Measurement (2026-10-20, local Postgres 18, files: relay-concurrent-dedupe + relay.integration)
+# branch stage-zero/clm-0649 (after resetData includes search_store_index): 2 failures / 25 runs
+# main @ 92064ac (worktree, same DB, same command):                           1 failure  / 30 runs
+# Same assertion both sides: "exactly one index doc — no duplicates: expected +0 to be 1"
+# → pre-existing nondeterminism in the two-concurrent-relay case (no mutual exclusion
+#   between instances); not introduced by CLM-0649. Registered as G-S9.20 (open, unclaimed).

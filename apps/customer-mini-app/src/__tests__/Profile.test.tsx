@@ -115,4 +115,14 @@ describe("Profile screen", () => {
 
     expect(screen.getByTestId("preferred-language-select")).toHaveValue("en");
   });
+
+  // ADR-072 D1 · CMS §3.8: saved places are managed from Profile.
+  it("links to saved places management from Profile", async () => {
+    mockedGet.mockResolvedValueOnce({ display_name: "Ali" });
+    render(<Profile />);
+    const link = await screen.findByTestId("profile-places-link");
+    expect(link.getAttribute("href")).toBe("#/places");
+    expect(link).toHaveTextContent("الأماكن المحفوظة");
+    expect(screen.getByRole("heading", { level: 2, name: "الأماكن المحفوظة" })).toBeInTheDocument();
+  });
 });

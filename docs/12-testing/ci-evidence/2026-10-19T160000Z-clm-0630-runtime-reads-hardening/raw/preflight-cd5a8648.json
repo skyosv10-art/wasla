@@ -1,0 +1,303 @@
+{
+  "target": "cd5a8648cdebbf071373f7a1ff7bf9b03c193cd4",
+  "main_head": "8958621e8205324acc9e86ea3867c001215fa6c2",
+  "lives": {
+    "811341deb66ed36f7d9da79d36da4173e2fbd989": [
+      "wasla-admin-app",
+      "wasla-alertmanager",
+      "wasla-audit",
+      "wasla-customer-app",
+      "wasla-customer-bot",
+      "wasla-customers",
+      "wasla-delivery",
+      "wasla-dispatch",
+      "wasla-driver-app",
+      "wasla-driver-bot",
+      "wasla-drivers",
+      "wasla-geography",
+      "wasla-identity",
+      "wasla-marketplace",
+      "wasla-matching",
+      "wasla-negotiations",
+      "wasla-observability",
+      "wasla-orders",
+      "wasla-otel-collector",
+      "wasla-partner-bot",
+      "wasla-prometheus",
+      "wasla-reputation",
+      "wasla-search",
+      "wasla-subscriptions"
+    ]
+  },
+  "per_live": {
+    "811341deb66ed36f7d9da79d36da4173e2fbd989": {
+      "changed_files_total": 41,
+      "by_area": {
+        ".github": 1,
+        "ROADMAP.md": 1,
+        "apps/customer-mini-app": 6,
+        "docs": 29,
+        "scripts/checks": 1,
+        "scripts/deploy": 2,
+        "scripts/verify.sh": 1
+      },
+      "deployable_code_changes": [
+        "apps/customer-mini-app/src/__tests__/DeliveryOrder.test.tsx",
+        "apps/customer-mini-app/src/__tests__/RideOrder.test.tsx",
+        "apps/customer-mini-app/src/components/SavedPlacePicker.tsx",
+        "apps/customer-mini-app/src/i18n/index.ts",
+        "apps/customer-mini-app/src/screens/DeliveryOrder.tsx",
+        "apps/customer-mini-app/src/screens/RideOrder.tsx"
+      ],
+      "deployable_confined_to_customer_mini_app": true,
+      "manifests_changed": [],
+      "root_install_or_image_inputs_changed": [],
+      "registered_runtime_reads_changed": [],
+      "registered_runtime_reads": [
+        "infra/observability/targets/",
+        "packages/channel-edge/allowlist/customer-mini-app.json",
+        "packages/channel-edge/allowlist/driver-mini-app.json",
+        "services/customers/contracts/schema.sql",
+        "services/delivery/contracts/events.json",
+        "services/delivery/contracts/schema.sql",
+        "services/dispatch/contracts/schema.sql",
+        "services/drivers/contracts/schema.sql",
+        "services/marketplace/contracts/events.json",
+        "services/marketplace/contracts/schema.sql",
+        "services/matching/contracts/schema.sql",
+        "services/negotiations/contracts/schema.sql",
+        "services/orders/contracts/schema.sql",
+        "services/search/contracts/schema.sql"
+      ]
+    }
+  },
+  "target_to_main_head": {
+    "changed_files": 18,
+    "outside_docs_scripts_deploy_checks": []
+  },
+  "plan": [
+    {
+      "service": "wasla-admin-app",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "static_site --filter @wasla/admin-portal",
+      "inputs_count": 79,
+      "changed": []
+    },
+    {
+      "service": "wasla-alertmanager",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image context infra/observability",
+      "inputs_count": 2,
+      "changed": []
+    },
+    {
+      "service": "wasla-audit",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/audit-service",
+      "inputs_count": 89,
+      "changed": []
+    },
+    {
+      "service": "wasla-customer-app",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "deploy",
+      "reason": "6 input file(s) changed since live 811341de",
+      "inputs_from": "static_site --filter @wasla/customer-mini-app",
+      "inputs_count": 79,
+      "changed": [
+        "apps/customer-mini-app/src/__tests__/DeliveryOrder.test.tsx",
+        "apps/customer-mini-app/src/__tests__/RideOrder.test.tsx",
+        "apps/customer-mini-app/src/components/SavedPlacePicker.tsx",
+        "apps/customer-mini-app/src/i18n/index.ts",
+        "apps/customer-mini-app/src/screens/DeliveryOrder.tsx",
+        "apps/customer-mini-app/src/screens/RideOrder.tsx"
+      ]
+    },
+    {
+      "service": "wasla-customer-bot",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/customer-bot",
+      "inputs_count": 99,
+      "changed": []
+    },
+    {
+      "service": "wasla-customers",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/customers-service",
+      "inputs_count": 91,
+      "changed": []
+    },
+    {
+      "service": "wasla-delivery",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/delivery-service",
+      "inputs_count": 92,
+      "changed": []
+    },
+    {
+      "service": "wasla-dispatch",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/dispatch-service",
+      "inputs_count": 94,
+      "changed": []
+    },
+    {
+      "service": "wasla-driver-app",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "static_site --filter @wasla/driver-mini-app",
+      "inputs_count": 79,
+      "changed": []
+    },
+    {
+      "service": "wasla-driver-bot",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/driver-bot",
+      "inputs_count": 99,
+      "changed": []
+    },
+    {
+      "service": "wasla-drivers",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/drivers-service",
+      "inputs_count": 91,
+      "changed": []
+    },
+    {
+      "service": "wasla-geography",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/geography-service",
+      "inputs_count": 93,
+      "changed": []
+    },
+    {
+      "service": "wasla-identity",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/identity-service",
+      "inputs_count": 91,
+      "changed": []
+    },
+    {
+      "service": "wasla-marketplace",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/marketplace-service",
+      "inputs_count": 90,
+      "changed": []
+    },
+    {
+      "service": "wasla-matching",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/matching-service",
+      "inputs_count": 91,
+      "changed": []
+    },
+    {
+      "service": "wasla-negotiations",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/negotiations-service",
+      "inputs_count": 91,
+      "changed": []
+    },
+    {
+      "service": "wasla-observability",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/observability-collector",
+      "inputs_count": 85,
+      "changed": []
+    },
+    {
+      "service": "wasla-orders",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/orders-service",
+      "inputs_count": 91,
+      "changed": []
+    },
+    {
+      "service": "wasla-otel-collector",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image context infra/observability",
+      "inputs_count": 2,
+      "changed": []
+    },
+    {
+      "service": "wasla-partner-bot",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/partner-bot",
+      "inputs_count": 94,
+      "changed": []
+    },
+    {
+      "service": "wasla-prometheus",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image context infra/observability",
+      "inputs_count": 2,
+      "changed": []
+    },
+    {
+      "service": "wasla-reputation",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/reputation-service",
+      "inputs_count": 90,
+      "changed": []
+    },
+    {
+      "service": "wasla-search",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/search-service",
+      "inputs_count": 92,
+      "changed": []
+    },
+    {
+      "service": "wasla-subscriptions",
+      "live": "811341deb66ed36f7d9da79d36da4173e2fbd989",
+      "decision": "runtime-equivalent",
+      "reason": "runtime inputs identical between live 811341de and target (image bytes not compared: COPY . .)",
+      "inputs_from": "image WASLA_SERVICE=@wasla/subscriptions-service",
+      "inputs_count": 90,
+      "changed": []
+    }
+  ]
+}

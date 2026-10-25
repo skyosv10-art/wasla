@@ -1,0 +1,4 @@
+services 24
+deploys since 2026-10-01 by status {'build_failed': 24, 'live': 24, 'deactivated': 832, 'update_failed': 17}
+earliest build_failed 2026-10-19T01:35:11.679967Z
+live commits (count of deploys that reached live) {'811341de': 24}

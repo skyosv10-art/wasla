@@ -462,8 +462,20 @@ export function createOrderApp(options: CreateOrderAppOptions): FastifyInstance 
         );
       }
 
-      const query = request.query as { status?: unknown; period?: unknown };
-      const period = typeof query.period === "string" ? query.period : "today";
+      // G-S13 (CLM-0614): `period` is `required` + `enum [today, week, month]`
+      // in api.openapi.yml (`listDriverJobs`). An absent or unknown value was
+      // silently read as `today` (200); it is now refused like any other
+      // contract violation. Checked AFTER ownership so a foreign driver still
+      // sees 404, never a validation hint.
+      const query = request.query as { period?: unknown };
+      const period = query.period;
+      if (period !== "today" && period !== "week" && period !== "month") {
+        throw new OrderError(
+          "ORDER_VALIDATION_FAILED",
+          "period يجب أن يكون today أو week أو month",
+          { traceId, details: { field: "period" } },
+        );
+      }
       const now = new Date();
       const since =
         period === "month"

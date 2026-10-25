@@ -1,0 +1,76 @@
+  [32m✓[0m السّجلُّ موجودٌ: docs/07-security/SERVICE_AUTH_ENFORCEMENT.md
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: bots/customer-bot/src/infrastructure/http-negotiations.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: bots/driver-bot/src/infrastructure/http-negotiations.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: packages/tick-scheduler/src/infrastructure/http-tick.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-dispatch-job.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-geography.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-identity-lookup.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/customers/src/infrastructure/http-order-intake.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/delivery/src/infrastructure/http-marketplace-catalog.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/delivery/src/infrastructure/http-marketplace-probe.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/delivery/src/infrastructure/http-marketplace-reservation.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/dispatch/src/infrastructure/http-matching.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/dispatch/src/infrastructure/http-order-engine.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/drivers/src/infrastructure/http-candidacy.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/drivers/src/infrastructure/http-zone-catalog.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/geography/src/infrastructure/http-identity-lookup.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/matching/src/infrastructure/http-geography.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/negotiations/src/infrastructure/http-agreed-price.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/negotiations/src/infrastructure/http-dispatch-offer.ts
+  [32m✓[0m موقَّعٌ ومُثبَتٌ في الشفرة: services/search/src/infrastructure/http-marketplace-catalog.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/audit/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/billing/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/customers/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/delivery/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/dispatch/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/drivers/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/geography/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/identity/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/marketplace/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/matching/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/negotiations/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/orders/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/reputation/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/search/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/subscriptions/src/http/app.ts
+  [32m✓[0m الحدُّ مفروضٌ في الشفرة: services/support/src/http/app.ts
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: audit (2 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: billing (4 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: customers (10 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: delivery (13 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: dispatch (7 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: drivers (15 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: geography (4 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: identity (9 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: marketplace (16 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: matching (5 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: negotiations (9 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: orders (7 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: partners (11 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: reputation (9 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: search (6 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: subscriptions (9 صلاحيّةً)
+  [32m✓[0m جدولُ الصلاحيّاتِ مُطابِقٌ للشفرةِ: support (3 صلاحيّةً)
+  [32m✓[0m قُفلُ أغلفةِ النداءِ: 0 مكتبةً موجودةً · 0 مُعلَنةً (المرجعُ: fetch الأصليُّ وحدَه حينَ يكونُ العددُ صفراً)
+  [32m✓[0m لا مُناديَ خامٍ ولا جالبَ محقونٍ خارجَ البصرِ: 42 ملفّاً (19 عميلاً + 23 استثناءً مُعلَناً)
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: audit
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: billing
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: customers
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: delivery
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: dispatch
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: drivers
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: geography
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: identity
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: marketplace
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: matching
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: negotiations
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: orders
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: reputation
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: search
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: subscriptions
+  [32m✓[0m العقدُ المنشورُ يُعلِنُ المُصادقةَ المفروضةَ: support
+  [32m✓[0m البابُ 10: 18 حدَّ دخولٍ مقيساً · 18 مفروضٌ · 0 غيرُ مفروضٍ (0 مساراً)
+  [32m✓[0m جردُ حدودِ الدخولِ مُغلَقٌ: 0 حدّاً · 0 مساراً · كلُّ صفٍّ بخطرٍ مفتوحٍ ومالكٍ
+
+[32m✓ حارسُ تغطيةِ هويّةِ الخدمة: كلُّ عميلٍ مُعلَنٌ بصدقٍ، والحدُّ المُعلَنُ مفروضٌ.[0m
+  والتغطيةُ الكاملةُ ليست مُدَّعاةً هنا: بوّابةُ M1-04 المستقلّة.

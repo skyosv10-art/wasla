@@ -1,0 +1,5 @@
+absolute /app path                                         audit=clean → @t/o runtime-equivalent — GAP (silent)
+composed path                                              audit=clean → @t/o runtime-equivalent — GAP (silent)
+target changed via const (../), old registration still valid audit=FAIL → @t/o deploy — ok
+target changed via const (absolute), old registration still valid audit=clean → @t/o runtime-equivalent — GAP (silent)
+target changed via const (join + ..), old registration still valid audit=FAIL → @t/o deploy — ok

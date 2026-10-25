@@ -66,6 +66,8 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 /** @description Validation failed */
                 422: {
                     headers: {
@@ -97,6 +99,8 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 /** @description Validation failed */
                 422: {
                     headers: {
@@ -138,6 +142,8 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 /** @description Invoice not found */
                 404: {
                     headers: {
@@ -183,6 +189,8 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 /** @description Invoice not found */
                 404: {
                     headers: {
@@ -237,6 +245,8 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 /** @description Invoice not found */
                 404: {
                     headers: {
@@ -287,6 +297,8 @@ export interface paths {
                     };
                     content?: never;
                 };
+                401: components["responses"]["AuthUnauthorized"];
+                403: components["responses"]["AuthForbidden"];
                 /** @description Invoice not found */
                 404: {
                     headers: {
@@ -347,7 +359,36 @@ export interface components {
             };
         };
     };
-    responses: never;
+    responses: {
+        /** @description ترويسة هويّة الخدمة غائبة أو غير صالحة (401) */
+        AuthUnauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    error: {
+                        code: string;
+                        message: string;
+                    };
+                };
+            };
+        };
+        /** @description الرمز صحيح لكنه يفتقد الصلاحية المطلوبة (403) */
+        AuthForbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    error: {
+                        code: string;
+                        message: string;
+                    };
+                };
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;

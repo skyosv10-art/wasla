@@ -1,0 +1,5 @@
+
+> @wasla/customer-mini-app@0.1.0 typecheck /home/user/workspace/wasla/apps/customer-mini-app
+> tsc -p tsconfig.json --noEmit
+
+tsc rc=0

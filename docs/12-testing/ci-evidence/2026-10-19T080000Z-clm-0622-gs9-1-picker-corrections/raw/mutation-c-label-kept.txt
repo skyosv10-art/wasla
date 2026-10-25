@@ -1,0 +1,465 @@
+
+ RUN  v3.2.7 /home/user/workspace/wasla/apps/customer-mini-app
+
+stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > renders all form fields
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+
+stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > renders the saved-place pickers for pickup and dropoff (G-S9.1)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+
+stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > a manual zone edit without a picked place keeps the label the user typed (CLM-0622)
+Warning: An update to RideOrder inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+
+stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > shows offered price field only when price_mode is customer_offer
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+
+ ❯ src/__tests__/RideOrder.test.tsx (16 tests | 1 failed) 383ms
+   ✓ RideOrder screen > renders all form fields 58ms
+   ✓ RideOrder screen > renders the saved-place pickers for pickup and dropoff (G-S9.1) 12ms
+   ✓ RideOrder screen > loads saved places on mount and lists them in the pickup picker (G-S9.1) 15ms
+   ✓ RideOrder screen > submitting with saved places selected sends source saved_place with the place's zone and label (G-S9.1) 40ms
+   ✓ RideOrder screen > two pickers on one screen share a single places request (CLM-0622) 10ms
+   ✓ RideOrder screen > a failed places load is visible and retry loads the places (CLM-0622) 21ms
+   × RideOrder screen > a manual zone edit after picking a place drops the picker-filled label (CLM-0622) 20ms
+     → expected 'المنزل' to be '' // Object.is equality
+   ✓ RideOrder screen > a manual zone edit without a picked place keeps the label the user typed (CLM-0622) 17ms
+   ✓ RideOrder screen > manually editing the zone after picking a place reverts the stop source to manual_zone (G-S9.1) 36ms
+   ✓ RideOrder screen > shows offered price field only when price_mode is customer_offer 18ms
+   ✓ RideOrder screen > validates and shows error when pickup zone is empty 10ms
+   ✓ RideOrder screen > calls preview API and shows result 28ms
+   ✓ RideOrder screen > calls submit API with Idempotency-Key header 38ms
+   ✓ RideOrder screen > disables buttons while submitting 13ms
+   ✓ RideOrder screen > shows error message when preview fails 30ms
+   ✓ RideOrder screen > shows error message when submit fails 16ms
+stderr | src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > renders all form fields including shipment details
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+
+stderr | src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > renders the saved-place pickers for pickup and dropoff (G-S9.1)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+
+stderr | src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > shows shipment type options
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+
+ ❯ src/__tests__/DeliveryOrder.test.tsx (8 tests | 1 failed) 220ms
+   ✓ DeliveryOrder screen > renders all form fields including shipment details 61ms
+   ✓ DeliveryOrder screen > renders the saved-place pickers for pickup and dropoff (G-S9.1) 14ms
+   × DeliveryOrder screen > shares one places request and drops the picker label on a manual edit (CLM-0622) 33ms
+     → expected 'المنزل' to be '' // Object.is equality
+   ✓ DeliveryOrder screen > submitting with a saved place selected sends source saved_place for that stop (G-S9.1) 27ms
+   ✓ DeliveryOrder screen > shows shipment type options 13ms
+   ✓ DeliveryOrder screen > validates and shows error when pickup zone is empty 16ms
+   ✓ DeliveryOrder screen > calls preview API with delivery order_type and shipment 35ms
+   ✓ DeliveryOrder screen > calls submit API with Idempotency-Key header 21ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > shares one places request and drops the picker label on a manual edit (CLM-0622)
+AssertionError: expected 'المنزل' to be '' // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[31m+ المنزل[39m
+
+ ❯ src/__tests__/DeliveryOrder.test.tsx:71:54
+     69|     expect(useOrderFormStore.getState().pickupLabel).toBe("المنزل");
+     70|     fireEvent.change(screen.getByTestId("d-pickup-zone-input"), { targ…
+     71|     expect(useOrderFormStore.getState().pickupLabel).toBe("");
+       |                                                      ^
+     72|     expect(useOrderFormStore.getState().pickupSource).toBe("manual_zon…
+     73|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/__tests__/RideOrder.test.tsx > RideOrder screen > a manual zone edit after picking a place drops the picker-filled label (CLM-0622)
+AssertionError: expected 'المنزل' to be '' // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[31m+ المنزل[39m
+
+ ❯ src/__tests__/RideOrder.test.tsx:177:54
+    175| 
+    176|     fireEvent.change(screen.getByTestId("pickup-zone-input"), { target…
+    177|     expect(useOrderFormStore.getState().pickupLabel).toBe("");
+       |                                                      ^
+    178| 
+    179|     fireEvent.change(screen.getByTestId("dropoff-zone-input"), { targe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 22 passed (24)
+   Start at  00:59:50
+   Duration  2.17s (transform 215ms, setup 166ms, collect 344ms, tests 603ms, environment 674ms, prepare 116ms)
+

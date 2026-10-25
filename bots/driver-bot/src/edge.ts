@@ -13,7 +13,13 @@
 import { buildBotApp, type BotApp, type BotRuntimeOverrides } from "@wasla/bot-runtime";
 import { createChannelEdge } from "@wasla/channel-edge";
 import { CHANNEL_SESSION_EDGE_SCOPES } from "@wasla/bot-runtime";
-import { createServiceRequestSigner, keyRegistryFromEnv } from "@wasla/service-auth";
+import {
+  createServiceRequestSigner,
+  keyRegistryFromEnv,
+  type ServiceRequestSigner,
+} from "@wasla/service-auth";
+
+import { fileURLToPath } from "node:url";
 
 import { BOT } from "./server.js";
 
@@ -32,6 +38,37 @@ export interface DriverBotEdgeOverrides extends BotRuntimeOverrides {
  * الإنتاجِ، وقائمةُ السماحِ الحاليةُ كلُّها `production_open=false` عمدًا
  * (CLM-0521). فالتركيبُ هنا يُسجِّلُ العقدَ لا الفتحَ.
  */
+/**
+ * خريطةُ عناوينِ وجهاتِ التوجيهِ (D2 · ADR-069 §2.1): عنوانُ كلِّ خدمةٍ من
+ * ترتيبِ التركيبِ لا من الطلبِ — وكلُّ المساراتِ الحاليةِ مغلقةٌ.
+ */
+function driverServiceUrlFor(
+  service: string,
+  env: Record<string, string | undefined>,
+): string {
+  const byService: Record<string, string> = {
+    drivers: env.DRIVERS_SERVICE_URL ?? "",
+    orders: env.ORDERS_SERVICE_URL ?? "",
+    dispatch: env.DISPATCH_SERVICE_URL ?? "",
+  };
+  return byService[service] ?? "";
+}
+
+/**
+ * مصنعُ موقِّعٍ لكلِّ خدمةٍ (D5 · ADR-069 §2.1): لا تمنحُ مصفوفةُ M1-05
+ * دورَ السائقِ اليومَ أيَّ جمهورٍ من خدماتِ التوجيهِ (drivers · orders ·
+ * dispatch) — فلا مصنعَ حرفيًّا هنا، وكلُّ مسارٍ يُفتحُ منها يفشلُ تركيبُهُ
+ * قبلَ الاستماعِ (فشلٌ مغلقٌ) حتى يصدرَ قرارُ المنحِ.
+ */
+function driverRequestSignerFor(
+  service: string,
+  _env: Record<string, string | undefined>,
+): ServiceRequestSigner {
+  throw new Error(
+    `EDGE_SIGNER_UNGRANTED: لا منحَ في M1-05 لـdriver-bot على ${service} — قرارُ المنحِ للمالكِ`,
+  );
+}
+
 export function buildAppWithEdge(overrides?: DriverBotEdgeOverrides): BotApp {
   const app = buildBotApp(BOT, overrides);
   const env = (overrides?.env ?? process.env) as Record<string, string | undefined>;
@@ -66,14 +103,13 @@ export function buildAppWithEdge(overrides?: DriverBotEdgeOverrides): BotApp {
     revokeSession: async () => {
       throw new Error("لا يُستدعى في هذا التركيبِ");
     },
-    identityUrl,
-    requestSigner: createServiceRequestSigner({
-      serviceName: "driver-bot",
-      audience: "identity",
-      keys,
-      scopes: CHANNEL_SESSION_EDGE_SCOPES,
-    }),
-    allowlistUrl: "packages/channel-edge/allowlist/driver-mini-app.json",
+    // D2: خريطةُ الوجهاتِ تُغلقُ على `env` التركيبِ لا على `process.env`.
+    serviceUrlFor: (service: string) => driverServiceUrlFor(service, env),
+    requestSignerFor: (service: string) => driverRequestSignerFor(service, env),
+    // مسارُ القائمةِ يُحَلُّ من موقعِ الوحدةِ لا من `cwd` — كتركيبِ بوتِ العميلِ.
+    allowlistUrl: fileURLToPath(
+      new URL("../../../packages/channel-edge/allowlist/driver-mini-app.json", import.meta.url),
+    ),
     enabled: true,
     allowedOrigins: [],
   });

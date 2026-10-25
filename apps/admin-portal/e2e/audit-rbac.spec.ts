@@ -120,7 +120,7 @@ test.describe("UAT-08: Audit immutability", () => {
     await expect(editBtns).toHaveCount(0);
   });
 
-  test("PUT to audit events returns 405", async ({ page }) => {
+  test("audit page exposes no form to edit audit events (UI only — HTTP 405 is proven in services/audit)", async ({ page }) => {
     // This is a frontend test — we verify the UI doesn't expose any edit capability
     await gotoRoute(page, "audit");
     // No form to edit audit events should exist

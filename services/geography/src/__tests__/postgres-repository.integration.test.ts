@@ -7,6 +7,10 @@
  * correctly (create → change → idempotent-same-zone no-op) — all wired through
  * the PostgresGeographyRepository / PostgresOutbox adapters.
  *
+ * CLM-0645 (G-S9.3): `searchZones` against real ILIKE — active-only, any
+ * locale, code/id order, limit, and LIKE metacharacters (`%`, `_`, backslash)
+ * matched literally (the in-memory adapter cannot prove escaping).
+ *
  * Excluded from the default `pnpm -r test` (see vitest.config.ts). Run with:
  *   DATABASE_URL=postgres://... pnpm --filter @wasla/geography-service test:integration
  *
@@ -16,6 +20,8 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+
+import { sql } from "drizzle-orm";
 
 import {
   createDb,
@@ -29,6 +35,7 @@ import {
   listDistricts,
   listZones,
   getZone,
+  searchZones,
   setUserLocation,
   getUserLocation,
   getUserLocationHistory,
@@ -194,5 +201,60 @@ describe.skipIf(!ENABLED)("Geography Postgres integration", () => {
     expect(again.location.version).toBe(2);
     expect(await getUserLocationHistory(deps, { waslaPublicId })).toHaveLength(2);
     expect((await deps.outbox.unread()).length).toBe(eventsBeforeIdempotent);
+  });
+
+  // ── CLM-0645 · G-S9.3: zone search (same rules as zone-search.test.ts) ──
+  it("searchZones: Arabic/English/Urdu name match, localized path, ar fallback", async () => {
+    const ar = await searchZones(deps, "قباء", undefined, "ar");
+    expect(ar.map((z) => z.id)).toEqual([QUBA_NORTH]);
+    expect(ar[0]!.path.district.name).toBe("حي قباء");
+
+    const en = await searchZones(deps, "qUBA n", undefined, "en");
+    expect(en.map((z) => z.id)).toEqual([QUBA_NORTH]);
+    expect(en[0]!.name).toBe("Quba North");
+
+    const ur = await searchZones(deps, "شمالی", undefined, "ur");
+    expect(ur.map((z) => z.id)).toEqual([QUBA_NORTH]);
+
+    const fallback = await searchZones(deps, "الحرة", undefined, "en");
+    expect(fallback.map((z) => z.id)).toEqual([HARA_EAST]);
+    expect(fallback[0]!.name).toBe("الحرة الشرقية");
+  });
+
+  it("searchZones: deterministic code/id order and limit", async () => {
+    expect((await searchZones(deps, "ال", undefined, "ar")).map((z) => z.id)).toEqual([HARA_EAST, QUBA_NORTH]);
+    expect((await searchZones(deps, "ال", "1", "ar")).map((z) => z.id)).toEqual([HARA_EAST]);
+  });
+
+  it("searchZones: LIKE metacharacters are literal", async () => {
+    // Without escaping, `%` and `_` would be wildcards and match every name.
+    for (const q of ["%%", "__", "%_"]) {
+      expect(await searchZones(deps, q, undefined, "ar"), q).toEqual([]);
+    }
+    // Give HRE an English name that really contains them, then match it literally.
+    await db.execute(sql`INSERT INTO geo_zone_names (zone_id, locale, name) VALUES (${HARA_EAST}, 'en', ${"East 50%_off \\ gate"})`);
+    try {
+      expect((await searchZones(deps, "50%_", undefined, "en")).map((z) => z.id)).toEqual([HARA_EAST]);
+      expect((await searchZones(deps, "\\ g", undefined, "en")).map((z) => z.id)).toEqual([HARA_EAST]);
+      // `5_` would match «50» if `_` were a wildcard.
+      expect(await searchZones(deps, "5_", undefined, "en")).toEqual([]);
+    } finally {
+      await db.execute(sql`DELETE FROM geo_zone_names WHERE zone_id = ${HARA_EAST} AND locale = 'en'`);
+    }
+  });
+
+  it("searchZones: inactive zones are never returned", async () => {
+    await db.execute(sql`UPDATE geo_zones SET status = 'inactive' WHERE id = ${QUBA_NORTH}`);
+    try {
+      expect(await searchZones(deps, "قباء", undefined, "ar")).toEqual([]);
+      expect((await searchZones(deps, "ال", undefined, "ar")).map((z) => z.id)).toEqual([HARA_EAST]);
+    } finally {
+      await db.execute(sql`UPDATE geo_zones SET status = 'active' WHERE id = ${QUBA_NORTH}`);
+    }
+  });
+
+  it("searchZones: a zone with several matching names is returned once", async () => {
+    // «قباء» occurs in QBN's ar and ur names; DISTINCT keeps one row.
+    expect((await searchZones(deps, "قباء", "20", "ar")).map((z) => z.id)).toEqual([QUBA_NORTH]);
   });
 });

@@ -40,7 +40,10 @@ describe("جردُ العملياتِ المفروضةِ", () => {
     // ADR-060 · CLM-0440: +1 — `POST /identity/assertions` (was 157).
     // CLM-0444: +8 — partners boundary (was 158). Total: 166.
     // CLM-0519: +3 — identity session routes (issue/exchange/revoke). Total: 169.
-    expect(ENFORCED_OPERATIONS).toHaveLength(169);
+    // CLM-0645 (G-S9.3): +1 — `GET /geo/zones/search` (scope `geography:zone:read`
+    // already enforced, so the scope count below is unchanged). Total: 170.
+    // CLM-0649 (G-S9.7): +1 — `GET /search/stores` (new scope `search:stores:read`). Total: 171.
+    expect(ENFORCED_OPERATIONS).toHaveLength(171);
     expect(new Set(ENFORCED_OPERATIONS.map((o) => o.audience)).size).toBe(18);
   });
 
@@ -48,7 +51,8 @@ describe("جردُ العملياتِ المفروضةِ", () => {
     // ADR-060 · CLM-0440: +1 — `identity:assertion:issue` (was 124).
     // CLM-0444: +8 — partners scopes (was 125). Total: 133.
     // CLM-0519: +3 — identity session scopes (issue/exchange/revoke). Total: 136.
-    expect(allEnforcedScopes()).toHaveLength(136);
+    // CLM-0649 (G-S9.7): +1 — `search:stores:read` (independent of products). Total: 137.
+    expect(allEnforcedScopes()).toHaveLength(137);
     for (const op of ENFORCED_OPERATIONS) {
       expect(op.scopes.length).toBeGreaterThan(0);
     }
@@ -473,7 +477,8 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
         (wave3Audiences.has(b.audience) && b.path !== "/identity/assertions" && !(b.audience === "identity" && (b.path === "/identity/users/:waslaPublicId/links" || b.path === "/identity/users/:waslaPublicId" || b.path === "/identity/users/:waslaPublicId/recovery" || b.path === "/identity/users/:waslaPublicId/history")) && !(b.audience === "delivery" && (b.path === "/store-orders" || b.path === "/store-orders/:orderPublicId/cancellation" || b.path === "/store-orders/:orderPublicId" || b.path === "/store-orders/:orderPublicId/delivery-task")) && !(b.audience === "support" && (b.path === "/support/tickets" || b.path === "/support/tickets/:ticketId" || b.path === "/support/tickets/:ticketId/evidence")) && !(b.audience === "subscriptions" && b.path === "/referrals")) ||
         (b.audience === "orders" && wave3Orders.has(`${b.method} ${b.path}`)),
     );
-    expect(wave3).toHaveLength(37);
+    // CLM-0649 (G-S9.7): +1 — `GET /search/stores` `none` بدليلٍ وسببٍ (37 → 38).
+    expect(wave3).toHaveLength(38);
     for (const b of wave3) {
       expect(b.strength).toBe("none");
       expect(b.evidence).toMatch(/^[^:]+\.ts:\S+ \S+/);
@@ -499,17 +504,18 @@ describe("حدُّ الدعوى في هذهِ الدفعةِ", () => {
     expect(wave3.filter((b) => b.audience === "billing").every((b) => b.dimension === "tenant")).toBe(true);
   });
 
-  it("RISK-0042 الموجةُ 1: 18 صفّاً `none` كلٌّ بدليلِ `<ملفٌّ>:<مِرساةٌ>` وسببٍ مكتوبٍ (CLM-0474)", () => {
+  it("RISK-0042 الموجةُ 1: 19 صفّاً `none` كلٌّ بدليلِ `<ملفٌّ>:<مِرساةٌ>` وسببٍ مكتوبٍ (CLM-0474)", () => {
     const wave1Audiences = new Set(["dispatch", "geography"]);
     // CLM-0466 (ADR-060 P2): قبولُ العرضِ ورفضُهُ ارتقيا من `none` إلى `asserted` فخرجا (23 → 21).
     // CLM-0474 (ADR-060 P2): 3 عمليّات جغرافيا ارتقتْ من `none` إلى `asserted` فخرجن (21 → 18).
+    // CLM-0645 (G-S9.3): +1 — `GET /geo/zones/search` بياناتٌ مرجعيّةٌ عامّةٌ `none` بدليلٍ وسببٍ (18 → 19).
     const wave1 = OPERATION_BINDINGS.filter(
       (b) =>
         (wave1Audiences.has(b.audience) && b.strength !== "asserted") ||
         (b.audience === "drivers" && ((b.method === "GET" && b.path === "/drivers") || b.path === "/drivers/eligibility/tick")) ||
         (b.audience === "customers" && b.path.startsWith("/customers") && !b.path.includes(":waslaPublicId")),
     );
-    expect(wave1).toHaveLength(18);
+    expect(wave1).toHaveLength(19);
     for (const binding of wave1) {
       expect(binding.strength).toBe("none");
       expect(binding.evidence).toMatch(/^services\/[a-z-]+\/src\/http\/app\.ts:\S+ \S+/);

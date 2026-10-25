@@ -1,0 +1,25 @@
+2026-10-19T01:36:19.6178636Z ✗ wasla-admin-app          live=811341d triggered=build_failed
+2026-10-19T01:36:19.6179027Z ✗ wasla-alertmanager       live=811341d triggered=build_failed
+2026-10-19T01:36:19.6179297Z ✗ wasla-audit              live=811341d triggered=build_failed
+2026-10-19T01:36:19.6179534Z ✗ wasla-customer-app       live=811341d triggered=build_failed
+2026-10-19T01:36:19.6179828Z ✗ wasla-customer-bot       live=811341d triggered=build_failed
+2026-10-19T01:36:19.6180168Z ✗ wasla-customers          live=811341d triggered=build_failed
+2026-10-19T01:36:19.6180430Z ✗ wasla-delivery           live=811341d triggered=build_failed
+2026-10-19T01:36:19.6180941Z ✗ wasla-dispatch           live=811341d triggered=build_failed
+2026-10-19T01:36:19.6181371Z ✗ wasla-driver-app         live=811341d triggered=build_failed
+2026-10-19T01:36:19.6181776Z ✗ wasla-driver-bot         live=811341d triggered=build_failed
+2026-10-19T01:36:19.6182379Z ✗ wasla-drivers            live=811341d triggered=build_failed
+2026-10-19T01:36:19.6183121Z ✗ wasla-geography          live=811341d triggered=build_failed
+2026-10-19T01:36:19.6183542Z ✗ wasla-identity           live=811341d triggered=build_failed
+2026-10-19T01:36:19.6183936Z ✗ wasla-marketplace        live=811341d triggered=build_failed
+2026-10-19T01:36:19.6184336Z ✗ wasla-matching           live=811341d triggered=build_failed
+2026-10-19T01:36:19.6184741Z ✗ wasla-negotiations       live=811341d triggered=build_failed
+2026-10-19T01:36:19.6185332Z ✗ wasla-observability      live=811341d triggered=build_failed
+2026-10-19T01:36:19.6185734Z ✗ wasla-orders             live=811341d triggered=build_failed
+2026-10-19T01:36:19.6186163Z ✗ wasla-otel-collector     live=811341d triggered=build_failed
+2026-10-19T01:36:19.6186575Z ✗ wasla-partner-bot        live=811341d triggered=build_failed
+2026-10-19T01:36:19.6186978Z ✗ wasla-prometheus         live=811341d triggered=build_failed
+2026-10-19T01:36:19.6187526Z ✗ wasla-reputation         live=811341d triggered=build_failed
+2026-10-19T01:36:19.6187939Z ✗ wasla-search             live=811341d triggered=build_failed
+2026-10-19T01:36:19.6188174Z ✗ wasla-subscriptions      live=811341d triggered=build_failed
+2026-10-19T01:36:19.6188357Z verdict: FAIL

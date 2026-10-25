@@ -1,0 +1,41 @@
+rev=7b7afa45348d654595145fc5c9b62e2f351c4af4
+== A1 gate (validate-service-auth-coverage.sh) on REV
+  rc=0
+  boundaries enforced in code: 16
+  contracts declaring the enforced auth (gate 9): 16
+    ✓ البابُ 10: 18 حدَّ دخولٍ مقيساً · 18 مفروضٌ · 0 غيرُ مفروضٍ (0 مساراً)
+    ✓ جردُ حدودِ الدخولِ مُغلَقٌ: 0 حدّاً · 0 مساراً · كلُّ صفٍّ بخطرٍ مفتوحٍ ومالكٍ
+== A2 per-contract disclosure (ops · ops with security · '401' · '403')
+  audit: ops=10 secured=9 public=1 with401=7 with403=0 schemes=['ServiceAuth']
+  billing: ops=7 secured=6 public=1 with401=0 with403=0 schemes=['ServiceAuth']
+  customers: ops=14 secured=13 public=0 with401=13 with403=13 schemes=['ServiceAuth']
+  delivery: ops=9 secured=7 public=0 with401=7 with403=7 schemes=['ServiceAuth']
+  dispatch: ops=9 secured=8 public=0 with401=8 with403=8 schemes=['ServiceAuth']
+  drivers: ops=18 secured=17 public=0 with401=17 with403=17 schemes=['ServiceAuth']
+  geography: ops=10 secured=10 public=0 with401=10 with403=10 schemes=['ServiceAuth']
+  identity: ops=9 secured=9 public=0 with401=9 with403=9 schemes=['ServiceAuth']
+  marketplace: ops=21 secured=20 public=0 with401=20 with403=20 schemes=['ServiceAuth']
+  matching: ops=7 secured=6 public=0 with401=6 with403=6 schemes=['ServiceAuth']
+  negotiations: ops=13 secured=12 public=0 with401=12 with403=12 schemes=['ServiceAuth']
+  orders: ops=10 secured=9 public=0 with401=9 with403=9 schemes=['ServiceAuth']
+  reputation: ops=11 secured=10 public=0 with401=10 with403=10 schemes=['ServiceAuth']
+  search: ops=4 secured=3 public=0 with401=3 with403=3 schemes=['ServiceAuth']
+  subscriptions: ops=12 secured=11 public=0 with401=11 with403=11 schemes=['ServiceAuth']
+  support: ops=8 secured=7 public=0 with401=0 with403=0 schemes=['ServiceAuth']
+  channel-core: ops=5 secured=3 public=0 with401=4 with403=3 schemes=['ServiceAuth']
+== A3 drift-test coverage: which service contracts are regenerated and diffed by a packages/contracts/*/api-types-drift test
+  guarded: customers dispatch drivers geography identity marketplace matching negotiations orders reputation subscriptions support 
+  enforced but NOT drift-guarded: audit billing delivery search 
+== A4 negative controls against gate 9 (each on a fresh tree)
+  K1 billing: securitySchemes key removed: rc=1 REJECTED   ✗ حدٌّ مفروضٌ وعقدُهُ المنشورُ ينفي المُصادقةَ بلا إعلانٍ في ال�
+  K2 delivery: first secured op → security: []: rc=0 ACCEPTED 
+  K3 delivery: every '401' response removed: rc=0 ACCEPTED 
+  K4 delivery: header name changed: rc=1 REJECTED   ✗ عقدٌ يُعلِنُ مُصادقةً بترويسةٍ غيرِ المفروضةِ (x-wasla-service-auth مفق
+== A5 the same K2/K3 against a drift-guarded contract (dispatch) — api-types-drift test
+  T0 unchanged: rc=0 Tests 1 passed (1)
+  T1 K3 on dispatch: rc=1 Tests 1 failed (1)
+  T2 K2 on dispatch: rc=1 Tests 1 failed (1)
+== A6 K2+K3 on delivery (not drift-guarded): gate 9 + full test suites of packages/contracts/delivery and services/delivery
+  D0 unchanged: packages/contracts/delivery:rc=0[Tests 29 passed (29)] services/delivery:rc=0[Tests 602 passed (602)]
+  D1 gate 9: rc=0
+  D1 K2+K3: packages/contracts/delivery:rc=0[Tests 29 passed (29)] services/delivery:rc=0[Tests 602 passed (602)]

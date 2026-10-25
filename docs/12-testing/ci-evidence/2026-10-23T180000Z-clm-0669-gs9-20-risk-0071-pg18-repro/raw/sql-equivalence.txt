@@ -1,0 +1,4 @@
+== 4. تكافؤُ الطفرةِ B في SQL ==
+standard_conforming_strings=on
+pairs=24180 · mismatch(no_clause vs ESCAPE '\')=0 · mismatch(with_clause vs literal containment)=0 · control mismatch(ESCAPE '' vs literal containment)=684
+spot: s='a\xb' · q='a%b' · e='a\%b' → no_clause=false · with_clause=false · escape_disabled(control)=true

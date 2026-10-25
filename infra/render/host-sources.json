@@ -17,7 +17,8 @@
     "scripts/checks/validate-render-config.sh",
     "scripts/checks/validate-render-deploy-target.sh",
     "scripts/checks/validate-render-host-sources.sh",
-    "scripts/ops/render_target.py"
+    "scripts/ops/render_target.py",
+    "scripts/test-env/t2_local.py"
   ],
   "legacy_write_tools": [
     "scripts/ops/m6-18b-dr/render-dr-cutover.py",

@@ -575,6 +575,49 @@ describe("order-request reads", () => {
     expect(foreign.json().code).toBe("CUSTOMER_ORDER_REQUEST_NOT_FOUND");
   });
 
+  it("limit=5 returns at most the five newest of seven requests (G-S9.10)", async () => {
+    const { app, ctx } = await harness();
+    const created: string[] = [];
+    for (let n = 1; n <= 7; n += 1) {
+      ctx.clock.advance(60_000); // distinct created_at, one minute apart
+      const response = await app.inject({
+        method: "POST",
+        url: `/customers/${CUSTOMER}/order-requests`,
+        headers: { "idempotency-key": `idem-key-last-five-${n}` },
+        payload: rideBody(),
+      });
+      expect(response.statusCode, response.body).toBe(201);
+      created.push(response.json().id);
+    }
+    const newestFirst = [...created].reverse();
+
+    const five = await app.inject({
+      method: "GET",
+      url: `/customers/${CUSTOMER}/order-requests?limit=5`,
+    });
+    expect(five.statusCode).toBe(200);
+    const items = five.json().items as Array<{ id: string; created_at: string }>;
+    expect(items).toHaveLength(5);
+    expect(items.map((item) => item.id)).toEqual(newestFirst.slice(0, 5));
+    const times = items.map((item) => item.created_at);
+    expect([...times].sort().reverse()).toEqual(times);
+
+    // Fewer than the limit: every request, nothing padded.
+    const all = await app.inject({
+      method: "GET",
+      url: `/customers/${CUSTOMER}/order-requests?limit=50`,
+    });
+    expect((all.json().items as unknown[]).length).toBe(7);
+
+    // Another customer's requests never count toward the five.
+    const foreign = await app.inject({
+      method: "GET",
+      url: `/customers/${OTHER_CUSTOMER}/order-requests?limit=5`,
+    });
+    expect(foreign.statusCode).toBe(200);
+    expect(foreign.json()).toEqual({ items: [] });
+  });
+
   it("rejects a limit outside the published bounds instead of clamping it", async () => {
     const { app } = await harness();
 

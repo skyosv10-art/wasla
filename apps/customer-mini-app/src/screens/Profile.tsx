@@ -146,6 +146,17 @@ export function Profile() {
       >
         {saving ? t("common.loading") : t("profile.save_button")}
       </button>
+
+      {/* ADR-072 D1 · CMS §3.8: saved places (list · add · delete) are managed
+          from Profile. The places screen keeps its own route; Profile is its
+          entry point now that Home no longer links to it. */}
+      <section className="profile-places" aria-labelledby="profile-places-heading">
+        <h2 id="profile-places-heading">{t("places.title")}</h2>
+        <a href="#/places" data-testid="profile-places-link">
+          <span aria-hidden="true">📍</span>
+          <span>{t("places.title")}</span>
+        </a>
+      </section>
     </div>
   );
 }

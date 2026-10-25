@@ -758,6 +758,15 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
   {
     audience: "geography",
     method: "GET",
+    path: "/geo/zones/search",
+    dimension: "owner",
+    strength: "none",
+    evidence: "services/geography/src/http/app.ts:scoped(GEO_SCOPES.zoneRead) searchZones(deps,",
+    note: "بياناتٌ مرجعيّةٌ عامّةٌ — لا مالكَ بطبيعتِها؛ المناطقُ النشطةُ فقط (CLM-0645 · G-S9.3).",
+  },
+  {
+    audience: "geography",
+    method: "GET",
     path: "/geo/zones/:zoneId",
     dimension: "owner",
     strength: "none",
@@ -1540,6 +1549,15 @@ export const OPERATION_BINDINGS: readonly OperationBinding[] = [
     strength: "none",
     evidence: "services/search/src/http/app.ts:internalScoped(SEARCH_SCOPES.productsRead) deps.searchReadPort.search(",
     note: "`none`: قرارُ تصميمٍ: بحثٌ في الكتالوجِ العامِّ؛ لا مَورِدَ لمستخدمٍ.",
+  },
+  {
+    audience: "search",
+    method: "GET",
+    path: "/search/stores",
+    dimension: "owner",
+    strength: "none",
+    evidence: "services/search/src/http/app.ts:internalScoped(SEARCH_SCOPES.storesRead) deps.storeSearchReadPort.searchStores(",
+    note: "`none`: أسماءُ متاجرَ معتمَدةٍ لها منتجٌ ظاهرٌ — إسقاطٌ عامٌّ بثلاثةِ حقولٍ بلا مالكٍ (CLM-0649 · G-S9.7 · ADR-025 §6).",
   },
   {
     audience: "search",

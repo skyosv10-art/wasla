@@ -1,0 +1,2 @@
+  ✓ plan: live→target · runtime-input equivalence (image bytes not compared) · outside-closure/inside-context regression · ambiguity deploys · registry audit 30 files clean · closure premise holds
+  ✓ self-test: 19/19 mutations caught

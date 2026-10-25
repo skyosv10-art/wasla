@@ -1,0 +1,23 @@
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > an approved store with a visible product is found; the relay fetched its names once 72ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > a suspended store is excluded even with a visible product 34ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > an archived store is excluded 37ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > an approved store with no visible product is excluded (draft · moderation pending · zero stock) 36ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > a store never approved (pending_review) is excluded and its names are never fetched 22ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > losing the last visible product removes the store (stock → 0), restocking brings it back 46ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > archiving the last visible product removes the store 36ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > matches across ar/en/ur names and returns the title in the requested locale 36ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > falls back to the Arabic title when the requested locale has no name 52ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > declared Arabic folding: hamza forms, alef maqsura, teh marbuta, diacritics, case 51ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > treats %, _ and \ in the query literally 78ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > orders exact → prefix → contains, ties by store_slug ascending — stable across calls 65ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > pages with a true total, including a page past the last match 79ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > rebuildAll + replay refills the store-name model from events and the read port — no manual data 51ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > duplicate delivery is a no-op: re-running the relay neither duplicates nor refetches 30ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > a stale store event (older state_sequence) cannot re-approve a suspended store 40ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > a failed name fetch leaves the approval pending and the projection untouched; retry applies it 39ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > mutation sentinels — a reader without the predicate leaks > without `store_state = 'approved'` the suspended store appears — the real reader hides it 55ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > mutation sentinels — a reader without the predicate leaks > without the visible-product EXISTS the empty approved store appears — the real reader hides it 50ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > mutation sentinels — a reader without the predicate leaks > without LIKE escaping `%%` matches every store — the real reader matches none 66ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > GET /search/stores over the real reader: three public fields only, scope enforced 91ms
+ ✓ src/__tests__/store-search.integration.test.ts > store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > normalizeStoreName is the single fold used by index and query 15ms
+      Tests  22 passed (22)

@@ -1,0 +1,10 @@
+ ✓ src/__tests__/order-form.test.ts (13 tests) 6ms
+ ✓ src/__tests__/session.test.ts (5 tests) 3ms
+
+ Test Files  14 passed (14)
+      Tests  104 passed (104)
+   Start at  23:30:33
+   Duration  11.48s (transform 411ms, setup 1.03s, collect 1.15s, tests 1.83s, environment 4.91s, prepare 784ms)
+
+> tsc -p tsconfig.json --noEmit
+

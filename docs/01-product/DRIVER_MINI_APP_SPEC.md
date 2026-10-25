@@ -75,6 +75,7 @@
 ```
 
 - تبديل حالة التوفر (`available` / `busy`) عبر `PUT /drivers/:id/availability`
+  - *(2026-10-18 · CLM-0613 / G-S10 — ملاحظةٌ مؤرَّخةٌ بلا محوٍ: العقدُ المعتمَدُ المنفَّذُ يجعلُ السائقَ يُعلِنُ `available` / `offline` فقط (`DRIVER_DECLARED_AVAILABILITY` في `packages/contracts/driver`)، و`busy` تضعُه المنظومةُ أثناءَ مهمّةٍ ويُرفَضُ من هذا المسارِ بـ400. الواجهةُ تتبعُ العقدَ — [الدليل](../12-testing/ci-evidence/2026-10-18T103000Z-clm-0613-gs10-driver-availability-eligibility/README.md) §2.)*
 - عرض حالة الأهلية (إذا كان غير مؤهل، يظهر تنبيه)
 - قائمة المهام النشطة (إن وُجدت) تعرض كأول عنصر
 
@@ -146,7 +147,7 @@
 
 - تعرض المهام المكتملة والأرباح
 - تصفية حسب الفترة (اليوم/الأسبوع/الشهر)
-- البيانات من `GET /orders/lookup` مع فلترة حسب السائق
+- البيانات من `GET /orders/drivers/:driverPublicId/jobs?period=today|week|month` (خدمةُ الطلباتِ · مقيَّدٌ بالمالكِ: `obo` = `driverPublicId` وإلا 404) — *(تحديثٌ مؤرَّخٌ 2026-10-18 · CLM-0608 · G-S11: النصُّ السابقُ «البيانات من `GET /orders/lookup` مع فلترة حسب السائق» لا يُنفَّذُ — `lookup` لا يقبلُ إلا `order_public_id`؛ المسارُ المعتمدُ هو المنشورُ في `services/orders/contracts/api.openapi.yml` (`listDriverJobs`) ومصفوفةِ التفويضِ. [الدليل](../12-testing/ci-evidence/2026-10-18T080000Z-clm-0608-gs11-driver-earnings-contract/README.md))*
 
 ### 4.6 شاشة المركبات (Vehicles)
 
@@ -233,7 +234,7 @@
 | المهمة | GET | `/dispatch/jobs/:job_id` | dispatch | `dispatch:job:read` | — |
 | المهمة (حالة) | POST | `/orders/:orderId/transitions` | orders | `orders:transition:write` | نعم (Idempotency-Key) |
 | المهمة (إلغاء) | POST | `/dispatch/jobs/:job_id/cancel` | dispatch | `dispatch:job:cancel` | — |
-| السجل | GET | `/orders/lookup` | orders | `orders:read` | — |
+| السجل | GET | `/orders/drivers/:driverPublicId/jobs` *(كان `/orders/lookup` · `orders:read` — تحديثٌ مؤرَّخٌ CLM-0608)* | orders | `orders:driver-jobs:read` | — |
 | المركبات | GET | `/drivers/:id/vehicles` | drivers | `drivers:vehicle:read` | — |
 | المركبات | POST | `/drivers/:id/vehicles` | drivers | `drivers:vehicle:write` | نعم (Idempotency-Key) |
 | المركبات | PATCH | `/drivers/:id/vehicles/:vehicleId` | drivers | `drivers:vehicle:write` | — |

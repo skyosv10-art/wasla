@@ -1283,6 +1283,7 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: verify.sh
@@ -1293,6 +1294,7 @@ jobs:
 
   markdown-lint:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     continue-on-error: true
     steps:
       - run: echo lint
@@ -1323,13 +1325,15 @@ open(p, "w", encoding="utf-8").write(t)
 PYX
       ;;
     gh_inline_list) # البابُ 2 على المصدرِ الحيِّ: قائمةُ إلزامٍ مضمَّنةٌ في YAML
-      printf '\n  repo-structure:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: for f in README.md CODEOWNERS; do test -f "$f"; done\n' \
+      printf '\n  repo-structure:\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n    steps:\n      - run: for f in README.md CODEOWNERS; do test -f "$f"; done\n' \
         >> "$R/.github/workflows/ci.yml" ;;
     gh_undeclared_af) # البابُ 3 على المصدرِ الحيِّ: تقنيعٌ غيرُ مُعلَنٍ في §4
-      printf '\n  flaky-job:\n    runs-on: ubuntu-24.04\n    continue-on-error: true\n    steps:\n      - run: echo maybe\n' \
+      printf '\n  flaky-job:\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n    continue-on-error: true\n    steps:\n      - run: echo maybe\n' \
         >> "$R/.github/workflows/ci.yml" ;;
+    gh_no_timeout)  # البابُ 5: وظيفةٌ حيّةٌ بلا timeout-minutes صريحٍ
+      sed -i '/timeout-minutes: 15/d' "$R/.github/workflows/ci.yml" ;;
     gh_undeclared_step_af) # البابُ 3: التقنيعُ في **خطوةٍ** لا في الوظيفة
-      printf '\n  sneaky-job:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo a\n        continue-on-error: true\n' \
+      printf '\n  sneaky-job:\n    runs-on: ubuntu-24.04\n    timeout-minutes: 15\n    steps:\n      - run: echo a\n        continue-on-error: true\n' \
         >> "$R/.github/workflows/ci.yml" ;;
     gh_no_jobs)     # ملفٌّ حيٌّ بلا وظائفَ → سقوطٌ صريحٌ لا مرورٌ بقائمةٍ فارغة
       printf 'name: ci\non:\n  push:\n    branches: [main]\n' > "$R/.github/workflows/ci.yml" ;;
@@ -1447,6 +1451,11 @@ t "يرفض تقنيعَ خطوةٍ داخلَ وظيفةِ GitHub غيرِ مُ
 cim_gh_no_jobs() { _cim "$(_ci_stage gh_no_jobs gh_no_jobs)"; }
 t "يسقط صراحةً إذا خلا ملفُّ GitHub من وظائفَ" fail cim_gh_no_jobs
 
+# (16) البابُ 5 على المصدرِ الحيِّ (RISK-0052): وظيفةٌ بلا مهلةٍ صريحةٍ تُرفَض
+#      وتُسمّى بالاسمِ — فالمهلةُ الافتراضيّةُ (360 د) ليست حدًّا معلَناً.
+cim_gh_no_timeout() { _cim "$(_ci_stage gh_no_timeout gh_no_timeout)"; }
+t "يرفض وظيفةَ GitHub بلا timeout-minutes صريح" fail cim_gh_no_timeout
+
 # (8) وثيقةٌ بلا كتلةِ §4 → سقوطٌ صريحٌ. ولولا هذه الحالةُ لأمكن للحارسِ أن يمرَّ
 # بقائمةِ استثناءاتٍ فارغةٍ لأنّه لم يجد الكتلةَ — أخطرُ من رفضٍ خاطئٍ.
 cim_no_anchor() { _cim "$(_ci_stage no_anchor no_anchor)"; }
@@ -1534,6 +1543,12 @@ cim_mut_door4() {
   _cim "$(_ci_stage orphan_guard orphan_guard)" "$m" >/dev/null 2>&1 && return 0 || return 1
 }
 t "البابُ 4 (لا حارسَ يتيماً) يكشف فعلاً" pass cim_mut_door4
+
+cim_mut_door5() {
+  local m; m="$(_cim_mutant door5 'PROBLEMS+=("البابُ 5 ($GH_FILE): الوظيفةُ' ': #')" || return 1
+  _cim "$(_ci_stage gh_no_timeout gh_no_timeout)" "$m" >/dev/null 2>&1 && return 0 || return 1
+}
+t "البابُ 5 (مهلةٌ صريحةٌ) يكشف فعلاً (طفرة)" pass cim_mut_door5
 
 printf '\n\033[1m[ط2] سلسلةُ توريدِ سيرِ العملِ — كلُّ سيرٍ مُعلَنٌ ومُثبَّتٌ (M0-31)\033[0m\n'
 # العطبُ الذي أوجبَ هذه الحالاتِ مقيسٌ: حرّاسُ CI يقرؤون `ci.yml` و`.gitlab-ci.yml`
@@ -2176,8 +2191,11 @@ _base_root() { # _base_root <tag> [orphan:yes|no]
   mkdir -p "$R/docs/12-testing/baseline-sources"
   printf 'Test Files  7 passed (7)\nTests  99 passed (99)\nالنتيجة: 12 ناجح · 0 فاشل\n' > "$R/docs/12-testing/baseline-sources/verify.log"
   printf 'التحقّقُ الموحَّد: كلُّ الفحوصِ المُنفَّذةِ نجحت\n' >> "$R/docs/12-testing/baseline-sources/verify.log"
+  # CLM-0680: يُؤرَّخُ الالتزامُ الصناعيُّ قبلَ ختمِ الأساسِ (BASELINE_STAMP) —
+  # فالبابُ 4(د) يقيسُ أنّ الولادةَ لا تسبقُ الشجرةَ التي زعمَ الأساسُ قياسَها.
   ( cd "$R" && git init -q . && git add -A >/dev/null 2>&1 \
-    && git -c user.email=t@t -c user.name=t commit -q -m synthetic >/dev/null 2>&1 ) || true
+    && GIT_AUTHOR_DATE="2026-08-27T00:00:00Z" GIT_COMMITTER_DATE="2026-08-27T00:00:00Z" \
+       git -c user.email=t@t -c user.name=t commit -q -m synthetic >/dev/null 2>&1 ) || true
   # السجلُّ **خارجَ** الجذرِ: ملفٌّ غيرُ مُتتبَّعٍ داخلَه يجعل الشجرةَ «مُعدَّلةً»
   # فيُسقِطها البابُ الرابعُ بلا سببٍ مكتوبٍ — وهو عيبٌ وقعَ في أوّلِ تشغيلٍ.
   local LOGF="docs/12-testing/baseline-sources/verify.log"
@@ -2251,6 +2269,87 @@ B_NOCOMMIT_O="$(_base_root nocommito)"; _base_mut "$B_NOCOMMIT_O" 'd["repo"]["co
 git clone -q --bare --no-local "$B_NOCOMMIT_O" "${B_NOCOMMIT_O}.origin.git" >/dev/null 2>&1; git -C "$B_NOCOMMIT_O" remote add origin "file://${B_NOCOMMIT_O}.origin.git"
 t "التزامٌ لا وجودَ له يُسقِطُ ولو وُجدَ origin (CLM-0538)" fail bash "$BASE_SRC" "$B_NOCOMMIT_O"
 
+# CLM-0680 (RISK-0011 — الأجزاءُ غيرَ القراريّةِ): سلامةُ `generated_at` واتّساقُه
+# معَ الشجرةِ التي زعمَ الأساسُ قياسَها. ليسَ سياسةَ قِدَمٍ (قرارُ المالكِ — M0-08)
+# بل فهمُ الطابعِ وعدمُ استقبالِه وعدمُ سبقِهِ لالتزامِهِ — وكلُّ فرعٍ يُحيَّدُ يُثبَتُ
+# ضروريَّهُ بطفرةٍ تُمرِّرُ العيبَ تحتَ الحارسِ المُطفَّرِ.
+B_GENBAD="$(_base_root genbad)"; _base_mut "$B_GENBAD" 'd["generated_at"]="ليس طابعاً زمنياً"'
+t "طابعُ ولادةٍ غيرُ مفهومٍ يُسقِط (RISK-0011)" fail bash "$BASE_SRC" "$B_GENBAD"
+B_GENFUT="$(_base_root genfut)"; _base_mut "$B_GENFUT" 'd["generated_at"]="2030-01-01T00:00:00Z"'
+t "طابعُ ولادةٍ في المستقبلِ يُسقِط (RISK-0011)" fail bash "$BASE_SRC" "$B_GENFUT"
+B_GENEARLY="$(_base_root genearly)"; _base_mut "$B_GENEARLY" 'd["generated_at"]="2026-08-26T00:00:00Z"'
+t "أساسٌ يسبقُ زمنَ التزامِهِ يُسقِط (RISK-0011)" fail bash "$BASE_SRC" "$B_GENEARLY"
+
+_base_src_mut() { # _base_src_mut <tag> <جذر> — حارسٌ مُطفَّرٌ داخلَ الجذرِ الصناعيِّ
+  # (حتى يجدَ مكتباتِهِ هناكَ) — وكلُّ طفرةٍ تُحيِّدُ فحصاً فتُمرِّرُ العيبَ.
+  local R="$2" M="$2/scripts/checks/validate-baseline.sh"
+  # الحارسُ يحلُّ المولِّدَ ومكتباتِهِ من موضعِهِ هو — فتُنسَخُ إليهِ في الجذرِ الصناعيِّ
+  cp "$REPO_ROOT/scripts/checks/lib/baseline_commit.py" "$R/scripts/checks/lib/" 2>/dev/null || true
+  cp "$REPO_ROOT/scripts/baseline.sh" "$R/scripts/baseline.sh" 2>/dev/null || true
+  chmod +x "$R/scripts/baseline.sh" 2>/dev/null || true
+  python3 - "$BASE_SRC" "$M" "$1" <<'PYM'
+import sys
+src, dst, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+MUT = {
+  "parse":   ('gen_dt = _dt.fromisoformat(gen.replace("Z", "+00:00"))', 'gen_dt = _dt.now(_tz.utc) if gen else None'),
+  "future":  ('if gen_dt > _dt.now(_tz.utc) + _td(minutes=5):', 'if False:'),
+  "consist": ('if gen_dt < _cdt:', 'if False:'),
+}
+old, new = MUT[tag]
+s = open(src, encoding="utf-8").read()
+assert old in s, "anchor missing: " + old
+open(dst, "w", encoding="utf-8").write(s.replace(old, new, 1))
+PYM
+  bash "$M" "$R"
+}
+t "طفرة (تحييدُ فحصِ فهمِ الطابعِ): حارسٌ بلا فحصِ الصيغةِ يمرُّ بالعيبِ (RISK-0011)" pass _base_src_mut parse "$B_GENBAD"
+t "طفرة (تحييدُ فحصِ المستقبلِ): حارسٌ يقبلُ طابعاً مستقبليّاً (RISK-0011)" pass _base_src_mut future "$B_GENFUT"
+t "طفرة (تحييدُ فحصِ الاتّساقِ): حارسٌ لا يقارنُ بالتزامِ الشجرةِ (RISK-0011)" pass _base_src_mut consist "$B_GENEARLY"
+
+
+# M0-08 · CLM-0686 — «إنذارُ القِدَمِ فقط» (قرارُ المالكِ 2026-10-25 · 96 ساعةً): الإنذارُ
+# يظهرُ فوقَ العتبةِ ويغيبُ تحتَها، ولا يُسقِطُ أبداً. الزمنُ المرجعيُّ مُثبَّتٌ
+# بـBASELINE_VALIDATE_NOW فلا تصيرُ الحالةُ كاذبةً بمرورِ الأيّام.
+_base_warn() { # _base_warn <yes|no> <جذر> <now> [عتبة] [حارس] — نجاحٌ = rc 0 ووجودُ الإنذارِ كما يُتوقَّع
+  local want="$1" R="$2" now="$3" th="${4:-}" g="${5:-$BASE_SRC}" out rc
+  if [[ -n "$th" ]]; then
+    out="$(BASELINE_VALIDATE_NOW="$now" BASELINE_STALENESS_WARN_HOURS="$th" bash "$g" "$R" 2>&1)"; rc=$?
+  else
+    out="$(BASELINE_VALIDATE_NOW="$now" bash "$g" "$R" 2>&1)"; rc=$?
+  fi
+  (( rc == 0 )) || { printf '%s\n' "$out"; return 1; }
+  if grep -q 'إنذارُ قِدَمٍ' <<< "$out"; then [[ "$want" == yes ]]; else [[ "$want" == no ]]; fi
+}
+B_AGE="$(_base_root agewarn)"
+t "أساسٌ عمرُه 4 س: لا إنذارَ ولا إسقاطَ (M0-08)" pass _base_warn no "$B_AGE" "2026-08-28T04:00:00Z"
+t "أساسٌ عمرُه 120 س: إنذارٌ يظهرُ ولا يُسقِط (M0-08)" pass _base_warn yes "$B_AGE" "2026-09-02T00:00:00Z"
+t "عتبةٌ مخصَّصةٌ 2 س تُنذِرُ عندَ 4 س (M0-08)" pass _base_warn yes "$B_AGE" "2026-08-28T04:00:00Z" 2
+t "عتبةٌ غيرُ صالحةٍ تعودُ إلى 96 س ولا تُسقِط (M0-08)" pass _base_warn no "$B_AGE" "2026-08-28T04:00:00Z" "-5"
+_base_warn_mut() { # _base_warn_mut <tag> <yes|no> <جذر> <now>
+  local R="$3" M="$3/scripts/checks/validate-baseline.sh"
+  cp "$REPO_ROOT/scripts/checks/lib/baseline_commit.py" "$R/scripts/checks/lib/" 2>/dev/null || true
+  cp "$REPO_ROOT/scripts/baseline.sh" "$R/scripts/baseline.sh" 2>/dev/null || true
+  chmod +x "$R/scripts/baseline.sh" 2>/dev/null || true
+  python3 - "$BASE_SRC" "$M" "$1" <<'PYM'
+import sys
+src, dst, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+MUT = {
+  "silent": ('if _age_h > _warn_h:', 'if False:'),
+  "gate":   ('print("N|⚠ إنذارُ قِدَمٍ (لا يُسقِط)', 'problems.append("⚠ إنذارُ قِدَمٍ (لا يُسقِط)'),
+  "fixed":  ('_fixed = _os.environ.get("BASELINE_VALIDATE_NOW", "").strip()', '_fixed = ""'),
+}
+old, new = MUT[tag]
+s = open(src, encoding="utf-8").read()
+assert old in s, "anchor missing: " + old
+open(dst, "w", encoding="utf-8").write(s.replace(old, new, 1))
+PYM
+  _base_warn "$2" "$R" "$4" "" "$M"
+}
+t "طفرة (إسكاتُ الإنذارِ): أساسٌ قديمٌ يمرُّ بلا إنذارٍ فتُكشَف (M0-08)" fail _base_warn_mut silent yes "$B_AGE" "2026-09-02T00:00:00Z"
+t "طفرة (تحويلُ الإنذارِ إلى بوّابةٍ بلا اعتمادٍ) تُكشَف (M0-08)" fail _base_warn_mut gate yes "$B_AGE" "2026-09-02T00:00:00Z"
+t "طفرة (تجاهلُ الزمنِ المثبَّتِ) تُكشَف: الحالةُ تتغيّرُ بمرورِ الأيّام (M0-08)" fail _base_warn_mut fixed no "$B_AGE" "2026-08-28T04:00:00Z"
+
+
 # ── البابُ 1: الصيغةُ والاتّساقُ الذاتيُّ ──────────────────────────────────
 B_NOFILE="$(_base_root nofile)"; rm -f "$B_NOFILE/docs/12-testing/BASELINE.json"
 t "غيابُ الأساسِ المُلتزَمِ يُسقِط" fail bash "$BASE_SRC" "$B_NOFILE"
@@ -2289,7 +2388,7 @@ t "تغيُّرُ بصمةِ ملفِّ القفلِ يُسقِط" fail bash "$B
 
 # ── البابُ 3: التكرارُ يُثبَت لا يُدَّعى ────────────────────────────────────
 B_VOL="$(_base_root volatile)"
-_base_mut "$B_VOL" 'd["generated_at"]="1999-01-01T00:00:00Z"; d["env"]["python"]="0.0.0"'
+_base_mut "$B_VOL" 'd["generated_at"]="2026-08-28T01:00:00Z"; d["env"]["python"]="0.0.0"'
 t "تغيُّرُ الوقتِ والبيئةِ وحدَهما لا يُسقِط (وإلّا استحالَ التكرارُ)" pass bash "$BASE_SRC" "$B_VOL"
 
 # ── البابُ 4: لا أساسَ يتيماً ولا مُجمِّلاً ─────────────────────────────────
@@ -2569,6 +2668,212 @@ printf 'export class P { async go() { return fetch("http://x/negotiations"); } }
   > "$S_FE_BOT/bots/customer-bot/src/infrastructure/http-negotiations.ts"
 t "عميلُ bots/ غيرُ مذكورٍ في السّجلِّ يُسقِط (البصرُ الموسَّعُ)" fail _sac "$S_FE_BOT"
 
+# ── البابُ 7 (G-S9.19 · CLM-0654): الجالبُ المحقونُ صارَ مرئيّاً ─────────────
+# عمى البابِ 7 الأصليُّ لم يكن في `fetch(` الخامِ بل فيمن خزّنَهُ باسمٍ آخرَ: هذا
+# هوَ شكلُ الهروبِ التاريخيِّ (عميلُ catalog-read-port.ts القديمُ في search كانَ
+# يُنادي marketplace بلا هويّةٍ وبـ`this.fetchImpl(` فلم يُرَ — RISK-0027/G-S9.19).
+# الجذرُ الصناعيُّ هنا **بلا `fetch(` خامِ إطلاقاً**: إن مرَّ الحارسُ القديمُ فعيبُهُ.
+S_FE_INJ="$(_sac_root fe_inj)"
+printf 'export class CatalogReadPort {\n  constructor(private readonly fetchImpl: (input: RequestInfo) => Promise<Response>) {}\n  async list() { return this.fetchImpl("http://x/marketplace/products"); }\n}\n' \
+  > "$S_FE_INJ/services/matching/src/infrastructure/catalog-read-port.ts"
+t "جالبٌ محقونٌ بلا raw fetch( ولا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19)" fail _sac "$S_FE_INJ"
+
+# وإعلانُهُ استثناءً بسببِهِ يُمرّرُهُ: الحارسُ يطلبُ إعلاناً صادقاً لا صمتاً
+S_FE_INJ_DECL="$(_sac_root fe_inj_decl)"
+printf 'export class CatalogReadPort {\n  constructor(private readonly fetchImpl: typeof globalThis.fetch) {}\n  async list() { return this.fetchImpl("http://x/marketplace/products"); }\n}\n' \
+  > "$S_FE_INJ_DECL/services/matching/src/infrastructure/catalog-read-port.ts"
+sed -i 's|<!-- fetch-exceptions:end -->|\| `services/matching/src/infrastructure/catalog-read-port.ts` \| جالبٌ صناعيٌّ محقونٌ مُعلَنٌ \|\n\n<!-- fetch-exceptions:end -->|' \
+  "$S_FE_INJ_DECL/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t "جالبٌ محقونٌ مُعلَنٌ استثناءً بسببِهِ يمرّ (G-S9.19)" pass _sac "$S_FE_INJ_DECL"
+
+# ومرجعُ globalThis.fetch المخزّنُ باسمٍ آخرَ مرئيٌّ هوَ الآخرُ: جذرُ تركيبٍ
+# يمرّرُ الجالبَ إلى عميلٍ موقّعٍ لا يُحصى بنفسِهِ إن لم يُعلَن
+S_FE_GTF="$(_sac_root fe_gtf)"
+mkdir -p "$S_FE_GTF/packages/tick-scheduler/src"
+printf 'const transport = globalThis.fetch;\nexport const call = () => transport("http://x/ticks");\n' \
+  > "$S_FE_GTF/packages/tick-scheduler/src/main.ts"
+t "مرجعُ globalThis.fetch مخزَّنٌ باسمٍ آخرَ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19)" fail _sac "$S_FE_GTF"
+
+# والتخزينُ باسمٍ آخرَ عبر الإسنادِ (`= fetch`) مرئيٌّ هوَ الآخرُ: هذا الشكلُ أفلتَ
+# منَ النمطِ الأصليِّ تماماً (لا `fetch(` ولا `globalThis`) — قُيِّسَ بعدَ مراجعةٍ
+# مستقّلةٍ لأولِ مرةٍ (CLM-0654): الإشارةُ في موضعِ القيمةِ تُحصى كالنداءِ.
+S_FE_ALIAS="$(_sac_root fe_alias)"
+printf 'const send = fetch;\nexport const call = () => send("http://x/marketplace/products");\n' \
+  > "$S_FE_ALIAS/services/matching/src/infrastructure/catalog-read-port.ts"
+t "تخزينُ fetch باسمٍ آخرَ (= fetch) بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · بعدَ المراجعةِ)" fail _sac "$S_FE_ALIAS"
+
+# الطفرةُ الحاكمةُ: إعادةُ الحارسِ إلى نمطِهِ القديمِ (raw fetch( وحدَهُ) تُعيد
+# العَمى فتُمرّرُ الهروبَ التاريخيَّ نفسَهُ — برهانٌ بأنّ إسقاطَ الحالةِ أعلاهُ
+# سببُهُ النمطُ الموسّعُ لا شيءٌ آخرَ، وأنّ بلا بصرٍ جديدٍ لا إخفاقَ (تحكيمٌ سلبيٌّ).
+S_FE_INJ_BLIND="$(_sac_root fe_inj_blind)"
+printf 'export class CatalogReadPort {\n  constructor(private readonly fetchImpl: typeof globalThis.fetch) {}\n  async list() { return this.fetchImpl("http://x/marketplace/products"); }\n}\n' \
+  > "$S_FE_INJ_BLIND/services/matching/src/infrastructure/catalog-read-port.ts"
+python3 -c 'import sys,pathlib; p=pathlib.Path(sys.argv[1])/"scripts/checks/validate-service-auth-coverage.sh"; s=p.read_text(); i=s.index("RAW_PATTERN="); j=s.index(chr(10),i); p.write_text(s[:i]+"RAW_PATTERN=\x27\\bfetch\\(\x27"+s[j:])' "$S_FE_INJ_BLIND"
+t "النمطُ القديمُ (raw fetch( وحدَهُ) يُمرّرُ الهروبَ المحقونَ نفسَهُ — العَمى المُعادُ يُقاسُ" pass _sac "$S_FE_INJ_BLIND"
+
+# حدٌّ مُعلَنٌ مُقاسٌ لا مخفيٌّ (CLM-0654 · 2026-10-21): الحارسُ grep لا AST، فلا
+# يستثني التعليقات. ملفٌّ لا يذكرُ fetch إلا في تعليقٍ — بلا أيِّ نداءٍ حقيقيٍّ —
+# **يُحصى** ويُسقِطُ ما لم يُعلَن (إيجابيّةٌ كاذبةٌ مقصودةٌ: الخطأُ نحوَ البصرِ لا
+# العمى). هذهِ الحالةُ تُثبّتُ السلوكَ الفعليَّ كي لا يَدّعيَ وصفٌ عكسَهُ.
+S_FE_CMT="$(_sac_root fe_comment_only)"
+printf '// TODO: replace with fetch("http://x/marketplace/products") once signed\nexport const noop = () => undefined;\n' \
+  > "$S_FE_CMT/services/matching/src/infrastructure/catalog-read-port.ts"
+t "ذكرُ fetch( في تعليقٍ وحدَهُ يُحصى ويُسقِط بلا استثناءٍ (حدٌّ مُعلَن: لا AST)" fail _sac "$S_FE_CMT"
+# ── البابُ 7 (G-S9.19 · CLM-0667): عملاءُ HTTP غيرُ المباشرينَ ──────────────────
+# قيسَ 2026-10-23 على نمطِ CLM-0654: خمسةُ أشكالٍ تُنادي حدّاً داخليّاً ولا يراها
+# البابُ 7 — وحداتُ Node المدمجةُ (لا تمرُّ بـpackage.json فلا يقفلُها البابُ 8)،
+# والتفكيكُ بإعادةِ التسميةِ، والوصولُ بالأقواسِ، وReflect.get. كلُّ جذرٍ هنا بلا
+# `fetch(` ولا `= fetch` ولا `globalThis.fetch`: إن مرَّ الحارسُ فعيبُهُ.
+_sac_g7() { # _sac_g7 <tag> <content> → جذرٌ فيهِ catalog-read-port.ts بالمحتوى
+  local R; R="$(_sac_root "$1")"
+  printf '%b' "$2" > "$R/services/matching/src/infrastructure/catalog-read-port.ts"
+  printf '%s' "$R"
+}
+S_G7_HTTP="$(_sac_g7 g7_node_http 'import { request } from "node:http";\nexport const call = () => request("http://wasla-marketplace:3000/products");\n')"
+t "وحدةُ node:http المدمجةُ بلا ذكرٍ ولا استثناءٍ تُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_HTTP"
+S_G7_HTTPS="$(_sac_g7 g7_https_require 'const https = require("https");\nexport const call = () => https.get("https://x/marketplace/products");\n')"
+t "require(\"https\") بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_HTTPS"
+S_G7_H2="$(_sac_g7 g7_http2_dynamic 'export const call = async () => (await import("node:http2")).connect("http://x");\n')"
+t "استيرادُ node:http2 الديناميكيُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_H2"
+S_G7_DESTR="$(_sac_g7 g7_destructure 'const { fetch: send } = globalThis;\nexport const call = () => send("http://x/marketplace/products");\n')"
+t "التفكيكُ بإعادةِ التسميةِ ({ fetch: send } = globalThis) يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_DESTR"
+S_G7_BRACKET="$(_sac_g7 g7_bracket 'const send = globalThis["fetch"];\nexport const call = () => send("http://x/marketplace/products");\n')"
+t "الوصولُ بالأقواسِ (globalThis[\"fetch\"]) يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_BRACKET"
+S_G7_REFLECT="$(_sac_g7 g7_reflect 'const send = Reflect.get(globalThis, "fetch");\nexport const call = () => send("http://x/marketplace/products");\n')"
+t "Reflect.get(globalThis, \"fetch\") يُسقِط (G-S9.19 · CLM-0667)" fail _sac "$S_G7_REFLECT"
+
+# سالبةٌ: الخادمُ الواردُ (createServer) يُحصى لأنّ النمطَ يرى الاستيرادَ لا الاتجاهَ،
+# فيمرُّ بإعلانٍ صادقٍ بسببِهِ — الحارسُ يطلبُ إعلاناً لا صمتاً.
+S_G7_SRV="$(_sac_g7 g7_server_declared 'import { createServer } from "node:http";\nexport const srv = createServer((_q, r) => r.end("ok"));\n')"
+sed -i 's|<!-- fetch-exceptions:end -->|\| `services/matching/src/infrastructure/catalog-read-port.ts` \| خادمٌ واردٌ صناعيٌّ (createServer) بلا نداءٍ صادرٍ \|\n\n<!-- fetch-exceptions:end -->|' \
+  "$S_G7_SRV/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+# الإعلانُ كُتِبَ فعلاً — وإلا مرَّت السالبةُ فارغةً (كما مرَّت في المرحلةِ الحمراءِ
+# لأنّ النمطَ القديمَ لم يرَ الملفَّ أصلاً): لا سالبةَ تمرُّ لسببٍ غيرِ سببِها.
+t "إعلانُ الخادمِ الواردِ مكتوبٌ في كتلةِ الاستثناءاتِ (حارسُ الحالةِ السالبةِ · CLM-0667)" pass \
+  grep -qF '| `services/matching/src/infrastructure/catalog-read-port.ts` | خادمٌ واردٌ صناعيٌّ' "$S_G7_SRV/docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+# والخادمُ نفسُهُ بلا إعلانٍ يُسقِطُ: الاستثناءُ هوَ سببُ المرورِ لا شيءٌ آخرُ
+S_G7_SRV_UNDECL="$(_sac_g7 g7_server_undeclared 'import { createServer } from "node:http";\nexport const srv = createServer((_q, r) => r.end("ok"));\n')"
+t "خادمُ node:http الواردُ بلا إعلانٍ يُسقِط — الإعلانُ هوَ سببُ المرورِ (CLM-0667)" fail _sac "$S_G7_SRV_UNDECL"
+t "خادمُ node:http الواردُ المُعلَنُ استثناءً بسببِهِ يمرّ (G-S9.19 · CLM-0667)" pass _sac "$S_G7_SRV"
+# سالبةٌ: كلمةُ fetch في نصٍّ أو اسمٍ لا يُنادي (مثلُ `prefetch:` أو `"fetched"`)
+# لا تُحصى — الأشكالُ الجديدةُ مُقيَّدةٌ بموضعِ القيمةِ لا بأيِّ ذكرٍ.
+S_G7_WORDS="$(_sac_g7 g7_words 'export const opts = { prefetch: true, label: "fetched" };\nexport const f = (o: { fetchedAt: string }) => o.fetchedAt;\n')"
+t "كلماتٌ تحوي fetch بلا إشارةِ قيمةٍ (prefetch: · \"fetched\") لا تُحصى فتمرّ (G-S9.19 · CLM-0667)" pass _sac "$S_G7_WORDS"
+
+# الطفرةُ الحاكمةُ: إعادةُ النمطِ إلى صيغةِ CLM-0654 تُعيدُ العمى فتمرُّ الأشكالُ
+# الخمسةُ — برهانٌ بأنّ إسقاطَها أعلاهُ سببُهُ التوسعةُ وحدَها (تحكيمٌ سلبيٌّ).
+_sac_g7_revert() { # يُعيدُ RAW_PATTERN إلى صيغةِ CLM-0654 حرفيّاً
+  python3 -c 'import sys,pathlib; p=pathlib.Path(sys.argv[1])/"scripts/checks/validate-service-auth-coverage.sh"; s=p.read_text(); i=s.index("RAW_PATTERN="); j=s.index(chr(10),i); old=sys.argv[2]; p.write_text(s[:i]+"RAW_PATTERN="+chr(39)+old+chr(39)+s[j:])' "$1" '\bfetch\s*\(|\bfetch[A-Z][A-Za-z0-9_]*\s*\(|\b[a-z]+Fetch[A-Za-z0-9_]*\s*\(|\bglobalThis\.fetch\b|=\s*fetch\b|\btypeof\s+fetch\b|\(\s*fetch\s*[,)]|,\s*fetch\s*[,)]|\.fetch\b'
+}
+for tag in node_http https_require http2_dynamic destructure bracket reflect; do
+  case $tag in
+    node_http) c='import { request } from "node:http";\nexport const call = () => request("http://x/products");\n' ;;
+    https_require) c='const https = require("https");\nexport const call = () => https.get("https://x/products");\n' ;;
+    http2_dynamic) c='export const call = async () => (await import("node:http2")).connect("http://x");\n' ;;
+    destructure) c='const { fetch: send } = globalThis;\nexport const call = () => send("http://x/products");\n' ;;
+    bracket) c='const send = globalThis["fetch"];\nexport const call = () => send("http://x/products");\n' ;;
+    reflect) c='const send = Reflect.get(globalThis, "fetch");\nexport const call = () => send("http://x/products");\n' ;;
+  esac
+  S_G7_BLIND="$(_sac_g7 "g7_blind_$tag" "$c")"
+  _sac_g7_revert "$S_G7_BLIND"
+  t "نمطُ CLM-0654 يُمرّرُ الشكلَ $tag — العمى المُعادُ يُقاسُ (CLM-0667)" pass _sac "$S_G7_BLIND"
+done
+
+# ── البابُ 7-د (G-S9.19 · CLM-0681): المقابسُ الخامّ ────────────────────────
+# فجوةُ المقابسِ الخامّ المُعلَنةُ في بصرِ البابِ 7: `node:net`/`node:tls`/`node:dgram` — لا
+# تمرُّ عبرَ package.json فلا يقفلُها البابُ 8، ولا تشبهُ fetch فيعمى عنها البابُ 7.
+# القياسُ على الشجرةِ الحيّةِ: كلُّ مراجعِها استيرادٌ نوعيٌّ (`import type {
+# AddressInfo }` في عشرِ ملفّاتِ e2e) لا استخدامٌ تشغيليٌّ — فالحارسُ الجديدُ لا
+# يُحصي النوعيَّ (يُمحى ترجمةً) ويُسقِطُ التشغيليَّ. الحالاتُ الثلاثُ السالبةُ
+# الأولى تشغيليّةٌ صريحةٌ في ملفِّ عميلٍ بلا ذكرٍ ولا استثناءٍ: إن مرَّت فوُجدَ العمى.
+S_G7SOCKET_NET="$(_sac_g7 g7s_net_runtime 'import { connect } from "node:net";\nexport const dial = () => connect(3000, "wasla-marketplace");\n')"
+t "استيرادُ node:net التشغيليُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0681)" fail _sac "$S_G7SOCKET_NET"
+S_G7SOCKET_TLS="$(_sac_g7 g7s_tls_require 'const tls = require("tls");\nexport const dial = () => tls.connect(443, "wasla-marketplace");\n')"
+t "require(\"tls\") بلا بادئةٍ وبلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0681)" fail _sac "$S_G7SOCKET_TLS"
+S_G7SOCKET_DGRAM="$(_sac_g7 g7s_dgram_dynamic 'export const dial = async () => (await import("node:dgram")).createSocket("udp4");\n')"
+t "استيرادُ node:dgram الديناميكيُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0681)" fail _sac "$S_G7SOCKET_DGRAM"
+# سالبةٌ موجبةُ التحكّمِ: الاستيرادُ النوعيُّ المُمحى ترجمةً لا يُحصى — وهي حالةُ
+# الشجرةِ الحيّةِ نفسُها (عشرُ ملفّاتِ e2e تستوردُ AddressInfo نوعيًّا وحدَها)، فلو
+# حُصيَ لصارَ الاستثناءُ قاعدةً تُخفي الفرقَ بينَ النوعيِّ والتشغيليِّ.
+S_G7SOCKET_TYPEONLY="$(_sac_g7 g7s_net_typeonly 'import type { AddressInfo } from "node:net";\nexport const port = (a: AddressInfo) => a.port;\n')"
+t "الاستيرادُ النوعيُّ (`import type { AddressInfo }`) لا يُحصى فيمرّ (G-S9.19 · CLM-0681)" pass _sac "$S_G7SOCKET_TYPEONLY"
+# الطفرةُ الحاكمةُ: حذفُ بابِ 7-د من نسخةِ الحارسِ داخلَ الجذرِ يُعيدُ العمى
+# فتمرُّ الأشكالُ الثلاثةُ — برهانٌ بأنّ إسقاطَها سببُهُ البابُ وحدَهُ (تحكيمٌ سلبيٌّ).
+_sac_g7_sockets_revert() { # يحذفُ بابَ 7-د (بينَ العلامتَينِ) من نسخةِ الحارسِ داخلَ الجذرِ
+  python3 -c 'import sys,pathlib; p=pathlib.Path(sys.argv[1])/"scripts/checks/validate-service-auth-coverage.sh"; s=p.read_text(); i=s.index("begin-raw-sockets"); j=s.index("end-raw-sockets"); k=s.index(chr(10), j); p.write_text(s[:i]+"# raw-sockets-section-removed"+s[k:])' "$1"
+}
+for tag in net_runtime tls_require dgram_dynamic; do
+  case $tag in
+    net_runtime) c='import { connect } from "node:net";\nexport const dial = () => connect(3000, "wasla-marketplace");\n' ;;
+    tls_require) c='const tls = require("tls");\nexport const dial = () => tls.connect(443, "wasla-marketplace");\n' ;;
+    dgram_dynamic) c='export const dial = async () => (await import("node:dgram")).createSocket("udp4");\n' ;;
+  esac
+  S_G7SOCKET_BLIND="$(_sac_g7 "g7s_blind_$tag" "$c")"
+  _sac_g7_sockets_revert "$S_G7SOCKET_BLIND"
+  t "حذفُ بابِ 7-د يُمرّرُ المقبسَ $tag — العمى المُعادُ يُقاسُ (CLM-0681)" pass _sac "$S_G7SOCKET_BLIND"
+done
+
+# ── البابُ 7-د (G-S9.19 · CLM-0682): الاستثناءُ النوعيُّ تعليمةً لا سطراً ──────
+# مراجعةٌ مستقلةٌ كشفت عيبَ CLM-0681: استثناءُ `import type` كانَ يُطبَّقُ على
+# السطرِ كلماتٍ (ورودِ العبارةِ) لا على التعليمةِ — فسطرٌ تشغيليٌّ يحملُ التعليقَ
+# `// import type` أو `require` في السطرِ نفسِهِ بعدَ استيرادٍ نوعيٍّ كانَ يُستثنى خطأً.
+# الإصلاحُ: قصُّ تعليمةِ الاستيرادِ النوعيِّ من رأسِ السطرِ ثمّ فحصُ الباقي.
+S_G7SOCKET2_CMT="$(_sac_g7 g7s2_runtime_comment 'import { connect } from "node:net"; // import type\nexport const dial = () => connect(3000, "wasla-marketplace");\n')"
+t "تعليقُ `// import type` على سطرٍ تشغيليٍّ لا يُستثنى — الثغرةُ مُقفَلةٌ (CLM-0682)" fail _sac "$S_G7SOCKET2_CMT"
+S_G7SOCKET2_SAMEROW="$(_sac_g7 g7s2_type_then_require 'import type { AddressInfo } from "node:net"; const tls = require("tls");\nexport const dial = (a: AddressInfo) => tls.connect(a.port, "wasla-marketplace");\n')"
+t "require(\"tls\") في السطرِ نفسِهِ بعدَ استيرادٍ نوعيٍّ لا يُستثنى (CLM-0682)" fail _sac "$S_G7SOCKET2_SAMEROW"
+# تحكّمٌ موجبٌ: الاستيرادُ النوعيُّ متعدّدُ الأسطرِ (ذيلُ `} from "net";` في سطرٍ
+# بلا تعليمةٍ) لا يُحصى — القصُّ يعرفُ ذيلَ الاستيرادِ النوعيِّ لا يقطعُ غيرَهُ.
+S_G7SOCKET2_MULTILINE="$(_sac_g7 g7s2_typeonly_multiline 'import type {\n  AddressInfo,\n} from "node:net";\nexport const port = (a: AddressInfo) => a.port;\n')"
+t "الاستيرادُ النوعيُّ متعدّدُ الأسطرِ لا يُحصى فيمرّ (CLM-0682)" pass _sac "$S_G7SOCKET2_MULTILINE"
+# الطفرةُ الحاكمةُ: إعادةُ الاستثناءِ إلى منطقِ CLM-0681 (ورودِ العبارةِ في السطرِ)
+# تُعيدُ الثغرةَ فتمرُّ الحالتانِ — برهانٌ بأنّ إسقاطَهُما سببُهُ الإصلاحُ وحدَهُ.
+_sac_g7_sockets2_revert() { # يُعيدُ منطقَ CLM-0681 (ورودِ العبارةِ) في نسخةِ الحارسِ داخلَ الجذرِ
+  python3 -c 'import sys,pathlib; p=pathlib.Path(sys.argv[1])/"scripts/checks/validate-service-auth-coverage.sh"; s=p.read_text(); i=s.index("s/^[[:space:]]*(import"); j=s.index("//''", i); p.write_text(s[:i]+"s/.*import type.*//"+s[j+2:])' "$1"
+}
+for tag in runtime_comment type_then_require; do
+  case $tag in
+    runtime_comment) c='import { connect } from "node:net"; // import type\nexport const dial = () => connect(3000, "wasla-marketplace");\n' ;;
+    type_then_require) c='import type { AddressInfo } from "node:net"; const tls = require("tls");\nexport const dial = (a: AddressInfo) => tls.connect(a.port, "wasla-marketplace");\n' ;;
+  esac
+  S_G7SOCKET2_BLIND="$(_sac_g7 "g7s2_blind_$tag" "$c")"
+  _sac_g7_sockets2_revert "$S_G7SOCKET2_BLIND"
+  t "منطقُ CLM-0681 يُمرّرُ $tag — الثغرةُ المُعادةُ تُقاسُ (CLM-0682)" pass _sac "$S_G7SOCKET2_BLIND"
+done
+
+# ── البابُ 7-د (G-S9.19 · CLM-0683): العملياتُ الخامّ ──────────────────────
+# المرحلةُ الثانيةُ من التكليف: قياسُ أنماطِ الهروبِ من الحارسِ النصّيِّ أثبتَ أنّ
+# `node:child_process` (قناةُ اتصالٍ كاملةٌ عبرَ exec/spawn) و`node:dns` يمرّانِ
+# بلا أيِّ بصرٍ — لا عبرَ package.json (فالبابُ 8 لا يراهما) ولا عبرَ نمطِ fetch.
+# أُدمِجَا في نمطِ المقابسِ الخامّ بآليّةِ CLM-0682 نفسِها (الاستثناءُ النوعيُّ
+# تعليمةً لا سطراً). القياسُ على الشجرةِ الحيّةِ: صفرُ مراجعَ تشغيليّةٍ — فلا
+# استثناءَ جديداً ولا جرداً يتغيّرُ؛ والحالاتُ السالبةُ تُثبِتُ أنّ الإسقاطَ
+# سببُهُ التوسعةُ وحدَها.
+S_G7PROC_EXEC="$(_sac_g7 g7p_exec_runtime 'import { exec } from "node:child_process";\nexport const call = (u: string) => exec("curl -s " + u);\n')"
+t "استيرادُ node:child_process التشغيليُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0683)" fail _sac "$S_G7PROC_EXEC"
+S_G7PROC_DNS="$(_sac_g7 g7p_dns_require 'const dns = require("dns");\nexport const lookup = (h: string) => dns.lookup(h);\n')"
+t "require(\"dns\") بلا بادئةٍ وبلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0683)" fail _sac "$S_G7PROC_DNS"
+S_G7PROC_DYN="$(_sac_g7 g7p_cp_dynamic 'export const call = async (u: string) => (await import("node:child_process")).exec("curl -s " + u);\n')"
+t "استيرادُ node:child_process الديناميكيُّ بلا ذكرٍ ولا استثناءٍ يُسقِط (G-S9.19 · CLM-0683)" fail _sac "$S_G7PROC_DYN"
+S_G7PROC_CMT="$(_sac_g7 g7p_cp_comment 'import { exec } from "node:child_process"; // import type\nexport const call = (u: string) => exec("curl -s " + u);\n')"
+t "تعليقُ // import type على استيرادِ child_process تشغيليٍّ لا يُستثنى (CLM-0683)" fail _sac "$S_G7PROC_CMT"
+# تحكّمٌ موجبٌ: الاستيرادُ النوعيُّ المُمحى ترجمةً لا يُحصى — بآليّةِ CLM-0682
+# نفسِها على الوحداتِ الجديدةِ.
+S_G7PROC_TYPEONLY="$(_sac_g7 g7p_cp_typeonly 'import type { ExecOptions } from "node:child_process";\nexport const opts = (o: ExecOptions) => o;\n')"
+t "الاستيرادُ النوعيُّ لـchild_process لا يُحصى فيمرّ (G-S9.19 · CLM-0683)" pass _sac "$S_G7PROC_TYPEONLY"
+# الطفرةُ الحاكمةُ: حذفُ بابِ 7-د (بينَ العلامتَينِ) يُعيدُ العمى فتمرُّ القناةُ
+# عبرَ child_process — برهانٌ بأنّ إسقاطَها سببُهُ البابُ وحدَهُ (تحكيمٌ سلبيٌّ).
+# (نفسُ حارسِ حذفِ البابِ من حالاتِ CLM-0681: _sac_g7_sockets_revert)
+for tag in exec_runtime cp_dynamic; do
+  case $tag in
+    exec_runtime) c='import { exec } from "node:child_process";\nexport const call = (u: string) => exec("curl -s " + u);\n' ;;
+    cp_dynamic) c='export const call = async (u: string) => (await import("node:child_process")).exec("curl -s " + u);\n' ;;
+  esac
+  S_G7PROC_BLIND="$(_sac_g7 "g7p_blind_$tag" "$c")"
+  _sac_g7_sockets_revert "$S_G7PROC_BLIND"
+  t "حذفُ بابِ 7-د يُمرّرُ العمليّةَ الخامَّ $tag — العمى المُعادُ يُقاسُ (CLM-0683)" pass _sac "$S_G7PROC_BLIND"
+done
+
 # ── البابُ 8: قُفلُ أغلفةِ النداءِ ─────────────────────────────────────────────
 # ولمَ هذا البابُ: البابُ 7 يقيسُ `fetch(` وحدَهُ، فمكتبةُ نداءٍ جديدةٌ تُعمِيهِ
 # **بصمتٍ وتُبقِيهِ أخضرَ** — عمىً يُولَدُ أخضرَ. فالقُفلُ بالرفضِ افتراضاً،
@@ -2676,6 +2981,129 @@ t "البابُ 9: حدٌّ مفروضٌ بلا عقدٍ منشورٍ في مو�
 S_D_NOHDR="$(_sac_root d_noheader)"
 rm -f "$S_D_NOHDR/packages/service-auth/src/http.ts"
 t "البابُ 9: غيابُ مصدرِ اسمِ الترويسةِ يُسقِط (لا قياسَ على موضعٍ مهجورٍ)" fail _sac "$S_D_NOHDR"
+
+# 11-15) البابُ 9-هـ (CLM-0679 · RISK-0041 · مراجعةُ #820): العملياتُ لا العقدُ وحده
+# K2 وK3 اللتانِ قاستهُما المراجعةُ: فتحُ عمليةٍ مؤمَّنةٍ بصمتٍ، وإسقاطُ 401/403 من
+# توثيقِها — والاتّجاهُ الثالثُ: وعدُ أمنٍ كاذبٌ (الشفرةُ OPEN والعقدُ يُؤمّنُ).
+_sac_9e() { # _sac_9e <tag> <candidates-yaml>
+  local R="$(_sac_root "$1")"
+  # عقدُ الحالةِ يُعلِنُ المُصادقةَ صريحاً — فلا يصحُّ بقاءُ الحدِّ في جردِ الدَّينِ
+  python3 - "$R" <<'PY'
+import sys, pathlib
+f = pathlib.Path(sys.argv[1]) / "docs/07-security/SERVICE_AUTH_ENFORCEMENT.md"
+t = f.read_text()
+f.write_text(t.replace("| `matching` | 2 | `M1-06` |", "| — | 0 | — |"))
+PY
+  cat > "$R/services/matching/src/http/app.ts" <<'TS'
+registerServiceIdentity(app, wiring);
+app.get("/health", { config: OPEN }, async () => ({ status: "ok" }));
+TS
+  cat > "$R/services/matching/contracts/api.openapi.yml" <<YML
+openapi: 3.1.0
+components:
+  securitySchemes:
+    ServiceIdentity:
+      type: apiKey
+      in: header
+      name: x-wasla-service-auth
+paths:
+  /health:
+    get:
+      security: []
+      responses:
+        '200': { description: ok }
+  /matching/candidates:
+    post:
+$2
+YML
+  printf '%s\n' "$R"
+}
+
+S_9E_OK="$(_sac_9e 9e_ok "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }")"
+t "البابُ 9-هـ: عمليّةٌ مؤمَّنةٌ موثَّقةُ 401/403 ومسارٌ عامٌّ يُطابِقُ OPEN في الشفرةِ يمرّ" pass _sac "$S_9E_OK"
+
+S_9E_K2="$(_sac_9e 9e_k2 "      security: []
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }")"
+t "البابُ 9-هـ: عمليّةٌ مؤمَّنةٌ تُفتَحُ بصمتٍ (security: []) تُسقَط (K2)" fail _sac "$S_9E_K2"
+
+S_9E_K3="$(_sac_9e 9e_k3 "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '403': { description: forbidden }")"
+t "البابُ 9-هـ: عمليّةٌ مؤمَّنةٌ بلا 401 موثَّقةٍ تُسقَط (K3)" fail _sac "$S_9E_K3"
+
+S_9E_403="$(_sac_9e 9e_403 "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }")"
+t "البابُ 9-هـ: عمليّةٌ بصلاحيةٍ بلا 403 موثَّقةٍ تُسقَط" fail _sac "$S_9E_403"
+
+S_9E_FP="$(_sac_9e 9e_fp "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }")"
+python3 - "$S_9E_FP" <<'PY'
+import sys, yaml, pathlib
+f = pathlib.Path(sys.argv[1]) / "services/matching/contracts/api.openapi.yml"
+spec = yaml.safe_load(f.read_text())
+del spec["paths"]["/health"]["get"]["security"]
+f.write_text(yaml.safe_dump(spec, allow_unicode=True))
+PY
+t "البابُ 9-هـ: الشفرةُ تُعلِنُ OPEN والعقدُ يُؤمّنُ المسارَ (وعدُ أمنٍ كاذبٌ) يُسقَط" fail _sac "$S_9E_FP"
+
+# اختباراتُ طفرةٍ للبابِ 9-هـ: كلُّ فرعٍ من الحارسِ ضروريٌّ لصيدِ حالتِهِ —
+# تُحيَّدُ الفروعُ واحدةً فواحدةً في نسخةِ الحارسِ داخلَ الجذرِ الصناعيِّ، فيجبُ
+# أن يمرَّ العيبُ تحتَ الحارسِ المُطفَّرِ (لو رُفضَ فالطفرةُ لم تُحيِّد شيئاً).
+_sac_9e_mut() { # _sac_9e_mut <tag> <old> <new> <candidates-yaml>
+  local R
+  R="$(_sac_9e "$1" "$4")"
+  python3 - "$R" "$2" "$3" <<'PY'
+import sys, pathlib
+q = pathlib.Path(sys.argv[1]) / "scripts/checks/validate-service-auth-coverage.sh"
+s = q.read_text(encoding="utf-8")
+old, new = sys.argv[2], sys.argv[3]
+assert old in s, "mutation anchor not found: " + old
+q.write_text(s.replace(old, new, 1), encoding="utf-8")
+PY
+  bash "$R/scripts/checks/validate-service-auth-coverage.sh"
+}
+
+_9E_SEC="      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }"
+t "طفرةُ 9-هـ (فرعُ K2): حارسٌ بلا فحصِ الفتحِ الصامتِ يمرُّ بالعيبِ — فالفرعُ ضروريٌّ" pass _sac_9e_mut 9e_mut_k2 'if (method.upper(), path) not in code_open:' 'if False:' "      security: []
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }
+        '403': { description: forbidden }"
+t "طفرةُ 9-هـ (فرعُ K3/401): حارسٌ بلا فحصِ 401 يمرُّ بالعيبِ" pass _sac_9e_mut 9e_mut_k3 'if "401" not in resp:' 'if False:' "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '403': { description: forbidden }"
+t "طفرةُ 9-هـ (فرعُ 403): حارسٌ بلا فحصِ 403 يمرُّ بالعيبِ" pass _sac_9e_mut 9e_mut_403 'if scoped and "403" not in resp:' 'if False:' "      security:
+        - ServiceIdentity: [matching:evaluate]
+      responses:
+        '200': { description: ok }
+        '401': { description: unauthorized }"
+t "طفرةُ 9-هـ (فرعُ الوعدِ الكاذبِ): حارسٌ لا يُقابِلُ OPEN في الشفرةِ يمرُّ بالعيبِ" pass _sac_9e_mut 9e_mut_fp 'elif (method.upper(), path) in code_open:' 'elif False:' "$_9E_SEC"
+t "طفرةُ 9-هـ (رؤيةُ components.securitySchemes): حارسٌ لا يرى الأمنَ تحتَ components يتخطّى العقودَ المؤمَّنةَ كلَّها" pass _sac_9e_mut 9e_mut_comps 'comps.get("securitySchemes") or spec.get("security")' 'spec.get("security")' "$_9E_SEC"
+
 
 
 printf '\n\033[1m[ح] حارسُ الترحيلاتِ المولَّدةِ العكوسةِ (M0-23 · فحصُ 13)\033[0m\n'
@@ -3087,6 +3515,11 @@ t "حارسُ الترحيلاتِ يقبلُ جذراً صحيحاً في 40 ت
 # طفراتُ الأبوابِ الخمسةِ (أ–هـ): فتحُ إنتاجٍ لفئةٍ محجوبةٍ، فئةٌ تخالفُ الشفرةَ،
 # دليلٌ غائبٌ، مسارٌ لا يناديه التطبيقُ (الفحصُ 24)، ومدخلٌ خارجَ اللقطةِ التاريخيةِ.
 . "$REPO_ROOT/scripts/checks/lib/gov-cases-edge-allowlist.sh"
+
+# ── 29) ترطيبُ حدِّ القناةِ في المدخلِ (D6 · CLM-0691) ─────────────────────
+# طفراتُ الأبوابِ: مدخلٌ بلا حدٍّ (عيبُ السلفِ)، مسارُ قائمةٍ يحلُّ إلى غائبٍ،
+# قائمةٌ ليست JSON، ووحدةُ حدٍّ مفقودةٌ — معَ ضابطٍ موجبٍ للشجرةِ النظيفةِ.
+. "$REPO_ROOT/scripts/checks/lib/gov-cases-edge-wiring.sh"
 
 # ── 26/27) STATE-SYNC و«الدمجُ يُغلِقُ الدورة» (M0-52 · ADR-061) ─────────────────
 # كلُّ حالةٍ تبني مستودعَ git صناعيّاً في mktemp وتنسخُ إليهِ الحارسَ والخريطةَ الحقيقيَّين،

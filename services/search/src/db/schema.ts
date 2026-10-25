@@ -148,6 +148,26 @@ export const searchMarketplaceStoreState = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// 2b) search_store_index — أسماءُ المتاجرِ المشتقّةُ (G-S9.7 · CLM-0649 · ADR-025 §6)
+//     لا حالةَ ولا مالكَ ولا رايةَ إتاحةٍ: الإتاحةُ تُشتقُّ عندَ القراءةِ.
+// ---------------------------------------------------------------------------
+
+export const searchStoreIndex = pgTable(
+  "search_store_index",
+  {
+    storeId: uuid("store_id").primaryKey(),
+    storeSlug: text("store_slug").notNull(),
+    titleAr: text("title_ar").notNull(),
+    titleEn: text("title_en"),
+    titleUr: text("title_ur"),
+    nameNormAr: text("name_norm_ar").notNull(),
+    nameNormEn: text("name_norm_en"),
+    nameNormUr: text("name_norm_ur"),
+  },
+  (table) => [unique("ux_search_store_index_slug").on(table.storeSlug)],
+);
+
+// ---------------------------------------------------------------------------
 // 3) search_marketplace_product_state — حالةُ المنتجِ المُستهلكةُ (إسقاطٌ)
 // ---------------------------------------------------------------------------
 

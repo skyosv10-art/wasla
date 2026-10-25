@@ -4,7 +4,7 @@
 >
 > **المرجع الأم:** [VISION.md](VISION.md) §4-6 · [USER_FLOWS.md](USER_FLOWS.md) §2 · [ADR-044](../15-decisions/ADR-044-customer-mini-app-architecture.md)
 >
-> **Last Updated:** 2026-09-22 · **Status:** Baseline v1.0 · **Related Team:** Team 02 (Customer) · Team 03 (Channel/UI)
+> **Last Updated:** 2026-10-19 (CLM-0621: §8 مسارُ marketplace) · **Status:** Baseline v1.0 · **Related Team:** Team 02 (Customer) · Team 03 (Channel/UI)
 
 ---
 
@@ -181,7 +181,7 @@ POST /identity/sessions/telegram  →  200 { token, expires_at }
 | customers | 8086 | كل المسارات العشرة |
 | orders | 8087 | GET /orders/{id} |
 | search | 8088 | GET /search/* |
-| marketplace | 8089 | GET /marketplace/stores, GET /marketplace/stores/{slug}/products |
+| marketplace | 8089 | GET /stores, GET /stores/{storeSlug}/products — *(2026-10-19 · CLM-0621: كانت `GET /marketplace/stores, GET /marketplace/stores/{slug}/products` — تقادمٌ؛ المرجعُ العقدُ المنفَّذُ [MARKETPLACE_HTTP.md](../04-api/MARKETPLACE_HTTP.md) #4/#12 وجدولُ التوجيهِ `infra/render/app-rewrites.json` `/stores`. **الحدُّ:** المسارانِ كلاهما `production_open=false` في `packages/channel-edge/allowlist/customer-mini-app.json` — `GET /stores` (W) محجوبٌ حتى G-ENF(marketplace) ([ADR-069](../15-decisions/ADR-069-human-authentication-edge-for-apps.md) C-07) و`GET /stores/{storeSlug}/products` (P) محجوبٌ حتى E-20 (الحدُّ يثبّتُ `visible_only=true`)؛ هذا التصحيحُ لا يُتيحُ الشاشةَ)* |
 | geography | 8082 | GET /geo/zones/{id} |
 | reputation | 8090 | GET /reputation/scores/{id} |
 

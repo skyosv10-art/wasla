@@ -116,6 +116,26 @@ CREATE TABLE IF NOT EXISTS search_marketplace_store_state (
 );
 
 -- ─────────────────────────────────────────────────────────────────────
+-- 2b) search_store_index — أسماءُ المتاجرِ (نموذجُ قراءةٍ مشتقٌّ · G-S9.7 · CLM-0649 · ADR-025 §6)
+--    marketplace مصدرُ الحقيقةِ؛ الاسمُ يُجلَبُ بمنفذٍ موقَّعٍ (`GET /stores/{storeSlug}`)
+--    عندَ `store_approved` — لا JOIN عبرَ الحدِّ ولا نصَّ حرًّا في الأحداثِ (ADR-016 §10).
+--    `name_norm_*` النسخُ المطبَّعةُ (normalizeStoreName) للمطابقةِ الحرفيّةِ المهرَّبةِ.
+--    الإتاحةُ **ليست هنا**: تُشتقُّ عندَ القراءةِ من حالةِ المتجرِ (2) ووجودِ منتجٍ ظاهرٍ (3).
+--    لا مالكَ ولا حالةَ ولا مراجعاتٍ ولا طاقمَ ولا توقيتاتٍ داخليّةً — ما لا يُفهرَسُ لا يتسرّبُ.
+-- ─────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS search_store_index (
+    store_id           UUID        PRIMARY KEY,
+    store_slug         TEXT        NOT NULL,
+    title_ar           TEXT        NOT NULL,
+    title_en           TEXT,
+    title_ur           TEXT,
+    name_norm_ar       TEXT        NOT NULL,
+    name_norm_en       TEXT,
+    name_norm_ur       TEXT,
+    CONSTRAINT ux_search_store_index_slug UNIQUE (store_slug)
+);
+
+-- ─────────────────────────────────────────────────────────────────────
 -- 3) search_marketplace_product_state — حالةُ المنتجِ المُستهلكةُ (إسقاطٌ)
 --    مصدرُ الحقيقةِ للبحثِ عن حالةِ المنتجِ والاعتدالِ والمخزونِ.
 --    `moderation_sequence` و`adjustment_sequence` يكشفانِ الأحداثِ القديمةَ

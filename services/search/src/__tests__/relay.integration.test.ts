@@ -26,6 +26,7 @@ import { PostgresProjectionStore } from "../infrastructure/projection-store.js";
 import { runRelayBatch, rebuildAll, DEFAULT_RELAY_CONFIG } from "../relay.js";
 import type { CatalogReadPort } from "../ports.js";
 import type { CatalogProduct } from "../domain/consumed-events.js";
+import { acmeStoreCatalog } from "./support/fake-store-catalog.js";
 
 const STORE_ID = "11111111-1111-1111-1111-111111111111";
 const PRODUCT_ID = "22222222-2222-2222-2222-222222222222";
@@ -75,7 +76,7 @@ async function seedHappyPath(pool: PgFixture["pool"]): Promise<string[]> {
 
   it("projects a visible index doc with correct state (outbox → relay → read model)", async () => {
     await seedHappyPath(pool);
-    const deps = { events: new PostgresMarketplaceEventSource(pool), catalog, store, config: DEFAULT_RELAY_CONFIG };
+    const deps = { events: new PostgresMarketplaceEventSource(pool), catalog, storeCatalog: acmeStoreCatalog(), store, config: DEFAULT_RELAY_CONFIG };
     const outcome = await runRelayBatch(deps);
     expect(outcome.applied).toBe(5);
     const docs = await store.listVisibleIndexDocs();
@@ -87,7 +88,7 @@ async function seedHappyPath(pool: PgFixture["pool"]): Promise<string[]> {
 
   it("duplicate delivery is idempotent (re-running is a no-op)", async () => {
     await seedHappyPath(pool);
-    const deps = { events: new PostgresMarketplaceEventSource(pool), catalog, store, config: DEFAULT_RELAY_CONFIG };
+    const deps = { events: new PostgresMarketplaceEventSource(pool), catalog, storeCatalog: acmeStoreCatalog(), store, config: DEFAULT_RELAY_CONFIG };
     const first = await runRelayBatch(deps);
     expect(first.applied).toBe(5);
     const second = await runRelayBatch(deps);
@@ -101,7 +102,7 @@ async function seedHappyPath(pool: PgFixture["pool"]): Promise<string[]> {
     await seedHappyPath(pool);
     // Append an out-of-order older store event (state_sequence 1, after seq 2).
     await seedOutboxEvent(pool, { event_type: "marketplace.store_registered", aggregate_type: "store", aggregate_id: STORE_ID, payload: { store_id: STORE_ID, store_slug: "acme", owner_public_id: "WS-0000000001", category_slug: "electronics", to_state: "pending_review", state_sequence: 1, actor_type: "owner", occurred_for: T0 } });
-    const deps = { events: new PostgresMarketplaceEventSource(pool), catalog, store, config: DEFAULT_RELAY_CONFIG };
+    const deps = { events: new PostgresMarketplaceEventSource(pool), catalog, storeCatalog: acmeStoreCatalog(), store, config: DEFAULT_RELAY_CONFIG };
     const outcome = await runRelayBatch(deps);
     expect(outcome.skipped).toBeGreaterThanOrEqual(1); // the stale event
     const docs = await store.listVisibleIndexDocs();
@@ -110,7 +111,7 @@ async function seedHappyPath(pool: PgFixture["pool"]): Promise<string[]> {
 
   it("rebuildAll (replay) clears and re-projects from zero", async () => {
     await seedHappyPath(pool);
-    const deps = { events: new PostgresMarketplaceEventSource(pool), catalog, store, config: DEFAULT_RELAY_CONFIG };
+    const deps = { events: new PostgresMarketplaceEventSource(pool), catalog, storeCatalog: acmeStoreCatalog(), store, config: DEFAULT_RELAY_CONFIG };
     await runRelayBatch(deps);
     await rebuildAll(deps); // clear + reset checkpoint
     const outcome = await runRelayBatch(deps);

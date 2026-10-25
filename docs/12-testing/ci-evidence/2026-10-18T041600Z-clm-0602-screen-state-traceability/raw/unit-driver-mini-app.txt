@@ -1,0 +1,149 @@
+# vitest driver-mini-app @ 9e1c622dfa835279f8436bf7332df85779d3aca1 — total=132 passed=132 failed=0 pending=0
+## src/__tests__/Documents.test.tsx
+passed	Documents screen renders loading state
+passed	Documents screen renders error state with retry
+passed	Documents screen renders empty state when no documents
+passed	Documents screen renders document cards
+passed	Documents screen shows document status
+passed	Documents screen shows rejection reason for rejected documents
+passed	Documents screen shows add document form when button clicked
+passed	Documents screen calls submitDocument on form submit
+passed	Documents screen shows action error when present
+passed	Documents screen disables submit button when storage_ref is empty
+## src/__tests__/Earnings.test.tsx
+passed	Earnings screen renders title and period buttons
+passed	Earnings screen shows loading state
+passed	Earnings screen shows error state
+passed	Earnings screen shows empty state when no jobs
+passed	Earnings screen shows summary with count and total
+passed	Earnings screen renders job list entries
+passed	Earnings screen calls fetchEarnings on mount and when period changes
+passed	Earnings screen calls setPeriod when period button clicked
+passed	Earnings screen disables period buttons while loading
+passed	Earnings screen marks active period with aria-pressed
+passed	Earnings screen fetches earnings when period changes via useEffect
+## src/__tests__/Home.test.tsx
+passed	Home screen renders the app name
+passed	Home screen renders navigation items
+passed	Home screen renders links with correct hrefs
+## src/__tests__/JobDetail.test.tsx
+passed	JobDetail screen renders empty state when no job_id provided
+passed	JobDetail screen renders loading state while fetching
+passed	JobDetail screen renders error state when fetch fails
+passed	JobDetail screen renders job details when job is loaded
+passed	JobDetail screen shows start_trip button when status is assigned
+passed	JobDetail screen shows arrived button when status is in_progress
+passed	JobDetail screen shows no transition button when status is completed
+passed	JobDetail screen calls transitionOrder when transition button is clicked
+passed	JobDetail screen shows cancel form when cancel button is clicked
+passed	JobDetail screen does not show cancel button for completed jobs
+## src/__tests__/Offers.test.tsx
+passed	Offers screen renders empty state when no job_id provided
+passed	Offers screen renders loading state while fetching offers
+passed	Offers screen renders error state when fetch fails
+passed	Offers screen renders empty state when offers list is empty
+passed	Offers screen renders offer cards for pending offers
+passed	Offers screen calls acceptOffer when accept button is clicked
+passed	Offers screen shows reject reason form when reject button is clicked
+## src/__tests__/Profile.test.tsx
+passed	Profile screen renders loading state
+passed	Profile screen renders error state with retry
+passed	Profile screen renders profile info when loaded
+passed	Profile screen shows suspension reason when suspended
+passed	Profile screen renders profile form with editable fields
+passed	Profile screen shows service kind checkboxes
+passed	Profile screen toggles service kind on checkbox click
+passed	Profile screen calls updateProfile on save button
+passed	Profile screen shows save error when present
+passed	Profile screen shows save success when saveSuccess is true
+passed	Profile screen save button shows submitting text when saving
+passed	Profile screen disables save button while saving
+## src/__tests__/Vehicles.test.tsx
+passed	Vehicles screen renders loading state
+passed	Vehicles screen renders error state with retry
+passed	Vehicles screen renders empty state when no vehicles
+passed	Vehicles screen renders vehicle cards
+passed	Vehicles screen shows retire button for active vehicles
+passed	Vehicles screen shows set-primary button for non-primary active vehicles
+passed	Vehicles screen does not show set-primary for primary vehicles
+passed	Vehicles screen shows add vehicle form when button clicked
+passed	Vehicles screen calls addVehicle on form submit
+passed	Vehicles screen calls patchVehicle on retire button
+passed	Vehicles screen calls patchVehicle on set-primary button
+passed	Vehicles screen shows action error when present
+## src/__tests__/Zones.test.tsx
+passed	Zones screen renders loading state
+passed	Zones screen renders error state with retry
+passed	Zones screen renders empty state when no zones
+passed	Zones screen renders zone checkboxes for existing zones
+passed	Zones screen checkboxes are checked for existing zones
+passed	Zones screen toggles zone selection on checkbox click
+passed	Zones screen calls saveZones on save button
+passed	Zones screen save button is disabled when no zones selected
+passed	Zones screen shows save error when present
+passed	Zones screen shows save success when saveSuccess is true
+passed	Zones screen save button shows submitting text when saving
+passed	Zones screen re-orders zones by preference_rank on save
+## src/__tests__/dispatch.test.ts
+passed	dispatchStore — fetchOffers fetches offers and populates the list
+passed	dispatchStore — fetchOffers handles API errors gracefully
+passed	dispatchStore — acceptOffer accepts an offer and updates the list
+passed	dispatchStore — acceptOffer returns false on API error
+passed	dispatchStore — transitionOrder calls the order transition endpoint with driver actor
+passed	dispatchStore — transitionOrder includes reason_code for terminal transitions
+passed	dispatchStore — cancelJob cancels a job and updates activeJob
+passed	dispatchStore — startPolling / stopPolling starts polling and sets up timer for the job
+passed	dispatchStore — startPolling / stopPolling does not restart polling if already polling the same job
+## src/__tests__/documents.test.ts
+passed	Documents store fetchDocuments populates documents on success
+passed	Documents store fetchDocuments sets error on failure
+passed	Documents store submitDocument sends POST with Idempotency-Key
+passed	Documents store submitDocument sets actionError on failure
+passed	Documents store clearErrors resets error states
+passed	Documents store submitDocument returns false when no driverId
+## src/__tests__/earnings.test.ts
+passed	Earnings store fetches earnings successfully
+passed	Earnings store handles fetch error
+passed	Earnings store sets error when no driver session
+passed	Earnings store calls correct API path with period query
+passed	Earnings store computes summary with zero jobs
+passed	Earnings store clears errors
+passed	Earnings store sets period
+## src/__tests__/frontend-quality.test.tsx
+passed	locale selection (?locale=) defaults to Arabic RTL
+passed	locale selection (?locale=) accepts ?locale=en and switches document lang/dir
+passed	locale selection (?locale=) ur stays RTL
+passed	locale selection (?locale=) rejects unknown locales back to Arabic
+passed	offline banner is hidden while online and appears on the offline event
+passed	api client network error mapping maps a fetch TypeError rejection to network_error (status 0)
+passed	api client network error mapping maps an aborted request to timeout (status 408)
+## src/__tests__/profile.test.ts
+passed	Profile store fetchProfile populates profile on success
+passed	Profile store fetchProfile sets error on failure
+passed	Profile store updateProfile sends PATCH request
+passed	Profile store updateProfile sets saveError on failure
+passed	Profile store clearErrors resets all error states
+passed	Profile store updateProfile returns false when no driverId
+## src/__tests__/session.test.ts
+passed	session store starts unauthenticated
+passed	session store sets session and becomes authenticated
+passed	session store clears session and becomes unauthenticated
+passed	session store is not authenticated when token is expired
+## src/__tests__/vehicles.test.ts
+passed	Vehicles store fetchVehicles populates vehicles on success
+passed	Vehicles store fetchVehicles sets error on failure
+passed	Vehicles store addVehicle sends POST with Idempotency-Key
+passed	Vehicles store addVehicle sets actionError on failure
+passed	Vehicles store patchVehicle sends PATCH request
+passed	Vehicles store patchVehicle sets actionError on failure
+passed	Vehicles store clearErrors resets error states
+passed	Vehicles store addVehicle returns false when no driverId
+## src/__tests__/zones.test.ts
+passed	Zones store fetchZones populates zones on success
+passed	Zones store fetchZones sets error on failure
+passed	Zones store saveZones sends PUT with full zone list
+passed	Zones store saveZones sets saveError on failure
+passed	Zones store clearErrors resets all error states
+passed	Zones store setAvailableZones updates availableZones
+passed	Zones store saveZones returns false when no driverId
+passed	Zones store saveZones handles empty zones list in response

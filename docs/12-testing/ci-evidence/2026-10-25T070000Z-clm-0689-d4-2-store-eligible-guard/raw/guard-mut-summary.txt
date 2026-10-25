@@ -1,0 +1,5 @@
+g1-prover-disabled: PASS=102 FAIL=17 failing=17
+g2-no-archived-store-coverage: PASS=118 FAIL=1 failing=1
+g3-equality-as-subset: PASS=118 FAIL=1 failing=1
+g4-import-not-checked: PASS=118 FAIL=1 failing=1
+DONE

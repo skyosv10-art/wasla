@@ -1,0 +1,6 @@
+# CLM-0654 · 2026-10-21 · comment-only fetch reference — isolated measurement
+# synthetic root built by _sac_root (scripts/checks/test-governance.sh), guard = branch validate-service-auth-coverage.sh
+control (base root)                                   exit=0
++ catalog-read-port.ts with only `// TODO: ... fetch("...")` exit=1  ✗ مُنادٍ خامٌ أو جالبٌ محقونٌ خارجَ بصرِ السّجلِّ: services/matching/src/infrastructure/catalog-read-port.ts
+same file, comment without the word fetch             exit=0
+# conclusion: the comment alone causes the count (grep, no AST) — false positive by design, fail-closed direction

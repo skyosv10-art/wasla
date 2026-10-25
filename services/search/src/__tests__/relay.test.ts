@@ -9,9 +9,10 @@
 
 import { describe, expect, it } from "vitest";
 import { runRelayBatch, DEFAULT_RELAY_CONFIG, type RelayDeps, type RelayLogEntry } from "../relay.js";
-import type { MarketplaceEventSource, CatalogReadPort, ProjectionStore } from "../ports.js";
+import type { MarketplaceEventSource, CatalogReadPort, CatalogStore, ProjectionStore } from "../ports.js";
 import type { MarketplaceOutboxRow, RelayCheckpoint, ConsumedStatus, CatalogProduct } from "../domain/consumed-events.js";
 import type { StoreProjection, ProductProjection } from "../domain/projector.js";
+import { acmeStoreCatalog } from "./support/fake-store-catalog.js";
 
 // ── In-memory fakes ──────────────────────────────────────────────────
 
@@ -38,9 +39,32 @@ class FakeCatalog implements CatalogReadPort {
 }
 
 class FakeStore implements ProjectionStore {
+  // G-S9.20 · CLM-0655: in-memory mutex per consumer — the fake models the exclusion, not a pass-through.
+  private lockTail = new Map<string, Promise<void>>();
+  lockAcquisitions = 0;
+  async withConsumerLock<T>(consumerId: string, fn: () => Promise<T>): Promise<T> {
+    const prev = this.lockTail.get(consumerId) ?? Promise.resolve();
+    let release!: () => void;
+    const mine = new Promise<void>((r) => (release = r));
+    this.lockTail.set(consumerId, prev.then(() => mine));
+    await prev;
+    this.lockAcquisitions += 1;
+    try {
+      return await fn();
+    } finally {
+      release();
+    }
+  }
   checkpoint: RelayCheckpoint | null = null;
   consumed = new Map<string, { status: ConsumedStatus; attempts: number; error?: string | null }>();
   stores = new Map<string, StoreProjection>();
+  storeDocs = new Map<string, CatalogStore>();
+  async hasStoreDoc(storeId: string) {
+    return this.storeDocs.has(storeId);
+  }
+  async upsertStoreDoc(store: CatalogStore) {
+    this.storeDocs.set(store.store_id, store);
+  }
   products = new Map<string, ProductProjection>();
   docs = new Map<string, { catalog: CatalogProduct; storeState: string; projection: ProductProjection }>();
   logs: RelayLogEntry[] = [];
@@ -77,7 +101,7 @@ class FakeStore implements ProjectionStore {
 }
 
 function deps(rows: MarketplaceOutboxRow[], catalog: FakeCatalog, store: FakeStore): RelayDeps {
-  return { events: new FakeEventSource(rows), catalog, store, config: { ...DEFAULT_RELAY_CONFIG, maxAttempts: 2 }, log: (e) => store.logs.push(e) };
+  return { events: new FakeEventSource(rows), catalog, storeCatalog: acmeStoreCatalog(), store, config: { ...DEFAULT_RELAY_CONFIG, maxAttempts: 2 }, log: (e) => store.logs.push(e) };
 }
 
 // ── Fixtures ─────────────────────────────────────────────────────────
@@ -146,6 +170,38 @@ describe("relay — idempotency (duplicate delivery)", () => {
       const c = store.consumed.get(id)!;
       expect(c.status === "applied" || c.status === "skipped_stale").toBe(true);
     }
+  });
+});
+
+describe("G-S9.20 · CLM-0655 — every batch runs under the consumer lock", () => {
+  it("runRelayBatch goes through store.withConsumerLock with the configured consumerId", async () => {
+    const catalog = new FakeCatalog(); catalog.set(catalogProduct);
+    const store = new FakeStore();
+    const seen: string[] = [];
+    const real = store.withConsumerLock.bind(store);
+    store.withConsumerLock = <T,>(consumerId: string, fn: () => Promise<T>) => { seen.push(consumerId); return real(consumerId, fn); };
+    await runRelayBatch({ ...deps(happyPath, catalog, store), config: { consumerId: "search-relay-test" } });
+    expect(seen).toEqual(["search-relay-test"]);
+    expect(store.lockAcquisitions).toBe(1);
+  });
+
+  it("two concurrent batches on one consumer never overlap; the second sees the advanced checkpoint", async () => {
+    const catalog = new FakeCatalog(); catalog.set(catalogProduct);
+    const store = new FakeStore();
+    const timeline: string[] = [];
+    const realGet = store.getCheckpoint.bind(store);
+    const realWrite = store.writeCheckpoint.bind(store);
+    store.getCheckpoint = async () => { timeline.push("get"); await new Promise((r) => setTimeout(r, 5)); return realGet(); };
+    store.writeCheckpoint = async (c: string, cp: RelayCheckpoint) => { timeline.push("write"); await realWrite(c, cp); };
+    const [a, b] = await Promise.all([
+      runRelayBatch(deps(happyPath, catalog, store)),
+      runRelayBatch(deps(happyPath, catalog, store)),
+    ]);
+    // Under the lock: A reads, writes its 5 checkpoints, and only then B reads.
+    expect(timeline, "the second batch read the checkpoint before the first finished").toEqual(["get", "write", "write", "write", "write", "write", "get"]);
+    expect(a.applied).toBe(5);
+    expect(b.applied, "the second batch applied nothing — all rows already terminal").toBe(0);
+    expect(store.docs.size).toBe(1);
   });
 });
 

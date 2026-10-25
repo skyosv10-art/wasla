@@ -50,3 +50,32 @@ export interface ProfilePatch {
   work_city_zone_id?: string | null;
   service_kinds?: ServiceKind[];
 }
+
+/**
+ * G-S10 (CLM-0613): eligibility verdict as returned by GET /drivers/:id/eligibility
+ * (`eligibilityToWire` in services/drivers). Values mirror packages/contracts/driver
+ * (`DRIVER_ELIGIBILITY_STATES`, `ELIGIBILITY_REASON_CODES`).
+ */
+export const ELIGIBILITY_STATES = ["eligible", "ineligible", "suspended", "unknown"] as const;
+export type EligibilityState = (typeof ELIGIBILITY_STATES)[number];
+
+export const ELIGIBILITY_REASON_CODES = [
+  "PROFILE_SUSPENDED",
+  "PROFILE_NOT_VERIFIED",
+  "NO_PRIMARY_VEHICLE",
+  "NO_SERVICE_ZONE",
+  "NO_SERVICE_KIND",
+  "DOCUMENT_MISSING",
+  "DOCUMENT_PENDING",
+  "DOCUMENT_REJECTED",
+  "DOCUMENT_EXPIRED",
+] as const;
+export type EligibilityReasonCode = (typeof ELIGIBILITY_REASON_CODES)[number];
+
+export interface DriverEligibility {
+  wasla_public_id: string;
+  eligibility_state: EligibilityState;
+  reason_codes: EligibilityReasonCode[];
+  policy_version: number;
+  evaluated_at: string;
+}

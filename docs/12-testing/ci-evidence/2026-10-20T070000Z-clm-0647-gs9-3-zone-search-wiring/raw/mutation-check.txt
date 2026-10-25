@@ -1,0 +1,4 @@
+# mutation: drop the stale-response guard (seq !== seqRef.current) in ZoneSearch.runSearch
+   × ZoneSearch component > a late response to an older search never replaces a newer one 19ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 9 passed (10)

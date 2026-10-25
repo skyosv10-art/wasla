@@ -19,6 +19,7 @@ import { keyRegistryFromEnv } from "@wasla/service-auth";
 import { createServiceTokenReplayGuardFromEnv } from "@wasla/service-auth/replay-store";
 import { buildSearchHttpApp } from "./app.js";
 import { SearchIndexReader } from "../infrastructure/search-index-reader.js";
+import { StoreSearchReader } from "../infrastructure/store-search-reader.js";
 import { PostgresSearchDeadLetterStore } from "../infrastructure/relay-dead-letter-store.js";
 import { PostgresSearchRequeueStore } from "../infrastructure/relay-requeue-store.js";
 import { PostgresSearchAcknowledgementStore } from "../infrastructure/relay-acknowledgement-store.js";
@@ -67,6 +68,7 @@ async function main(): Promise<void> {
 
   const { fastify, close } = buildSearchHttpApp({
     searchReadPort: readPort,
+    storeSearchReadPort: new StoreSearchReader(pool),
     indexHealthPort,
     deadLetterReadPort,
     relayRequeuePort,

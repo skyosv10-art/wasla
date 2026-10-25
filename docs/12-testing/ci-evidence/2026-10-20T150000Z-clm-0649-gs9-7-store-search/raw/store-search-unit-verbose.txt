@@ -1,0 +1,36 @@
+ ✓ src/__tests__/store-search.test.ts > parseStoreSearchRequest — bounds come from the shared contract > defaults: locale ar · page 1 · page_size 10 2ms
+ ✓ src/__tests__/store-search.test.ts > parseStoreSearchRequest — bounds come from the shared contract > q: trimmed length 2..64, non-empty after normalization 1ms
+ ✓ src/__tests__/store-search.test.ts > parseStoreSearchRequest — bounds come from the shared contract > counts characters, not UTF-16 units (64 emoji are 64, not 128) 0ms
+ ✓ src/__tests__/store-search.test.ts > parseStoreSearchRequest — bounds come from the shared contract > page 1..50 and page_size 1..20 — integers only 1ms
+ ✓ src/__tests__/store-search.test.ts > parseStoreSearchRequest — bounds come from the shared contract > locale ar/en/ur only 0ms
+ ✓ src/__tests__/store-search.test.ts > parseStoreSearchRequest — bounds come from the shared contract > undeclared keys are rejected by name, never ignored 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > أحمد → احمد 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > إسلام → اسلام 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > آمنة → امنه 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > ٱلنور → النور 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > مستشفى → مستشفي 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > کریانہ → كريانه 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > مؤسسة → موسسه 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > مسائل → مسايل 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) >   مَكْتَبَةُ   النُّور  → مكتبه النور 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > ـمتـجـر → متجر 0ms
+ ✓ src/__tests__/store-search.test.ts > normalizeStoreName — declared folding (ADR-025 §6.4) > ACME Store → acme store 0ms
+ ✓ src/__tests__/store-search.test.ts > escapeLike + localizedTitle > escapes %, _ and \ (and nothing else) 0ms
+ ✓ src/__tests__/store-search.test.ts > escapeLike + localizedTitle > returns the requested locale or falls back to Arabic (null or blank) 0ms
+ ✓ src/__tests__/store-search.test.ts > HttpMarketplaceCatalogReadPort — signed, names only > scopes are exactly product:read + store:read 0ms
+ ✓ src/__tests__/store-search.test.ts > HttpMarketplaceCatalogReadPort — signed, names only > GET /stores/{slug} carries a service token and returns only the names 18ms
+ ✓ src/__tests__/store-search.test.ts > HttpMarketplaceCatalogReadPort — signed, names only > GET /products/{id} is signed too (G-S9.19 — the old port sent no identity) 1ms
+ ✓ src/__tests__/store-search.test.ts > HttpMarketplaceCatalogReadPort — signed, names only > 404 → null; 401/403 → denied; 500 → error status; bad shape → drift — all but 404 throw 3ms
+ ✓ src/__tests__/store-search.test.ts > HttpMarketplaceCatalogReadPort — signed, names only > network failure → unreachable (throws, so the relay keeps the event pending) 1ms
+ ✓ src/__tests__/store-search.test.ts > relay — store names are fetched on approval, before any mutation > registered → no fetch; approved → one fetch and a doc 1ms
+ ✓ src/__tests__/store-search.test.ts > relay — store names are fetched on approval, before any mutation > a failed fetch leaves the event pending and the store state unchanged 0ms
+ ✓ src/__tests__/store-search.test.ts > relay — store names are fetched on approval, before any mutation > 404 from marketplace is not a silent empty name — the event does not apply 0ms
+ ✓ src/__tests__/store-search.test.ts > relay — store names are fetched on approval, before any mutation > contract drift (resource slug ≠ event slug) is refused 0ms
+ ✓ src/__tests__/store-search.test.ts > relay — store names are fetched on approval, before any mutation > a doc already present is not refetched (re-approval after suspension) 0ms
+ ✓ src/__tests__/store-search.test.ts > GET /search/stores — HTTP > emits exactly the public projection even if the port over-returns 63ms
+ ✓ src/__tests__/store-search.test.ts > GET /search/stores — HTTP > 400 {"q":"ن"} → SEARCH_QUERY_TOO_SHORT 4ms
+ ✓ src/__tests__/store-search.test.ts > GET /search/stores — HTTP > 400 {"q":"نور","owner_public_id":"WS-1"} → SEARCH_UNKNOWN_PARAMETER 3ms
+ ✓ src/__tests__/store-search.test.ts > GET /search/stores — HTTP > 400 {"q":"نور","page_size":"21"} → SEARCH_PAGE_SIZE_INVALID 4ms
+ ✓ src/__tests__/store-search.test.ts > GET /search/stores — HTTP > 400 {"q":"نور","locale":"fr"} → SEARCH_UNSUPPORTED_LOCALE 4ms
+ ✓ src/__tests__/store-search.test.ts > GET /search/stores — HTTP > 503 — not an empty page — when no store search port is composed 3ms
+      Tests  35 passed (35)

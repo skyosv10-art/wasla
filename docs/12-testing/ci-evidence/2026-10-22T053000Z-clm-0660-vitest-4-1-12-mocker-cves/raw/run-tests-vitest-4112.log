@@ -1,0 +1,1876 @@
+── الاختبارات — شِقّانِ (M0-35)
+  المتوازي: 58 حزمةً · المُسلسَلُ (بوّاباتٌ على قاعدةٍ واحدةٍ): 15 حزمةً
+
+[1/2] الشِّقُّ المتوازي
+  · مُرشِّحاتُ المتوازي: 58 حزمةً كلُّها في جردِ pnpm
+Scope: 58 of 74 workspace projects
+apps/admin-portal test$ vitest run
+apps/customer-mini-app test$ vitest run
+apps/driver-mini-app test$ vitest run
+packages/authz-policy test$ vitest run
+apps/customer-mini-app test:  RUN  v4.1.12 /home/user/workspace/wasla/apps/customer-mini-app
+apps/driver-mini-app test:  RUN  v4.1.12 /home/user/workspace/wasla/apps/driver-mini-app
+apps/admin-portal test:  RUN  v4.1.12 /home/user/workspace/wasla/apps/admin-portal
+packages/authz-policy test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/authz-policy
+packages/authz-policy test:  ✓ src/__tests__/policy.test.ts (40 tests) 106ms
+packages/authz-policy test:  ✓ src/__tests__/signer.test.ts (12 tests) 7ms
+packages/authz-policy test:  Test Files  2 passed (2)
+packages/authz-policy test:       Tests  52 passed (52)
+packages/authz-policy test:    Start at  02:11:47
+packages/authz-policy test:    Duration  1.62s (transform 489ms, setup 0ms, import 619ms, tests 113ms, environment 1ms)
+packages/authz-policy test: Done
+packages/compliance-review test$ vitest run --config vitest.config.ts
+apps/customer-mini-app test: stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > renders all form fields
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > renders the saved-place pickers for pickup and dropoff (G-S9.1)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/admin-portal test:  ✓ src/__tests__/moderation-screen.test.tsx (7 tests) 347ms
+apps/driver-mini-app test: stderr | src/__tests__/Home.test.tsx > Home screen > renders the app name
+apps/driver-mini-app test: Warning: An update to Home inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at Home (/home/user/workspace/wasla/apps/driver-mini-app/src/screens/Home.tsx:7:57)
+apps/driver-mini-app test: Warning: An update to Home inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at Home (/home/user/workspace/wasla/apps/driver-mini-app/src/screens/Home.tsx:7:57)
+apps/driver-mini-app test: stderr | src/__tests__/Home.test.tsx > Home screen > renders navigation items
+apps/driver-mini-app test: Warning: An update to Home inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at Home (/home/user/workspace/wasla/apps/driver-mini-app/src/screens/Home.tsx:7:57)
+apps/driver-mini-app test: Warning: An update to Home inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at Home (/home/user/workspace/wasla/apps/driver-mini-app/src/screens/Home.tsx:7:57)
+apps/driver-mini-app test: stderr | src/__tests__/Home.test.tsx > Home screen > renders links with correct hrefs
+apps/driver-mini-app test: Warning: An update to Home inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at Home (/home/user/workspace/wasla/apps/driver-mini-app/src/screens/Home.tsx:7:57)
+apps/driver-mini-app test: Warning: An update to Home inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at Home (/home/user/workspace/wasla/apps/driver-mini-app/src/screens/Home.tsx:7:57)
+packages/compliance-review test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/compliance-review
+apps/customer-mini-app test: stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > a manual zone edit without a picked place keeps the label the user typed (CLM-0622)
+apps/customer-mini-app test: Warning: An update to RideOrder inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > shows offered price field only when price_mode is customer_offer
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:13:57)
+packages/compliance-review test: stdout | src/__tests__/compliance-review.test.ts > M4-05 PDPL Compliance Requirements > should have a compliance score above 30%
+packages/compliance-review test: 
+packages/compliance-review test:   Compliance score: 50% (3/12 fully compliant)
+packages/compliance-review test: stdout | src/__tests__/compliance-review.test.ts > M4-05 Compliance Summary > should generate a compliance report
+packages/compliance-review test: 
+packages/compliance-review test:   === PDPL Compliance Report ===
+packages/compliance-review test:   Total requirements: 12
+packages/compliance-review test:   Fully compliant: 3
+packages/compliance-review test:   Gaps (partial + not implemented): 9
+packages/compliance-review test:   Compliance score: 50%
+packages/compliance-review test:   Sensitive data elements: 4
+packages/compliance-review test:   Data subject rights: 5
+packages/compliance-review test:  ✓ src/__tests__/compliance-review.test.ts (14 tests) 58ms
+packages/compliance-review test:  Test Files  1 passed (1)
+packages/compliance-review test:       Tests  14 passed (14)
+packages/compliance-review test:    Start at  02:11:50
+packages/compliance-review test:    Duration  619ms (transform 171ms, setup 0ms, import 190ms, tests 58ms, environment 0ms)
+packages/compliance-review test: Done
+packages/config test$ vitest run
+apps/customer-mini-app test:  ✓ src/__tests__/RideOrder.test.tsx (16 tests) 1384ms
+apps/driver-mini-app test:  ✓ src/__tests__/Home.test.tsx (12 tests) 905ms
+packages/config test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/config
+packages/config test:  ✓ src/__tests__/registry.test.ts (9 tests) 32ms
+packages/config test:  ✓ src/__tests__/readers.test.ts (24 tests) 23ms
+packages/config test:  Test Files  2 passed (2)
+packages/config test:       Tests  33 passed (33)
+packages/config test:    Start at  02:11:51
+packages/config test:    Duration  1.02s (transform 223ms, setup 0ms, import 278ms, tests 55ms, environment 0ms)
+packages/config test: Done
+packages/contracts/billing test$ vitest run
+apps/admin-portal test:  ✓ src/__tests__/orders-screen.test.tsx (7 tests) 318ms
+apps/driver-mini-app test:  ✓ src/__tests__/session-init.test.ts (12 tests) 396ms
+packages/contracts/billing test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/billing
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders screen > polls the list every STATUS_POLL_INTERVAL_MS while the screen is open
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders screen > polls the list every STATUS_POLL_INTERVAL_MS while the screen is open
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders screen > does not poll while the tab is hidden
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders screen > refreshes the open detail view periodically
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders screen > refreshes the open detail view periodically
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders screen > refreshes the open detail view periodically
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders screen > keeps the previous list when a poll fails (silent refresh)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+packages/contracts/billing test:  ✓ src/__tests__/contracts.test.ts (15 tests) 20ms
+packages/contracts/billing test:  Test Files  1 passed (1)
+packages/contracts/billing test:       Tests  15 passed (15)
+packages/contracts/billing test:    Start at  02:11:53
+packages/contracts/billing test:    Duration  578ms (transform 87ms, setup 0ms, import 99ms, tests 20ms, environment 0ms)
+packages/contracts/billing test: Done
+packages/contracts/channel test$ vitest run
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders detail — stale responses > a periodic refresh for A that lands after switching to B does not replace B
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders detail — stale responses > a periodic refresh for A that lands after switching to B does not replace B
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders detail — stale responses > a periodic refresh for A that lands after switching to B does not replace B
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: stderr | src/__tests__/MyOrders.test.tsx > MyOrders detail — stale responses > a periodic refresh for A that lands after switching to B does not replace B
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test: Warning: An update to MyOrders inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at MyOrders (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/MyOrders.tsx:12:57)
+apps/customer-mini-app test:  ✓ src/__tests__/MyOrders.test.tsx (19 tests) 857ms
+apps/admin-portal test:  ✓ src/__tests__/audit-screen.test.tsx (7 tests) 405ms
+packages/contracts/channel test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/channel
+apps/driver-mini-app test:  ✓ src/__tests__/Profile.test.tsx (14 tests) 267ms
+apps/customer-mini-app test: stderr | src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > renders all form fields including shipment details
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: stderr | src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > renders the saved-place pickers for pickup and dropoff (G-S9.1)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: stderr | src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > shows shipment type options
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test: Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+apps/customer-mini-app test:     at div
+apps/customer-mini-app test:     at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+apps/customer-mini-app test:  ✓ src/__tests__/DeliveryOrder.test.tsx (8 tests) 538ms
+apps/admin-portal test:  ✓ src/__tests__/partners-screen.test.tsx (8 tests) 336ms
+packages/contracts/channel test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 1991ms
+packages/contracts/channel test:      ✓ regenerating with the package's generate script changes nothing  1988ms
+apps/driver-mini-app test:  ✓ src/__tests__/Earnings.test.tsx (11 tests) 251ms
+packages/contracts/channel test:  ✓ src/__tests__/bot-role-spec.test.ts (9 tests) 8ms
+packages/contracts/channel test:  ✓ src/__tests__/events.test.ts (11 tests) 8ms
+apps/customer-mini-app test: stderr | src/__tests__/ZoneSearch.test.tsx > ZoneSearch component > uses the UI language as locale (en)
+apps/customer-mini-app test: Warning: An update to ZoneSearch inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at ZoneSearch (/home/user/workspace/wasla/apps/customer-mini-app/src/components/ZoneSearch.tsx:9:23)
+apps/customer-mini-app test:  ✓ src/__tests__/ZoneSearch.test.tsx (10 tests) 483ms
+packages/contracts/channel test:  ✓ src/__tests__/contracts.test.ts (13 tests) 9ms
+apps/admin-portal test:  ✓ src/__tests__/support-screen.test.tsx (7 tests) 266ms
+packages/contracts/channel test:  ✓ src/__tests__/errors.test.ts (10 tests) 13ms
+packages/contracts/channel test:  Test Files  5 passed (5)
+packages/contracts/channel test:       Tests  44 passed (44)
+packages/contracts/channel test:    Start at  02:11:55
+packages/contracts/channel test:    Duration  4.38s (transform 231ms, setup 0ms, import 342ms, tests 2.03s, environment 0ms)
+packages/contracts/channel test: Done
+packages/contracts/customer test$ vitest run
+apps/driver-mini-app test:  ✓ src/__tests__/Documents.test.tsx (10 tests) 196ms
+packages/contracts/customer test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/customer
+apps/customer-mini-app test:  ✓ src/__tests__/Profile.test.tsx (6 tests) 328ms
+apps/admin-portal test:  ✓ src/__tests__/drivers-screen.test.tsx (7 tests) 159ms
+apps/driver-mini-app test:  ✓ src/__tests__/Zones.test.tsx (12 tests) 222ms
+apps/customer-mini-app test:  ✓ src/__tests__/session-init.test.ts (12 tests) 421ms
+apps/driver-mini-app test: stderr | src/__tests__/Offers.test.tsx > Offers screen > renders empty state when no job_id provided
+apps/driver-mini-app test: react-i18next:: useTranslation: You will need to pass in an i18next instance by using initReactI18next { code: 'NO_I18NEXT_INSTANCE' }
+packages/contracts/customer test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2400ms
+packages/contracts/customer test:      ✓ regenerating with the package's generate script changes nothing  2398ms
+apps/driver-mini-app test:  ✓ src/__tests__/Offers.test.tsx (7 tests) 258ms
+apps/admin-portal test:  ✓ src/__tests__/dashboard.test.tsx (3 tests) 159ms
+packages/contracts/customer test:  ✓ src/__tests__/contracts.test.ts (29 tests) 28ms
+packages/contracts/customer test:  ✓ src/__tests__/events.test.ts (13 tests) 26ms
+packages/contracts/customer test:  Test Files  3 passed (3)
+packages/contracts/customer test:       Tests  43 passed (43)
+packages/contracts/customer test:    Start at  02:12:00
+packages/contracts/customer test:    Duration  3.96s (transform 249ms, setup 0ms, import 299ms, tests 2.45s, environment 8ms)
+packages/contracts/customer test: Done
+packages/contracts/delivery test$ vitest run
+apps/customer-mini-app test: stderr | src/__tests__/StoreSearch.test.tsx > StoreSearch component > uses the UI language as locale (ur)
+apps/customer-mini-app test: Warning: An update to StoreSearch inside a test was not wrapped in act(...).
+apps/customer-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/customer-mini-app test: act(() => {
+apps/customer-mini-app test:   /* fire events that update state */
+apps/customer-mini-app test: });
+apps/customer-mini-app test: /* assert on the output */
+apps/customer-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/customer-mini-app test:     at StoreSearch (/home/user/workspace/wasla/apps/customer-mini-app/src/components/StoreSearch.tsx:13:24)
+apps/customer-mini-app test:  ✓ src/__tests__/StoreSearch.test.tsx (9 tests) 404ms
+apps/driver-mini-app test: stderr | src/__tests__/dispatch.test.ts > dispatchStore — startPolling / stopPolling > starts polling and sets up timer for the job
+apps/driver-mini-app test: Warning: An update to TestComponent inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at TestComponent (/home/user/workspace/wasla/node_modules/.pnpm/@testing-library+react@16.3.3_@testing-library+dom@10.4.2_@types+react-dom@18.3.7_@types+reac_aeftit5ke2xxaf4nxeo4zj4kvi/node_modules/@testing-library/react/dist/pure.js:337:5)
+apps/driver-mini-app test: stderr | src/__tests__/dispatch.test.ts > dispatchStore — startPolling / stopPolling > does not restart polling if already polling the same job
+apps/driver-mini-app test: Warning: An update to TestComponent inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at TestComponent (/home/user/workspace/wasla/node_modules/.pnpm/@testing-library+react@16.3.3_@testing-library+dom@10.4.2_@types+react-dom@18.3.7_@types+reac_aeftit5ke2xxaf4nxeo4zj4kvi/node_modules/@testing-library/react/dist/pure.js:337:5)
+apps/driver-mini-app test: stderr | src/__tests__/dispatch.test.ts > dispatchStore — startPolling / stopPolling > does not restart polling if already polling the same job
+apps/driver-mini-app test: Warning: An update to TestComponent inside a test was not wrapped in act(...).
+apps/driver-mini-app test: When testing, code that causes React state updates should be wrapped into act(...):
+apps/driver-mini-app test: act(() => {
+apps/driver-mini-app test:   /* fire events that update state */
+apps/driver-mini-app test: });
+apps/driver-mini-app test: /* assert on the output */
+apps/driver-mini-app test: This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+apps/driver-mini-app test:     at TestComponent (/home/user/workspace/wasla/node_modules/.pnpm/@testing-library+react@16.3.3_@testing-library+dom@10.4.2_@types+react-dom@18.3.7_@types+reac_aeftit5ke2xxaf4nxeo4zj4kvi/node_modules/@testing-library/react/dist/pure.js:337:5)
+apps/driver-mini-app test:  ✓ src/__tests__/dispatch.test.ts (9 tests) 84ms
+packages/contracts/delivery test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/delivery
+apps/admin-portal test:  ✓ src/__tests__/frontend-quality.test.tsx (7 tests) 80ms
+packages/contracts/delivery test:  ✓ src/__tests__/contracts.test.ts (29 tests) 54ms
+packages/contracts/delivery test:  Test Files  1 passed (1)
+packages/contracts/delivery test:       Tests  29 passed (29)
+packages/contracts/delivery test:    Start at  02:12:05
+packages/contracts/delivery test:    Duration  545ms (transform 187ms, setup 0ms, import 205ms, tests 54ms, environment 0ms)
+packages/contracts/delivery test: Done
+packages/contracts/dispatch test$ vitest run
+packages/contracts/dispatch test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/dispatch
+apps/driver-mini-app test:  ✓ src/__tests__/Vehicles.test.tsx (12 tests) 413ms
+apps/customer-mini-app test:  ✓ src/__tests__/SavedPlaces.test.tsx (6 tests) 267ms
+apps/admin-portal test:  ✓ src/__tests__/users-screen.test.tsx (7 tests) 152ms
+apps/driver-mini-app test:  ✓ src/__tests__/App-session.test.tsx (3 tests) 152ms
+apps/admin-portal test:  ✓ src/__tests__/orders.test.ts (10 tests) 50ms
+apps/customer-mini-app test:  ✓ src/__tests__/Marketplace.test.tsx (5 tests) 217ms
+packages/contracts/dispatch test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2162ms
+packages/contracts/dispatch test:      ✓ regenerating with the package's generate script changes nothing  2160ms
+packages/contracts/dispatch test:  ✓ src/__tests__/events.test.ts (4 tests) 77ms
+apps/driver-mini-app test: stderr | src/__tests__/JobDetail.test.tsx > JobDetail screen > renders empty state when no job_id provided
+apps/driver-mini-app test: react-i18next:: useTranslation: You will need to pass in an i18next instance by using initReactI18next { code: 'NO_I18NEXT_INSTANCE' }
+apps/driver-mini-app test:  ✓ src/__tests__/JobDetail.test.tsx (10 tests) 234ms
+packages/contracts/dispatch test:  ✓ src/__tests__/boundary.test.ts (4 tests) 4ms
+apps/admin-portal test:  ✓ src/__tests__/users.test.ts (9 tests) 12ms
+packages/contracts/dispatch test:  ✓ src/__tests__/contracts.test.ts (9 tests) 8ms
+packages/contracts/dispatch test:  ✓ src/__tests__/schema.test.ts (5 tests) 10ms
+packages/contracts/dispatch test:  Test Files  5 passed (5)
+packages/contracts/dispatch test:       Tests  23 passed (23)
+packages/contracts/dispatch test:    Start at  02:12:07
+packages/contracts/dispatch test:    Duration  4.52s (transform 208ms, setup 0ms, import 323ms, tests 2.26s, environment 0ms)
+packages/contracts/dispatch test: Done
+packages/contracts/driver test$ vitest run
+apps/customer-mini-app test:  ✓ src/__tests__/Home.test.tsx (4 tests) 286ms
+apps/admin-portal test:  ✓ src/__tests__/audit.test.ts (7 tests) 17ms
+apps/driver-mini-app test:  ✓ src/__tests__/frontend-quality.test.tsx (7 tests) 155ms
+packages/contracts/driver test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/driver
+apps/driver-mini-app test:  ✓ src/__tests__/profile.test.ts (6 tests) 7ms
+apps/customer-mini-app test:  ✓ src/__tests__/Reputation.test.tsx (4 tests) 149ms
+apps/admin-portal test:  ✓ src/__tests__/drivers.test.ts (11 tests) 41ms
+apps/driver-mini-app test:  ✓ src/__tests__/earnings.test.ts (8 tests) 8ms
+packages/contracts/driver test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2623ms
+packages/contracts/driver test:      ✓ regenerating with the package's generate script changes nothing  2620ms
+apps/customer-mini-app test:  ✓ src/__tests__/App-session.test.tsx (3 tests) 121ms
+apps/admin-portal test:  ✓ src/__tests__/session.test.ts (4 tests) 5ms
+apps/admin-portal test:  Test Files  14 passed (14)
+apps/admin-portal test:       Tests  101 passed (101)
+apps/admin-portal test:    Start at  02:11:47
+apps/admin-portal test:    Duration  28.06s (transform 830ms, setup 4.37s, import 1.94s, tests 2.35s, environment 13.19s)
+apps/admin-portal test: Done
+packages/contracts/geography test$ vitest run
+packages/contracts/driver test:  ✓ src/__tests__/events.test.ts (10 tests) 50ms
+apps/driver-mini-app test:  ✓ src/__tests__/vehicles.test.ts (8 tests) 8ms
+packages/contracts/driver test:  ✓ src/__tests__/boundary.test.ts (7 tests) 33ms
+packages/contracts/geography test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/geography
+packages/contracts/driver test:  ✓ src/__tests__/schema.test.ts (29 tests) 32ms
+apps/customer-mini-app test:  ✓ src/__tests__/Search.test.tsx (6 tests) 214ms
+packages/contracts/driver test:  ✓ src/__tests__/contracts.test.ts (13 tests) 11ms
+packages/contracts/driver test:  Test Files  5 passed (5)
+packages/contracts/driver test:       Tests  60 passed (60)
+packages/contracts/driver test:    Start at  02:12:12
+packages/contracts/driver test:    Duration  5.15s (transform 235ms, setup 0ms, import 335ms, tests 2.75s, environment 0ms)
+packages/contracts/driver test: Done
+packages/contracts/identity test$ vitest run
+apps/driver-mini-app test:  ✓ src/__tests__/documents.test.ts (6 tests) 27ms
+packages/contracts/identity test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/identity
+apps/customer-mini-app test:  ✓ src/__tests__/frontend-quality.test.tsx (7 tests) 36ms
+packages/contracts/geography test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2269ms
+packages/contracts/geography test:      ✓ regenerating with the package's generate script changes nothing  2267ms
+apps/driver-mini-app test:  ✓ src/__tests__/session.test.ts (4 tests) 10ms
+packages/contracts/geography test:  ✓ src/__tests__/events.test.ts (5 tests) 10ms
+packages/contracts/geography test:  ✓ src/__tests__/contracts.test.ts (10 tests) 5ms
+packages/contracts/geography test:  Test Files  3 passed (3)
+packages/contracts/geography test:       Tests  16 passed (16)
+packages/contracts/geography test:    Start at  02:12:16
+packages/contracts/geography test:    Duration  3.62s (transform 151ms, setup 0ms, import 195ms, tests 2.28s, environment 5ms)
+packages/contracts/geography test: Done
+packages/contracts/marketplace test$ vitest run
+packages/contracts/identity test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 1865ms
+packages/contracts/identity test:      ✓ regenerating with the package's generate script changes nothing  1863ms
+apps/customer-mini-app test:  ✓ src/__tests__/session.test.ts (5 tests) 8ms
+packages/contracts/marketplace test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/marketplace
+packages/contracts/identity test:  ✓ src/__tests__/events.test.ts (7 tests) 6ms
+apps/driver-mini-app test:  ✓ src/__tests__/zones.test.ts (8 tests) 17ms
+apps/driver-mini-app test:  Test Files  18 passed (18)
+apps/driver-mini-app test:       Tests  159 passed (159)
+apps/driver-mini-app test:    Start at  02:11:47
+apps/driver-mini-app test:    Duration  33.87s (transform 1.17s, setup 3.10s, import 3.38s, tests 3.61s, environment 15.56s)
+apps/driver-mini-app test: Done
+packages/contracts/matching test$ vitest run
+packages/contracts/identity test:  ✓ src/__tests__/contracts.test.ts (6 tests) 4ms
+packages/contracts/identity test:  Test Files  3 passed (3)
+packages/contracts/identity test:       Tests  14 passed (14)
+packages/contracts/identity test:    Start at  02:12:18
+packages/contracts/identity test:    Duration  3.55s (transform 146ms, setup 0ms, import 198ms, tests 1.88s, environment 0ms)
+packages/contracts/identity test: Done
+packages/contracts/negotiation test$ vitest run
+packages/contracts/matching test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/matching
+packages/contracts/negotiation test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/negotiation
+apps/customer-mini-app test:  ✓ src/__tests__/order-form.test.ts (13 tests) 26ms
+apps/customer-mini-app test:  Test Files  16 passed (16)
+apps/customer-mini-app test:       Tests  133 passed (133)
+apps/customer-mini-app test:    Start at  02:11:47
+apps/customer-mini-app test:    Duration  35.13s (transform 1.10s, setup 3.36s, import 3.72s, tests 5.74s, environment 14.99s)
+apps/customer-mini-app test: Done
+packages/contracts/order test$ vitest run
+packages/contracts/marketplace test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2095ms
+packages/contracts/marketplace test:      ✓ regenerating with the package's generate script changes nothing  2093ms
+packages/contracts/order test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/order
+packages/contracts/marketplace test:  ✓ src/__tests__/schema.test.ts (12 tests) 33ms
+packages/contracts/marketplace test:  ✓ src/__tests__/events.test.ts (8 tests) 25ms
+packages/contracts/matching test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2256ms
+packages/contracts/matching test:      ✓ regenerating with the package's generate script changes nothing  2254ms
+packages/contracts/negotiation test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2287ms
+packages/contracts/negotiation test:      ✓ regenerating with the package's generate script changes nothing  2285ms
+packages/contracts/marketplace test:  ✓ src/__tests__/contracts.test.ts (16 tests) 55ms
+packages/contracts/matching test:  ✓ src/__tests__/events.test.ts (6 tests) 16ms
+packages/contracts/negotiation test:  ✓ src/__tests__/boundary.test.ts (13 tests) 21ms
+packages/contracts/marketplace test:  ✓ src/__tests__/boundary.test.ts (10 tests) 30ms
+packages/contracts/marketplace test:  Test Files  5 passed (5)
+packages/contracts/marketplace test:       Tests  47 passed (47)
+packages/contracts/marketplace test:    Start at  02:12:21
+packages/contracts/marketplace test:    Duration  4.75s (transform 215ms, setup 0ms, import 322ms, tests 2.24s, environment 0ms)
+packages/contracts/marketplace test: Done
+packages/contracts/reputation test$ vitest run
+packages/contracts/matching test:  ✓ src/__tests__/schema.test.ts (5 tests) 4ms
+packages/contracts/negotiation test:  ✓ src/__tests__/contracts.test.ts (14 tests) 37ms
+packages/contracts/order test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2119ms
+packages/contracts/order test:      ✓ regenerating with the package's generate script changes nothing  2111ms
+packages/contracts/negotiation test:  ✓ src/__tests__/schema.test.ts (30 tests) 27ms
+packages/contracts/matching test:  ✓ src/__tests__/contracts.test.ts (10 tests) 10ms
+packages/contracts/reputation test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/reputation
+packages/contracts/order test:  ✓ src/__tests__/transitions-doc.test.ts (21 tests) 50ms
+packages/contracts/matching test:  ✓ src/__tests__/boundary.test.ts (3 tests) 5ms
+packages/contracts/matching test:  Test Files  5 passed (5)
+packages/contracts/matching test:       Tests  25 passed (25)
+packages/contracts/matching test:    Start at  02:12:22
+packages/contracts/matching test:    Duration  4.71s (transform 175ms, setup 0ms, import 265ms, tests 2.29s, environment 0ms)
+packages/contracts/matching test: Done
+packages/contracts/search test$ vitest run
+packages/contracts/negotiation test:  ✓ src/__tests__/events.test.ts (13 tests) 40ms
+packages/contracts/negotiation test:  Test Files  5 passed (5)
+packages/contracts/negotiation test:       Tests  71 passed (71)
+packages/contracts/negotiation test:    Start at  02:12:22
+packages/contracts/negotiation test:    Duration  4.72s (transform 197ms, setup 0ms, import 319ms, tests 2.41s, environment 0ms)
+packages/contracts/negotiation test: Done
+packages/contracts/subscription test$ vitest run
+packages/contracts/order test:  ✓ src/__tests__/contracts.test.ts (49 tests) 41ms
+packages/contracts/search test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/search
+packages/contracts/subscription test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/subscription
+packages/contracts/order test:  ✓ src/__tests__/boundary.test.ts (31 tests) 41ms
+packages/contracts/search test:  ✓ src/__tests__/contracts.test.ts (25 tests) 38ms
+packages/contracts/search test:  Test Files  1 passed (1)
+packages/contracts/search test:       Tests  25 passed (25)
+packages/contracts/search test:    Start at  02:12:28
+packages/contracts/search test:    Duration  597ms (transform 105ms, setup 0ms, import 122ms, tests 38ms, environment 0ms)
+packages/contracts/search test: Done
+packages/contracts/support test$ vitest run
+packages/contracts/order test:  ✓ src/__tests__/events.test.ts (18 tests) 29ms
+packages/contracts/order test:  Test Files  5 passed (5)
+packages/contracts/order test:       Tests  120 passed (120)
+packages/contracts/order test:    Start at  02:12:23
+packages/contracts/order test:    Duration  4.86s (transform 302ms, setup 0ms, import 412ms, tests 2.28s, environment 0ms)
+packages/contracts/order test: Done
+packages/errors test$ vitest run
+packages/contracts/reputation test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 2208ms
+packages/contracts/reputation test:      ✓ regenerating with the package's generate script changes nothing  2206ms
+packages/contracts/support test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/contracts/support
+packages/errors test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/errors
+packages/contracts/reputation test:  ✓ src/__tests__/events.test.ts (20 tests) 40ms
+packages/errors test:  ✓ src/__tests__/errors.test.ts (3 tests) 4ms
+packages/errors test:  Test Files  1 passed (1)
+packages/errors test:       Tests  3 passed (3)
+packages/errors test:    Start at  02:12:29
+packages/errors test:    Duration  387ms (transform 34ms, setup 0ms, import 45ms, tests 4ms, environment 0ms)
+packages/errors test: Done
+packages/golden-e2e test$ vitest run
+packages/contracts/reputation test:  ✓ src/__tests__/boundary.test.ts (19 tests) 21ms
+packages/contracts/subscription test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 1942ms
+packages/contracts/subscription test:      ✓ regenerating with the package's generate script changes nothing  1940ms
+packages/contracts/reputation test:  ✓ src/__tests__/contracts.test.ts (18 tests) 28ms
+packages/golden-e2e test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/golden-e2e
+packages/contracts/subscription test:  ✓ src/__tests__/contracts.test.ts (11 tests) 25ms
+packages/golden-e2e test:  ↓ src/__tests__/golden-journeys.golden.test.ts (39 tests | 39 skipped)
+packages/golden-e2e test:  Test Files  1 skipped (1)
+packages/golden-e2e test:       Tests  39 skipped (39)
+packages/golden-e2e test:    Start at  02:12:31
+packages/golden-e2e test:    Duration  426ms (transform 134ms, setup 0ms, import 148ms, tests 0ms, environment 0ms)
+packages/golden-e2e test: Done
+packages/incident-ops test$ vitest run --config vitest.config.ts
+packages/contracts/reputation test:  ✓ src/__tests__/schema.test.ts (24 tests) 64ms
+packages/contracts/reputation test:  Test Files  5 passed (5)
+packages/contracts/reputation test:       Tests  82 passed (82)
+packages/contracts/reputation test:    Start at  02:12:26
+packages/contracts/reputation test:    Duration  4.78s (transform 288ms, setup 0ms, import 398ms, tests 2.36s, environment 0ms)
+packages/contracts/subscription test:  ✓ src/__tests__/events.test.ts (6 tests) 28ms
+packages/contracts/reputation test: Done
+packages/observability test$ vitest run
+packages/contracts/support test:  ✓ src/__tests__/api-types-drift.test.ts (1 test) 1978ms
+packages/contracts/support test:      ✓ regenerating with the package's generate script changes nothing  1975ms
+packages/incident-ops test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/incident-ops
+packages/contracts/subscription test:  ✓ src/__tests__/boundary.test.ts (7 tests) 7ms
+packages/contracts/support test:  ✓ src/__tests__/contracts.test.ts (13 tests) 22ms
+packages/contracts/support test:  Test Files  2 passed (2)
+packages/contracts/support test:       Tests  14 passed (14)
+packages/contracts/support test:    Start at  02:12:29
+packages/contracts/support test:    Duration  3.00s (transform 138ms, setup 0ms, import 159ms, tests 2.00s, environment 0ms)
+packages/observability test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/observability
+packages/contracts/support test: Done
+packages/outbox test$ vitest run
+packages/contracts/subscription test:  ✓ src/__tests__/schema.test.ts (7 tests) 15ms
+packages/contracts/subscription test:  Test Files  5 passed (5)
+packages/contracts/subscription test:       Tests  32 passed (32)
+packages/contracts/subscription test:    Start at  02:12:28
+packages/contracts/subscription test:    Duration  4.62s (transform 249ms, setup 0ms, import 391ms, tests 2.02s, environment 0ms)
+packages/contracts/subscription test: Done
+packages/pilot-feedback test$ vitest run --config vitest.config.ts
+packages/incident-ops test:  ✓ src/__tests__/incident-ops.test.ts (12 tests | 2 skipped) 16ms
+packages/incident-ops test:  Test Files  1 passed (1)
+packages/incident-ops test:       Tests  10 passed | 2 skipped (12)
+packages/incident-ops test:    Start at  02:12:32
+packages/incident-ops test:    Duration  675ms (transform 128ms, setup 0ms, import 142ms, tests 16ms, environment 5ms)
+packages/incident-ops test: Done
+packages/resilience test$ vitest run
+packages/outbox test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/outbox
+packages/observability test:  ✓ src/__tests__/metrics.test.ts (6 tests) 269ms
+packages/resilience test:  DEPRECATED  `test.poolOptions` was removed in Vitest 4. All previous `poolOptions` are now top-level options. Please, refer to the migration guide: https://vitest.dev/guide/migration#pool-rework
+packages/resilience test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/resilience
+packages/pilot-feedback test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/pilot-feedback
+packages/outbox test:  ✓ src/__tests__/drain.test.ts (6 tests) 18ms
+packages/outbox test:  Test Files  1 passed (1)
+packages/outbox test:       Tests  6 passed (6)
+packages/outbox test:    Start at  02:12:33
+packages/outbox test:    Duration  620ms (transform 97ms, setup 0ms, import 116ms, tests 18ms, environment 0ms)
+packages/outbox test: Done
+packages/pilot-feedback test:  ✓ src/__tests__/pilot-feedback.test.ts (18 tests) 15ms
+packages/pilot-feedback test:  Test Files  1 passed (1)
+packages/pilot-feedback test:       Tests  18 passed (18)
+packages/pilot-feedback test:    Start at  02:12:33
+packages/pilot-feedback test:    Duration  509ms (transform 152ms, setup 0ms, import 168ms, tests 15ms, environment 0ms)
+packages/pilot-feedback test: Done
+packages/observability test:  ✓ src/__tests__/synthetic-trace.test.ts (4 tests) 92ms
+packages/observability test:  Test Files  2 passed (2)
+packages/observability test:       Tests  10 passed (10)
+packages/observability test:    Start at  02:12:32
+packages/observability test:    Duration  1.83s (transform 182ms, setup 0ms, import 643ms, tests 361ms, environment 0ms)
+packages/observability test: Done
+packages/resilience test:  ✓ src/__tests__/pg-guard.test.ts (36 tests) 5099ms
+packages/resilience test:      ✓ a hanging database on a pool with a 5 s connect bound is 'down' in < 3 s  2504ms
+packages/resilience test:      ✓ reports a pool created after the hook was attached (resolved per request)  2501ms
+packages/resilience test:  ✓ src/__tests__/chaos-scenarios.test.ts (10 tests) 174ms
+packages/resilience test:  ✓ src/__tests__/bulkhead.test.ts (6 tests) 157ms
+packages/resilience test:  ✓ src/__tests__/timeout.test.ts (6 tests) 157ms
+packages/resilience test:  ✓ src/__tests__/pool-tls-coverage.test.ts (3 tests) 59ms
+packages/resilience test:  ✓ src/__tests__/retry.test.ts (6 tests) 15ms
+packages/resilience test:  ✓ src/__tests__/circuit-breaker.test.ts (7 tests) 5ms
+packages/resilience test:  Test Files  7 passed (7)
+packages/resilience test:       Tests  74 passed (74)
+packages/resilience test:    Start at  02:12:33
+packages/resilience test:    Duration  6.95s (transform 267ms, setup 0ms, import 386ms, tests 5.66s, environment 1ms)
+packages/resilience test: Done
+packages/auth-sdk test$ vitest run
+packages/channel-core test$ vitest run
+packages/load-testing test$ vitest run --config vitest.config.ts
+packages/tick-scheduler test$ vitest run
+packages/tick-scheduler test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/tick-scheduler
+packages/auth-sdk test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/auth-sdk
+packages/channel-core test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/channel-core
+packages/load-testing test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/load-testing
+packages/auth-sdk test:  ✓ src/__tests__/principal.test.ts (33 tests) 36ms
+packages/channel-core test:  ✓ src/__tests__/neutrality.guard.test.ts (40 tests) 13ms
+packages/load-testing test:  ↓ src/__tests__/load-capacity.test.ts (18 tests | 18 skipped)
+packages/load-testing test:  Test Files  1 skipped (1)
+packages/load-testing test:       Tests  18 skipped (18)
+packages/load-testing test:    Start at  02:12:41
+packages/load-testing test:    Duration  785ms (transform 235ms, setup 0ms, import 267ms, tests 0ms, environment 0ms)
+packages/load-testing test: Done
+services/billing test$ vitest run
+packages/tick-scheduler test:  ✓ src/__tests__/scheduler.test.ts (15 tests) 296ms
+packages/tick-scheduler test:  Test Files  1 passed (1)
+packages/tick-scheduler test:       Tests  15 passed (15)
+packages/tick-scheduler test:    Start at  02:12:41
+packages/tick-scheduler test:    Duration  1.24s (transform 614ms, setup 0ms, import 693ms, tests 296ms, environment 0ms)
+packages/tick-scheduler test: Done
+services/delivery test$ vitest run
+packages/auth-sdk test:  ✓ src/__tests__/authorize.test.ts (29 tests) 11ms
+packages/channel-core test:  ✓ src/__tests__/receive-update.test.ts (12 tests) 20ms
+packages/auth-sdk test:  ✓ src/__tests__/describe.test.ts (6 tests) 5ms
+packages/channel-core test:  ✓ src/__tests__/groups.test.ts (16 tests) 33ms
+packages/auth-sdk test:  Test Files  3 passed (3)
+packages/auth-sdk test:       Tests  68 passed (68)
+packages/auth-sdk test:    Start at  02:12:41
+packages/auth-sdk test:    Duration  1.81s (transform 261ms, setup 0ms, import 356ms, tests 52ms, environment 0ms)
+packages/auth-sdk test: Done
+services/observability test$ vitest run
+services/billing test:  RUN  v4.1.12 /home/user/workspace/wasla/services/billing
+services/delivery test:  RUN  v4.1.12 /home/user/workspace/wasla/services/delivery
+packages/channel-core test:  ✓ src/__tests__/send-message.test.ts (14 tests) 25ms
+services/observability test:  RUN  v4.1.12 /home/user/workspace/wasla/services/observability
+packages/channel-core test:  ✓ src/__tests__/deep-link.test.ts (8 tests) 9ms
+services/billing test: stderr | src/__tests__/db-failure-containment.test.ts > billing — database refused (down) > fails 5 times, then the breaker rejects fast without touching the database; health is 503
+services/billing test: {"level":"warn","event":"db_breaker_transition","pool":"billing","from":"closed","to":"open","failures":5}
+services/observability test:  ✓ src/__tests__/config.test.ts (11 tests) 11ms
+services/observability test:  Test Files  1 passed (1)
+services/observability test:       Tests  11 passed (11)
+services/observability test:    Start at  02:12:43
+services/observability test:    Duration  844ms (transform 154ms, setup 0ms, import 168ms, tests 11ms, environment 0ms)
+packages/channel-core test:  ✓ src/__tests__/launch-surfaces.test.ts (5 tests) 11ms
+services/observability test: Done
+services/search test$ vitest run
+packages/channel-core test:  ✓ src/__tests__/retry.test.ts (9 tests) 10ms
+packages/channel-core test:  Test Files  7 passed (7)
+packages/channel-core test:       Tests  104 passed (104)
+packages/channel-core test:    Start at  02:12:41
+packages/channel-core test:    Duration  3.77s (transform 423ms, setup 0ms, import 724ms, tests 121ms, environment 4ms)
+packages/channel-core test: Done
+services/support test$ vitest run
+services/search test:  RUN  v4.1.12 /home/user/workspace/wasla/services/search
+services/billing test:  ✓ src/__tests__/db-failure-containment.test.ts (2 tests) 1008ms
+services/billing test:      ✓ a call is bounded by the connect timeout instead of hanging, and health answers 503 within its probe bound  821ms
+services/delivery test:  ✓ src/__tests__/store-order-http.test.ts (31 tests) 608ms
+services/support test:  RUN  v4.1.12 /home/user/workspace/wasla/services/support
+services/billing test:  ✓ src/__tests__/http.test.ts (16 tests) 221ms
+services/billing test:  ✓ src/__tests__/relay-loop.test.ts (3 tests) 77ms
+services/delivery test:  ✓ src/__tests__/readiness-probe-bound.test.ts (3 tests) 557ms
+services/delivery test:      ✓ a slow-but-successful cold connect is ready, not a false probe_timeout  303ms
+services/search test:  ✓ src/__tests__/store-search.test.ts (46 tests) 288ms
+services/billing test:  ✓ src/__tests__/relay.test.ts (19 tests) 69ms
+services/billing test:  ✓ src/__tests__/domain.test.ts (47 tests) 47ms
+services/delivery test:  ✓ src/__tests__/service-identity.test.ts (25 tests) 338ms
+services/search test:  ✓ src/__tests__/http-app.test.ts (12 tests) 245ms
+services/billing test:  ✓ src/__tests__/schema-drift.test.ts (8 tests) 20ms
+services/support test:  ✓ src/__tests__/user-assertion-ownership.test.ts (16 tests) 630ms
+services/billing test:  ✓ src/__tests__/infrastructure.test.ts (11 tests) 16ms
+services/billing test:  ✓ src/__tests__/delivery-contract.test.ts (7 tests) 12ms
+services/search test:  ✓ src/__tests__/service-identity.test.ts (12 tests) 279ms
+services/delivery test:  ✓ src/__tests__/http-marketplace-catalog.test.ts (18 tests) 572ms
+services/delivery test:      ✓ places an order for a slug — the answer that was 503 for seven reviews  415ms
+services/support test:  ✓ src/__tests__/http.test.ts (16 tests) 347ms
+services/billing test:  ✓ src/__tests__/boundary.test.ts (5 tests) 5ms
+services/billing test:  Test Files  9 passed (9)
+services/billing test:       Tests  118 passed (118)
+services/billing test:    Start at  02:12:43
+services/billing test:    Duration  6.03s (transform 634ms, setup 0ms, import 1.78s, tests 1.48s, environment 1ms)
+services/billing test: Done
+services/delivery test:  ✓ src/__tests__/relay-dead-letter-acknowledgement-http.test.ts (18 tests) 274ms
+services/search test:  ✓ src/__tests__/relay-dead-letters.test.ts (13 tests) 323ms
+services/support test:  ✓ src/__tests__/reputation-bridge.test.ts (7 tests) 175ms
+services/support test:  ✓ src/__tests__/relay.test.ts (30 tests) 36ms
+services/delivery test:  ✓ src/__tests__/payment-mirror.test.ts (25 tests) 346ms
+services/search test:  ✓ src/__tests__/relay-acknowledgement.test.ts (14 tests) 170ms
+services/support test:  ✓ src/__tests__/infrastructure.test.ts (24 tests) 41ms
+services/delivery test:  ✓ src/__tests__/inventory-conflict-acknowledgement-http.test.ts (10 tests) 180ms
+services/support test:  ✓ src/__tests__/domain.test.ts (24 tests) 20ms
+services/search test:  ✓ src/__tests__/relay-requeue.test.ts (10 tests) 205ms
+services/support test:  ✓ src/__tests__/boundary.test.ts (7 tests) 8ms
+services/search test:  ✓ src/__tests__/schema-drift.test.ts (21 tests) 67ms
+services/support test:  ✓ src/__tests__/schema-drift.test.ts (5 tests) 6ms
+services/support test:  Test Files  8 passed (8)
+services/support test:       Tests  129 passed (129)
+services/support test:    Start at  02:12:46
+services/support test:    Duration  5.95s (transform 879ms, setup 0ms, import 2.07s, tests 1.26s, environment 1ms)
+services/support test: Done
+services/delivery test:  ✓ src/__tests__/user-assertion-ownership.test.ts (7 tests) 219ms
+services/search test:  ✓ src/__tests__/relay.test.ts (11 tests) 21ms
+services/search test:  ✓ src/__tests__/projector.test.ts (9 tests) 6ms
+services/search test:  ✓ src/__tests__/query.test.ts (9 tests) 11ms
+services/delivery test:  ✓ src/__tests__/inventory-conflict-http.test.ts (10 tests) 164ms
+services/search test:  ✓ src/__tests__/http-requests.test.ts (12 tests) 9ms
+services/search test:  ✓ src/__tests__/ranking.test.ts (9 tests) 6ms
+services/delivery test:  ✓ src/__tests__/relay-requeue-http.test.ts (12 tests) 177ms
+services/search test:  ✓ src/__tests__/event-coverage.test.ts (3 tests) 5ms
+services/search test:  ✓ src/__tests__/visibility.test.ts (6 tests) 4ms
+services/search test:  Test Files  14 passed (14)
+services/search test:       Tests  187 passed (187)
+services/search test:    Start at  02:12:45
+services/search test:    Duration  8.25s (transform 957ms, setup 0ms, import 2.94s, tests 1.64s, environment 4ms)
+services/search test: Done
+services/delivery test:  ✓ src/__tests__/relay-dead-letter-http.test.ts (10 tests) 119ms
+services/delivery test:  ✓ src/__tests__/fulfillment-transition.http.test.ts (8 tests) 131ms
+services/delivery test:  ✓ src/__tests__/user-assertion-ownership-batch2.test.ts (10 tests) 120ms
+services/delivery test:  ✓ src/__tests__/idempotency-retention.test.ts (17 tests) 103ms
+services/delivery test:  ✓ src/__tests__/retry-after.test.ts (10 tests) 94ms
+services/delivery test:  ✓ src/__tests__/readiness-observation.test.ts (12 tests) 86ms
+services/delivery test:  ✓ src/__tests__/schema-drift.test.ts (34 tests) 34ms
+services/delivery test:  ✓ src/__tests__/marketplace-health-probe.test.ts (21 tests) 20ms
+services/delivery test:  ✓ src/__tests__/marketplace-reservation-contract-drift.test.ts (3 tests) 23ms
+services/delivery test:  ✓ src/__tests__/state-machine.test.ts (10 tests) 17ms
+services/delivery test:  ✓ src/__tests__/relay.test.ts (21 tests) 16ms
+services/delivery test:  ✓ src/__tests__/relay-dead-letters.unit.test.ts (21 tests) 9ms
+services/delivery test:  ✓ src/__tests__/dispatch-mirror.test.ts (23 tests) 11ms
+services/delivery test:  ✓ src/__tests__/idempotency.test.ts (23 tests) 11ms
+services/delivery test:  ✓ src/__tests__/idempotency-sweep-runner.test.ts (21 tests) 11ms
+services/delivery test:  ✓ src/__tests__/delegation.test.ts (11 tests) 11ms
+services/delivery test:  ✓ src/__tests__/store-order-domain.test.ts (14 tests) 10ms
+services/delivery test:  ✓ src/__tests__/dependency-probe.test.ts (20 tests) 10ms
+services/delivery test:  ✓ src/__tests__/validation.test.ts (15 tests) 10ms
+services/delivery test:  ✓ src/__tests__/marketplace-inventory.test.ts (29 tests) 12ms
+services/delivery test:  ✓ src/__tests__/service-auth-docs-drift.test.ts (7 tests) 9ms
+services/delivery test:  ✓ src/__tests__/ops-runner-purity.test.ts (11 tests) 8ms
+services/delivery test:  ✓ src/__tests__/inventory-conflict.unit.test.ts (18 tests) 8ms
+services/delivery test:  ✓ src/__tests__/reservation-store-fake.test.ts (6 tests) 8ms
+services/delivery test:  ✓ src/__tests__/inventory-reservation.unit.test.ts (18 tests) 7ms
+services/delivery test:  ✓ src/__tests__/relay-acknowledgement.unit.test.ts (13 tests) 7ms
+services/delivery test:  ✓ src/__tests__/conflict-acknowledger.unit.test.ts (7 tests) 6ms
+services/delivery test:  ✓ src/__tests__/fulfillment-transition.unit.test.ts (9 tests) 6ms
+services/delivery test:  ✓ src/__tests__/marketplace-actor-contract-drift.test.ts (4 tests) 5ms
+services/delivery test:  ✓ src/__tests__/event-coverage.test.ts (4 tests) 5ms
+services/delivery test:  ✓ src/__tests__/relay-reprocess.test.ts (9 tests) 5ms
+services/delivery test:  ✓ src/__tests__/store-order-confirmation-inventory.unit.test.ts (4 tests) 4ms
+services/delivery test:  Test Files  42 passed (42)
+services/delivery test:       Tests  602 passed (602)
+services/delivery test:    Start at  02:12:43
+services/delivery test:    Duration  17.60s (transform 1.39s, setup 0ms, import 4.53s, tests 4.37s, environment 4ms)
+services/delivery test: Done
+packages/channel-postgres test$ vitest run
+packages/telegram-adapter test$ vitest run
+services/customers test$ vitest run
+services/audit test$ vitest run
+services/customers test:  RUN  v4.1.12 /home/user/workspace/wasla/services/customers
+packages/telegram-adapter test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/telegram-adapter
+services/audit test:  RUN  v4.1.12 /home/user/workspace/wasla/services/audit
+packages/channel-postgres test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/channel-postgres
+packages/channel-postgres test:  ✓ src/__tests__/schema-drift.test.ts (9 tests) 21ms
+packages/channel-postgres test:  Test Files  1 passed (1)
+packages/channel-postgres test:       Tests  9 passed (9)
+packages/channel-postgres test:    Start at  02:13:01
+packages/channel-postgres test:    Duration  704ms (transform 158ms, setup 0ms, import 428ms, tests 21ms, environment 0ms)
+packages/channel-postgres test: Done
+services/drivers test$ vitest run
+packages/telegram-adapter test:  ✓ src/__tests__/update-parser.test.ts (23 tests) 55ms
+services/audit test:  ✓ src/__tests__/http/audit-routes.test.ts (26 tests) 262ms
+services/audit test:  Test Files  1 passed (1)
+services/audit test:       Tests  26 passed (26)
+services/audit test:    Start at  02:13:01
+services/audit test:    Duration  1.76s (transform 793ms, setup 0ms, import 989ms, tests 262ms, environment 0ms)
+services/audit test: Done
+services/identity test$ vitest run
+services/drivers test:  RUN  v4.1.12 /home/user/workspace/wasla/services/drivers
+packages/telegram-adapter test:  ✓ src/__tests__/init-data.test.ts (33 tests) 96ms
+services/customers test:  ✓ src/__tests__/http/app.test.ts (35 tests) 819ms
+packages/telegram-adapter test:  ✓ src/__tests__/port-conformance.test.ts (8 tests) 34ms
+services/identity test:  RUN  v4.1.12 /home/user/workspace/wasla/services/identity
+packages/telegram-adapter test:  ✓ src/__tests__/channel-adapter.test.ts (17 tests) 60ms
+services/customers test:  ✓ src/__tests__/http/admin-routes.test.ts (13 tests) 557ms
+services/drivers test:  ✓ src/__tests__/service-identity.test.ts (13 tests) 506ms
+services/drivers test:      ✓ لا هوية → 401 بمغلف عقد السائقين (error.code مسطَّح) ولا يُسمّى سبب الرفض  348ms
+packages/telegram-adapter test:  ✓ src/__tests__/rate-limit.test.ts (8 tests) 24ms
+services/identity test:  ✓ src/__tests__/http/user-assertion.test.ts (8 tests) 273ms
+packages/telegram-adapter test:  ✓ src/__tests__/error-mapping.test.ts (10 tests) 7ms
+services/customers test:  ✓ src/__tests__/http-order-intake.test.ts (17 tests) 290ms
+packages/telegram-adapter test:  ✓ src/__tests__/keyboard.test.ts (12 tests) 27ms
+services/identity test:  ✓ src/__tests__/http/link-asserted-ownership.test.ts (5 tests) 303ms
+services/drivers test:  ✓ src/__tests__/availability-eligibility-boundaries.test.ts (7 tests) 364ms
+packages/telegram-adapter test:  ✓ src/__tests__/webhook-auth.test.ts (8 tests) 33ms
+services/customers test:  ✓ src/__tests__/service-identity.test.ts (13 tests) 366ms
+packages/telegram-adapter test:  ✓ src/__tests__/group-updates.test.ts (13 tests) 22ms
+packages/telegram-adapter test:  Test Files  9 passed (9)
+packages/telegram-adapter test:       Tests  132 passed (132)
+packages/telegram-adapter test:    Start at  02:13:01
+packages/telegram-adapter test:    Duration  6.18s (transform 752ms, setup 0ms, import 1.35s, tests 356ms, environment 1ms)
+packages/telegram-adapter test: Done
+services/marketplace test$ vitest run
+services/identity test:  ✓ src/__tests__/http/app.test.ts (9 tests) 261ms
+services/customers test:  ✓ src/__tests__/observability-wiring.test.ts (3 tests) 217ms
+services/drivers test:  ✓ src/__tests__/http-profile.test.ts (17 tests) 569ms
+services/marketplace test:  RUN  v4.1.12 /home/user/workspace/wasla/services/marketplace
+services/customers test:  ✓ src/__tests__/customer-profile.test.ts (8 tests) 8ms
+services/identity test:  ✓ src/__tests__/http/service-identity.test.ts (14 tests) 447ms
+services/customers test:  ✓ src/__tests__/order-request-submit.test.ts (11 tests) 33ms
+services/customers test:  ✓ src/__tests__/saved-places.test.ts (10 tests) 22ms
+services/drivers test:  ✓ src/__tests__/http-errors.test.ts (9 tests) 402ms
+services/customers test:  ✓ src/__tests__/events-privacy.test.ts (3 tests) 15ms
+services/identity test:  ✓ src/__tests__/http/user-asserted-ownership.test.ts (9 tests) 461ms
+services/drivers test:  ✓ src/__tests__/http-vehicles.test.ts (7 tests) 298ms
+services/marketplace test:  ✓ src/__tests__/service-identity.test.ts (54 tests) 826ms
+services/customers test:  ✓ src/__tests__/mappers.test.ts (4 tests) 12ms
+services/customers test:  ✓ src/__tests__/order-request-preview.test.ts (13 tests) 50ms
+services/identity test:  ✓ src/__tests__/session.test.ts (28 tests) 23ms
+services/drivers test:  ✓ src/__tests__/http-documents.test.ts (7 tests) 356ms
+services/customers test:  ✓ src/__tests__/schema-drift.test.ts (17 tests) 13ms
+services/marketplace test:  ✓ src/__tests__/http-degraded.test.ts (30 tests) 706ms
+services/customers test:  ✓ src/__tests__/dispatch-job-wiring.test.ts (5 tests) 24ms
+services/customers test:  Test Files  13 passed (13)
+services/customers test:       Tests  152 passed (152)
+services/customers test:    Start at  02:13:01
+services/customers test:    Duration  11.26s (transform 959ms, setup 0ms, import 2.97s, tests 2.42s, environment 1ms)
+services/customers test: Done
+services/matching test$ vitest run
+services/identity test:  ✓ src/__tests__/operations.test.ts (6 tests) 32ms
+services/marketplace test:  ✓ src/__tests__/purity.test.ts (21 tests) 375ms
+services/matching test:  RUN  v4.1.12 /home/user/workspace/wasla/services/matching
+services/drivers test:  ✓ src/__tests__/http-eligibility.test.ts (7 tests) 362ms
+services/identity test:  ✓ src/__tests__/resolve-telegram-identity.test.ts (5 tests) 27ms
+services/marketplace test:  ✓ src/__tests__/canonical-json.test.ts (3 tests) 156ms
+services/drivers test:  ✓ src/__tests__/http-admin-list.test.ts (3 tests) 195ms
+services/identity test:  ✓ src/__tests__/public-id.test.ts (4 tests) 20ms
+services/identity test:  Test Files  9 passed (9)
+services/identity test:       Tests  88 passed (88)
+services/identity test:    Start at  02:13:04
+services/identity test:    Duration  10.79s (transform 1.06s, setup 0ms, import 4.98s, tests 1.85s, environment 1ms)
+services/identity test: Done
+services/negotiations test$ vitest run
+services/marketplace test:  ✓ src/__tests__/http-drift.test.ts (32 tests) 186ms
+services/matching test:  ✓ src/__tests__/user-assertion-ownership.test.ts (14 tests) 569ms
+services/negotiations test:  RUN  v4.1.12 /home/user/workspace/wasla/services/negotiations
+services/drivers test:  ✓ src/__tests__/http-drift.test.ts (12 tests) 144ms
+services/marketplace test:  ✓ src/__tests__/schema-drift.test.ts (33 tests) 92ms
+services/matching test:  ✓ src/__tests__/http-errors.test.ts (9 tests) 137ms
+services/marketplace test:  ✓ src/__tests__/composition.test.ts (19 tests) 82ms
+services/matching test:  ✓ src/__tests__/http-candidacy.test.ts (5 tests) 185ms
+services/drivers test:  ✓ src/__tests__/user-assertion-forwarding.test.ts (5 tests) 236ms
+services/marketplace test:  ✓ src/__tests__/events.test.ts (57 tests) 104ms
+services/marketplace test:  ✓ src/__tests__/catalog.test.ts (15 tests) 27ms
+services/drivers test:  ✓ src/__tests__/outbound-ports.test.ts (30 tests) 64ms
+services/negotiations test:  ✓ src/__tests__/http.test.ts (36 tests) 504ms
+services/matching test:  ✓ src/__tests__/http-service-identity.test.ts (13 tests) 412ms
+services/marketplace test:  ✓ src/__tests__/errors.test.ts (16 tests) 45ms
+services/drivers test:  ✓ src/__tests__/contract-drift.test.ts (23 tests) 81ms
+services/drivers test:  ✓ src/__tests__/state-machines.test.ts (20 tests) 54ms
+services/marketplace test:  ✓ src/__tests__/category-seed.test.ts (13 tests) 14ms
+services/marketplace test:  ✓ src/__tests__/staff.test.ts (20 tests) 11ms
+services/matching test:  ✓ src/__tests__/http-candidates.test.ts (4 tests) 323ms
+services/drivers test:  ✓ src/__tests__/privacy.test.ts (4 tests) 68ms
+services/marketplace test:  ✓ src/__tests__/identifiers.test.ts (12 tests) 29ms
+services/matching test:  ✓ src/__tests__/scoring.test.ts (29 tests) 98ms
+services/negotiations test:  ✓ src/__tests__/user-assertion-ownership.test.ts (16 tests) 607ms
+services/drivers test:  ✓ src/__tests__/publication.test.ts (16 tests) 39ms
+services/marketplace test:  ✓ src/__tests__/reservation.test.ts (9 tests) 21ms
+services/marketplace test:  ✓ src/__tests__/inventory-sync.test.ts (13 tests) 19ms
+services/drivers test:  ✓ src/__tests__/eligibility.test.ts (16 tests) 41ms
+services/matching test:  ✓ src/__tests__/http-health.test.ts (2 tests) 190ms
+services/negotiations test:  ✓ src/__tests__/service-identity.test.ts (14 tests) 239ms
+services/marketplace test:  ✓ src/__tests__/transitions.test.ts (16 tests) 11ms
+services/drivers test:  ✓ src/__tests__/schema-drift.test.ts (28 tests) 23ms
+services/drivers test:  Test Files  17 passed (17)
+services/drivers test:       Tests  224 passed (224)
+services/drivers test:    Start at  02:13:03
+services/drivers test:    Duration  17.80s (transform 1.26s, setup 0ms, import 6.78s, tests 3.80s, environment 2ms)
+services/drivers test: Done
+services/orders test$ vitest run
+services/matching test:  ✓ src/__tests__/http-geography.test.ts (4 tests) 100ms
+services/marketplace test:  ✓ src/__tests__/visibility.test.ts (7 tests) 27ms
+services/marketplace test:  ✓ src/__tests__/service-auth-docs-drift.test.ts (7 tests) 51ms
+services/negotiations test:  ✓ src/__tests__/http-drift.test.ts (14 tests) 153ms
+services/matching test:  ✓ src/__tests__/manage-candidacy.test.ts (23 tests) 51ms
+services/orders test:  RUN  v4.1.12 /home/user/workspace/wasla/services/orders
+services/marketplace test:  ✓ src/__tests__/state.test.ts (14 tests) 9ms
+services/matching test:  ✓ src/__tests__/evaluate-candidates.test.ts (26 tests) 48ms
+services/negotiations test:  ✓ src/__tests__/constraints.test.ts (25 tests) 54ms
+services/marketplace test:  ✓ src/__tests__/inventory.test.ts (11 tests) 15ms
+services/matching test:  ✓ src/__tests__/ruleset-drift.test.ts (8 tests) 9ms
+services/negotiations test:  ✓ src/__tests__/outbound-ports.test.ts (22 tests) 132ms
+services/matching test:  ✓ src/__tests__/mappers.test.ts (9 tests) 40ms
+services/marketplace test:  ✓ src/__tests__/staff-rank.test.ts (4 tests) 18ms
+services/marketplace test:  Test Files  21 passed (21)
+services/marketplace test:       Tests  406 passed (406)
+services/marketplace test:    Start at  02:13:08
+services/marketplace test:    Duration  14.88s (transform 1.14s, setup 0ms, import 3.80s, tests 2.82s, environment 2ms)
+services/marketplace test: Done
+services/partners test$ vitest run
+services/negotiations test:  ✓ src/__tests__/privacy.test.ts (7 tests) 107ms
+services/matching test:  ✓ src/__tests__/filters.test.ts (22 tests) 9ms
+services/partners test:  RUN  v4.1.12 /home/user/workspace/wasla/services/partners
+services/negotiations test:  ✓ src/__tests__/schema-drift.test.ts (27 tests) 50ms
+services/matching test:  ✓ src/__tests__/schema-drift.test.ts (19 tests) 16ms
+services/matching test:  Test Files  14 passed (14)
+services/matching test:       Tests  187 passed (187)
+services/matching test:    Start at  02:13:13
+services/matching test:    Duration  11.02s (transform 1.17s, setup 0ms, import 3.51s, tests 2.19s, environment 1ms)
+services/matching test: Done
+services/reputation test$ vitest run
+services/orders test:  ✓ src/__tests__/http/app.test.ts (65 tests) 858ms
+services/partners test:  ✓ src/__tests__/webhook-delivery.unit.test.ts (12 tests) 28ms
+services/negotiations test:  ✓ src/__tests__/tick.test.ts (13 tests) 39ms
+services/partners test:  ✓ src/__tests__/usage-enforcement.unit.test.ts (9 tests) 18ms
+services/reputation test:  RUN  v4.1.12 /home/user/workspace/wasla/services/reputation
+services/negotiations test:  ✓ src/__tests__/agreement.test.ts (14 tests) 41ms
+services/partners test:  ✓ src/__tests__/lifecycle.unit.test.ts (13 tests) 6ms
+services/orders test:  ✓ src/__tests__/transition-order.test.ts (459 tests) 427ms
+services/partners test:  ✓ src/__tests__/credentials.unit.test.ts (9 tests) 10ms
+services/negotiations test:  ✓ src/__tests__/rounds.test.ts (16 tests) 48ms
+services/partners test:  ✓ src/__tests__/issue-credential.unit.test.ts (4 tests) 15ms
+services/partners test:  ✓ src/__tests__/tenant-guard.unit.test.ts (6 tests) 18ms
+services/partners test:  Test Files  6 passed (6)
+services/partners test:       Tests  53 passed (53)
+services/partners test:    Start at  02:13:24
+services/partners test:    Duration  2.29s (transform 181ms, setup 0ms, import 381ms, tests 95ms, environment 1ms)
+services/partners test: Done
+services/subscriptions test$ vitest run
+services/negotiations test:  ✓ src/__tests__/read.test.ts (12 tests) 37ms
+services/orders test:  ✓ src/__tests__/http/service-identity.test.ts (11 tests) 261ms
+services/negotiations test:  ✓ src/__tests__/domain.test.ts (19 tests) 22ms
+services/subscriptions test:  RUN  v4.1.12 /home/user/workspace/wasla/services/subscriptions
+services/reputation test:  ✓ src/__tests__/http.test.ts (44 tests) 648ms
+services/negotiations test:  ✓ src/__tests__/open-thread.test.ts (15 tests) 36ms
+services/orders test:  ✓ src/__tests__/http/driver-jobs.test.ts (9 tests) 298ms
+services/negotiations test:  ✓ src/__tests__/messages.test.ts (10 tests) 58ms
+services/negotiations test:  Test Files  15 passed (15)
+services/negotiations test:       Tests  260 passed (260)
+services/negotiations test:    Start at  02:13:15
+services/negotiations test:    Duration  12.55s (transform 1.32s, setup 0ms, import 4.31s, tests 2.13s, environment 1ms)
+services/negotiations test: Done
+services/orders test:  ✓ src/__tests__/assignments.test.ts (21 tests) 38ms
+services/subscriptions test:  ✓ src/__tests__/purity.test.ts (24 tests) 268ms
+services/orders test:  ✓ src/__tests__/ingest-order.test.ts (27 tests) 19ms
+services/reputation test:  ✓ src/__tests__/service-identity.test.ts (15 tests) 305ms
+services/orders test:  ✓ src/__tests__/schema-drift.test.ts (19 tests) 32ms
+services/reputation test:  ✓ src/__tests__/purity.test.ts (15 tests) 134ms
+services/orders test:  ✓ src/__tests__/mappers.test.ts (14 tests) 22ms
+services/subscriptions test:  ✓ src/__tests__/http-degraded.test.ts (18 tests) 195ms
+services/orders test:  ✓ src/__tests__/state-machine.test.ts (28 tests) 68ms
+services/reputation test:  ✓ src/__tests__/http-drift.test.ts (13 tests) 101ms
+services/orders test:  ✓ src/__tests__/read-order.test.ts (11 tests) 18ms
+services/orders test:  Test Files  10 passed (10)
+services/orders test:       Tests  664 passed (664)
+services/orders test:    Start at  02:13:22
+services/orders test:    Duration  8.31s (transform 1.25s, setup 0ms, import 2.74s, tests 2.04s, environment 1ms)
+services/orders test: Done
+services/subscriptions test:  ✓ src/__tests__/service-identity.test.ts (14 tests) 225ms
+services/reputation test:  ✓ src/__tests__/schema-drift.test.ts (30 tests) 25ms
+services/reputation test:  ✓ src/__tests__/submit-rating.test.ts (17 tests) 24ms
+services/subscriptions test:  ✓ src/__tests__/user-assertion-ownership.test.ts (7 tests) 139ms
+services/reputation test:  ✓ src/__tests__/reads.test.ts (18 tests) 16ms
+services/reputation test:  ✓ src/__tests__/run-tick.test.ts (12 tests) 19ms
+services/subscriptions test:  ✓ src/__tests__/http-drift.test.ts (23 tests) 79ms
+services/reputation test:  ✓ src/__tests__/consume-source-event.test.ts (10 tests) 17ms
+services/reputation test:  ✓ src/__tests__/record-fact.test.ts (15 tests) 17ms
+services/subscriptions test:  ✓ src/__tests__/schema-drift.test.ts (23 tests) 26ms
+services/reputation test:  ✓ src/__tests__/inbound-translate.test.ts (22 tests) 18ms
+services/subscriptions test:  ✓ src/__tests__/events.test.ts (21 tests) 12ms
+services/reputation test:  ✓ src/__tests__/drain-outbox.test.ts (14 tests) 12ms
+services/subscriptions test:  ✓ src/__tests__/composition.test.ts (10 tests) 17ms
+services/reputation test:  ✓ src/__tests__/constraints.test.ts (18 tests) 14ms
+services/subscriptions test:  ✓ src/__tests__/transitions.test.ts (18 tests) 14ms
+services/reputation test:  ✓ src/__tests__/fraud.test.ts (23 tests) 14ms
+services/subscriptions test:  ✓ src/__tests__/state.test.ts (24 tests) 13ms
+services/reputation test:  ✓ src/__tests__/source-events-drift.test.ts (11 tests) 9ms
+services/subscriptions test:  ✓ src/__tests__/periods.test.ts (15 tests) 10ms
+services/reputation test:  ✓ src/__tests__/score.test.ts (20 tests) 9ms
+services/reputation test:  Test Files  16 passed (16)
+services/reputation test:       Tests  297 passed (297)
+services/reputation test:    Start at  02:13:25
+services/reputation test:    Duration  7.98s (transform 1.07s, setup 0ms, import 2.55s, tests 1.38s, environment 2ms)
+services/reputation test: Done
+services/subscriptions test:  ✓ src/__tests__/referral.test.ts (18 tests) 9ms
+services/subscriptions test:  ✓ src/__tests__/plans.test.ts (13 tests) 9ms
+services/subscriptions test:  ✓ src/__tests__/referral-code.test.ts (8 tests) 8ms
+services/subscriptions test:  Test Files  14 passed (14)
+services/subscriptions test:       Tests  236 passed (236)
+services/subscriptions test:    Start at  02:13:27
+services/subscriptions test:    Duration  6.37s (transform 926ms, setup 0ms, import 2.27s, tests 1.02s, environment 1ms)
+services/subscriptions test: Done
+packages/bot-runtime test$ vitest run
+packages/channel-edge test$ vitest run
+services/dispatch test$ vitest run
+services/geography test$ vitest run
+packages/bot-runtime test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/bot-runtime
+services/dispatch test:  RUN  v4.1.12 /home/user/workspace/wasla/services/dispatch
+packages/channel-edge test:  RUN  v4.1.12 /home/user/workspace/wasla/packages/channel-edge
+services/geography test:  RUN  v4.1.12 /home/user/workspace/wasla/services/geography
+packages/channel-edge test:  ✓ src/__tests__/create-channel-edge.test.ts (5 tests) 25ms
+packages/channel-edge test:  Test Files  1 passed (1)
+packages/channel-edge test:       Tests  5 passed (5)
+packages/channel-edge test:    Start at  02:13:34
+packages/channel-edge test:    Duration  1.54s (transform 921ms, setup 0ms, import 1.00s, tests 25ms, environment 0ms)
+packages/channel-edge test: Done
+services/geography test:  ✓ src/__tests__/zone-search.test.ts (23 tests) 559ms
+packages/bot-runtime test:  ✓ src/__tests__/bot-role-abuse.test.ts (53 tests) 638ms
+services/geography test:  ✓ src/__tests__/service-identity.test.ts (13 tests) 261ms
+packages/bot-runtime test:  ✓ src/__tests__/conversation.test.ts (13 tests) 188ms
+services/geography test:  ✓ src/__tests__/http/app.test.ts (16 tests) 290ms
+packages/bot-runtime test:  ✓ src/__tests__/bot-role-journey.test.ts (18 tests) 251ms
+services/dispatch test:  ✓ src/__tests__/config-boot-fail.test.ts (4 tests) 4581ms
+services/dispatch test:      ✓ DISPATCH_WAVE_SIZE=٣ (Arabic-Indic) → ConfigError with variable name, not silent 200  1337ms
+services/dispatch test:      ✓ DISPATCH_WAVE_SIZE=abc (non-numeric) → ConfigError  1207ms
+services/dispatch test:      ✓ DISPATCH_WAVE_SIZE=0 (below min 1) → ConfigError  1044ms
+services/dispatch test:      ✓ DISPATCH_MAX_WAVES=لا رقمَ → ConfigError with its own name  989ms
+packages/bot-runtime test:  ✓ src/__tests__/messages.test.ts (8 tests) 152ms
+services/geography test:  ✓ src/__tests__/user-assertion-ownership.test.ts (8 tests) 279ms
+services/geography test:  ✓ src/__tests__/hierarchy.test.ts (10 tests) 10ms
+services/geography test:  ✓ src/__tests__/user-location.test.ts (11 tests) 29ms
+packages/bot-runtime test:  ✓ src/__tests__/webhook.test.ts (14 tests) 220ms
+services/geography test:  ✓ src/__tests__/locale.test.ts (4 tests) 5ms
+services/geography test:  Test Files  7 passed (7)
+services/geography test:       Tests  85 passed (85)
+services/geography test:    Start at  02:13:34
+services/geography test:    Duration  6.19s (transform 1.21s, setup 0ms, import 2.38s, tests 1.43s, environment 6ms)
+services/geography test: Done
+services/dispatch test:  ✓ src/__tests__/service-identity.test.ts (15 tests) 172ms
+packages/bot-runtime test:  ✓ src/__tests__/runtime.test.ts (6 tests) 85ms
+services/dispatch test:  ✓ src/__tests__/http-offers.test.ts (6 tests) 143ms
+packages/bot-runtime test:  ✓ src/__tests__/groups.test.ts (14 tests) 133ms
+packages/bot-runtime test:  ✓ src/__tests__/service-identity.test.ts (10 tests) 129ms
+services/dispatch test:  ✓ src/__tests__/http-offer-detail.test.ts (9 tests) 132ms
+packages/bot-runtime test:  ✓ src/__tests__/launch-surfaces.test.ts (8 tests) 104ms
+services/dispatch test:  ✓ src/__tests__/user-assertion-ownership.test.ts (8 tests) 124ms
+packages/bot-runtime test:  ✓ src/__tests__/user-assertion.test.ts (5 tests) 96ms
+packages/bot-runtime test:  ✓ src/__tests__/bot-database-health.test.ts (1 test) 62ms
+services/dispatch test:  ✓ src/__tests__/http-jobs.test.ts (11 tests) 170ms
+packages/bot-runtime test:  ✓ src/__tests__/bot-role-runtime.test.ts (26 tests) 13ms
+packages/bot-runtime test:  ✓ src/__tests__/config.test.ts (24 tests) 10ms
+services/dispatch test:  ✓ src/__tests__/http-errors.test.ts (5 tests) 145ms
+packages/bot-runtime test:  ✓ src/__tests__/identity-bootstrap.test.ts (8 tests) 12ms
+packages/bot-runtime test:  Test Files  14 passed (14)
+packages/bot-runtime test:       Tests  208 passed (208)
+packages/bot-runtime test:    Start at  02:13:34
+packages/bot-runtime test:    Duration  10.54s (transform 1.68s, setup 0ms, import 5.00s, tests 2.09s, environment 1ms)
+packages/bot-runtime test: Done
+services/dispatch test:  ✓ src/__tests__/http-tick.test.ts (4 tests) 80ms
+services/dispatch test:  ✓ src/__tests__/http-health.test.ts (2 tests) 67ms
+services/dispatch test:  ✓ src/__tests__/contract-drift.test.ts (15 tests) 62ms
+services/dispatch test:  ✓ src/__tests__/http-order-engine.test.ts (25 tests) 43ms
+services/dispatch test:  ✓ src/__tests__/events-contract.test.ts (8 tests) 39ms
+services/dispatch test:  ✓ src/__tests__/tick.test.ts (26 tests) 33ms
+services/dispatch test:  ✓ src/__tests__/http-matching.test.ts (7 tests) 29ms
+services/dispatch test:  ✓ src/__tests__/run-tick.test.ts (8 tests) 22ms
+services/dispatch test:  ✓ src/__tests__/accept-offer.test.ts (17 tests) 27ms
+services/dispatch test:  ✓ src/__tests__/reject-offer.test.ts (12 tests) 24ms
+services/dispatch test:  ✓ src/__tests__/cancel-job.test.ts (14 tests) 24ms
+services/dispatch test:  ✓ src/__tests__/mappers.test.ts (10 tests) 20ms
+services/dispatch test:  ✓ src/__tests__/create-job.test.ts (13 tests) 14ms
+services/dispatch test:  ✓ src/__tests__/state-machine.test.ts (19 tests) 11ms
+services/dispatch test:  ✓ src/__tests__/schema-drift.test.ts (18 tests) 9ms
+services/dispatch test:  ✓ src/__tests__/runtime-config.test.ts (7 tests) 7ms
+services/dispatch test:  ✓ src/__tests__/deadlines.test.ts (10 tests) 5ms
+services/dispatch test:  Test Files  24 passed (24)
+services/dispatch test:       Tests  273 passed (273)
+services/dispatch test:    Start at  02:13:34
+services/dispatch test:    Duration  16.22s (transform 1.30s, setup 0ms, import 5.82s, tests 5.98s, environment 2ms)
+services/dispatch test: Done
+bots/customer-bot test$ vitest run
+bots/driver-bot test$ vitest run
+bots/partner-bot test$ vitest run
+bots/partner-bot test:  RUN  v4.1.12 /home/user/workspace/wasla/bots/partner-bot
+bots/customer-bot test:  RUN  v4.1.12 /home/user/workspace/wasla/bots/customer-bot
+bots/driver-bot test:  RUN  v4.1.12 /home/user/workspace/wasla/bots/driver-bot
+bots/partner-bot test:  ✓ src/__tests__/partner-bot.test.ts (6 tests) 260ms
+bots/partner-bot test:  ✓ src/__tests__/bot-role.test.ts (10 tests) 102ms
+bots/partner-bot test:  Test Files  2 passed (2)
+bots/partner-bot test:       Tests  16 passed (16)
+bots/partner-bot test:    Start at  02:13:51
+bots/partner-bot test:    Duration  2.99s (transform 1.25s, setup 0ms, import 2.11s, tests 362ms, environment 0ms)
+bots/partner-bot test: Done
+bots/customer-bot test:  ✓ src/__tests__/bot-role.test.ts (15 tests) 6266ms
+bots/customer-bot test:      ✓ answers /negotiations  2008ms
+bots/customer-bot test:      ✓ answers /accept  2005ms
+bots/customer-bot test:      ✓ answers /reject  2008ms
+bots/driver-bot test:  ✓ src/__tests__/bot-role.test.ts (17 tests) 6175ms
+bots/driver-bot test:      ✓ answers /negotiations  2007ms
+bots/driver-bot test:      ✓ answers /accept  2009ms
+bots/driver-bot test:      ✓ answers /reject  2004ms
+bots/customer-bot test:  ✓ src/__tests__/customer-flows.test.ts (14 tests) 163ms
+bots/driver-bot test:  ✓ src/__tests__/driver-flows.test.ts (21 tests) 165ms
+bots/customer-bot test:  ✓ src/__tests__/customer-bot.test.ts (6 tests) 84ms
+bots/customer-bot test:  ✓ src/__tests__/user-assertion-propagation.test.ts (5 tests) 27ms
+bots/driver-bot test:  ✓ src/__tests__/driver-bot.test.ts (6 tests) 97ms
+bots/customer-bot test:  ✓ src/__tests__/http-negotiations-signing.test.ts (4 tests) 27ms
+bots/driver-bot test:  ✓ src/__tests__/http-negotiations-signing.test.ts (4 tests) 31ms
+bots/customer-bot test:  ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 9ms
+bots/customer-bot test:  Test Files  6 passed (6)
+bots/customer-bot test:       Tests  56 passed (56)
+bots/customer-bot test:    Start at  02:13:51
+bots/customer-bot test:    Duration  10.58s (transform 1.48s, setup 0ms, import 2.83s, tests 6.58s, environment 1ms)
+bots/customer-bot test: Done
+bots/driver-bot test:  ✓ src/__tests__/user-assertion-propagation.test.ts (5 tests) 25ms
+bots/driver-bot test:  ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 9ms
+bots/driver-bot test:  Test Files  6 passed (6)
+bots/driver-bot test:       Tests  65 passed (65)
+bots/driver-bot test:    Start at  02:13:51
+bots/driver-bot test:    Duration  10.96s (transform 1.80s, setup 0ms, import 3.11s, tests 6.50s, environment 1ms)
+bots/driver-bot test: Done
+
+[2/2] الشِّقُّ المُسلسَلُ — --workspace-concurrency=1
+  · مُرشِّحاتُ المُسلسَل: 15 حزمةً كلُّها في جردِ pnpm
+Scope: 15 of 74 workspace projects
+
+> @wasla/partners-e2e@0.1.0 test /home/user/workspace/wasla/packages/partners-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/partners-e2e
+
+ ↓ src/__tests__/phase14-exit-gate.e2e.test.ts (8 tests | 8 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  8 skipped (8)
+   Start at  02:14:04
+   Duration  529ms (transform 236ms, setup 0ms, import 356ms, tests 0ms, environment 0ms)
+
+
+> @wasla/service-auth@0.1.0 test /home/user/workspace/wasla/packages/service-auth
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/service-auth
+
+ ✓ src/__tests__/user-assertion.test.ts (27 tests) 269ms
+ ✓ src/__tests__/fastify.test.ts (14 tests) 136ms
+ ✓ src/__tests__/replay-store.test.ts (12 tests) 77ms
+ ✓ src/__tests__/http-server.e2e.test.ts (11 tests) 59ms
+ ✓ src/__tests__/token.test.ts (51 tests) 33ms
+ ✓ src/__tests__/enforce.test.ts (18 tests) 18ms
+ ✓ src/__tests__/keys.test.ts (27 tests) 13ms
+ ✓ src/__tests__/http.test.ts (14 tests) 13ms
+ ✓ src/__tests__/edge-controls.test.ts (15 tests) 9ms
+ ✓ src/__tests__/outbound.test.ts (9 tests) 10ms
+ ✓ src/__tests__/replay-postgres.test.ts (10 tests) 9ms
+ ✓ src/__tests__/replay.test.ts (11 tests) 7ms
+
+ Test Files  12 passed (12)
+      Tests  219 passed (219)
+   Start at  02:14:05
+   Duration  3.50s (transform 494ms, setup 0ms, import 860ms, tests 652ms, environment 1ms)
+
+
+> @wasla/app-edge-e2e@0.1.0 test /home/user/workspace/wasla/packages/app-edge-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/app-edge-e2e
+
+ ✓ src/__tests__/edge-session.e2e.test.ts (2 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  02:14:08
+   Duration  434ms (transform 220ms, setup 0ms, import 264ms, tests 3ms, environment 0ms)
+
+
+> @wasla/billing-e2e@0.1.0 test /home/user/workspace/wasla/packages/billing-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/billing-e2e
+
+ ↓ src/__tests__/m5-17q-delivery-billing.e2e.test.ts (3 tests | 3 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  3 skipped (3)
+   Start at  02:14:09
+   Duration  1.07s (transform 620ms, setup 0ms, import 911ms, tests 0ms, environment 0ms)
+
+
+> @wasla/channel-e2e@0.1.0 test /home/user/workspace/wasla/packages/channel-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/channel-e2e
+
+ ✓ src/__tests__/phase03-exit-gate.e2e.test.ts (8 tests | 1 skipped) 228ms
+{"level":30,"time":"2026-10-22T02:14:13.436Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.450Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.437Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-o1kfgm","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.438Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.442Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"aeffe8a0-33b9-48bc-a6b6-129f0d818ed1","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.444Z","reqId":"req-1","res":{"statusCode":201},"responseTime":5.975941000000034,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.450Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-jbfwwr","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.450Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.463Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"5e80274d-fb69-4a4f-8147-e66f5ce40571","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.463Z","reqId":"req-1","res":{"statusCode":201},"responseTime":13.073429999999973,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.464Z","reqId":"req-2","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.471Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.466Z","reqId":"req-2","res":{"statusCode":409},"responseTime":1.9810259999999857,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.471Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-g5kes0","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.471Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.476Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.480Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.485Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.471Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"e19148c9-aaa7-4080-8528-a5274c7555b9","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.472Z","reqId":"req-1","res":{"statusCode":201},"responseTime":0.7142299999999864,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.476Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-zins9m","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.476Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":40,"time":"2026-10-22T02:14:13.476Z","reqId":"req-1","reason":"insufficient_scope","status":403,"route":"POST /identity/sessions","missing_scopes":["identity:session:issue"],"msg":"رُفض طلب خدمة على حد الهويّة"}
+{"level":30,"time":"2026-10-22T02:14:13.476Z","reqId":"req-1","res":{"statusCode":403},"responseTime":0.5246309999999994,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.480Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-2x672k","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.480Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":40,"time":"2026-10-22T02:14:13.481Z","reqId":"req-1","reason":"missing_credentials","status":401,"route":"POST /identity/sessions","msg":"رُفض طلب خدمة على حد الهويّة"}
+{"level":30,"time":"2026-10-22T02:14:13.481Z","reqId":"req-1","res":{"statusCode":401},"responseTime":0.5141840000000002,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.485Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-zwdnls","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.485Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.486Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"ad4c99ae-dc90-437c-a684-0b7638592342","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.486Z","reqId":"req-1","res":{"statusCode":201},"responseTime":0.8928579999999897,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.486Z","reqId":"req-2","req":{"method":"POST","url":"/identity/sessions/exchange","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.492Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.487Z","reqId":"req-2","event":"user_session_exchanged","wasla_public_id":"WS-0000000001","actor_type":"customer","via":"customer-bot","aud":["orders"],"kid":"clm-0519-test-zwdnls","jti":"03-6kcqX5-gTXixAh1FKVw","exp":1791504060,"session_id":"ad4c99ae-dc90-437c-a684-0b7638592342","msg":"user session exchanged"}
+{"level":30,"time":"2026-10-22T02:14:13.488Z","reqId":"req-2","res":{"statusCode":200},"responseTime":1.468479000000002,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.492Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-8sn9y1","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.493Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.493Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"cdf9876a-bfb9-4549-9664-d076c19fbc1e","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.493Z","reqId":"req-1","res":{"statusCode":201},"responseTime":0.7400739999999928,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.494Z","reqId":"req-2","req":{"method":"POST","url":"/identity/sessions/exchange","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.499Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.495Z","reqId":"req-2","res":{"statusCode":401},"responseTime":0.6770780000000514,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.499Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-7snp87","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.499Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.499Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"66bb8c92-53ce-4cb4-a819-2adb117d2933","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.500Z","reqId":"req-1","res":{"statusCode":201},"responseTime":0.7565159999999196,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.500Z","reqId":"req-2","req":{"method":"POST","url":"/identity/sessions/revoke","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.501Z","reqId":"req-2","event":"user_session_revoked","session_id":"66bb8c92-53ce-4cb4-a819-2adb117d2933","actor_type":"customer","via":"customer-bot","reason":"user_requested","msg":"user session revoked"}
+{"level":30,"time":"2026-10-22T02:14:13.501Z","reqId":"req-2","res":{"statusCode":200},"responseTime":0.7917879999999968,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.501Z","reqId":"req-3","req":{"method":"POST","url":"/identity/sessions/exchange","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.502Z","reqId":"req-3","res":{"statusCode":401},"responseTime":0.5140579999999773,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.502Z","reqId":"req-4","req":{"method":"POST","url":"/identity/sessions/exchange","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.507Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.503Z","reqId":"req-4","res":{"statusCode":401},"responseTime":0.4647390000000087,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.507Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-f5sl0b","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.507Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.508Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"b3f2f49b-1330-42ad-a692-d58d3805c548","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.508Z","reqId":"req-1","res":{"statusCode":201},"responseTime":0.5882589999999936,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.508Z","reqId":"req-2","req":{"method":"POST","url":"/identity/sessions/exchange","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.513Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.509Z","reqId":"req-2","res":{"statusCode":403},"responseTime":0.446215000000052,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.513Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-ixymm3","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.513Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.514Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"cd3e5ed8-a820-4397-aeec-84fb512f72a1","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.514Z","reqId":"req-1","res":{"statusCode":201},"responseTime":0.5624559999999974,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.514Z","reqId":"req-2","req":{"method":"POST","url":"/identity/sessions/exchange","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.519Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.515Z","reqId":"req-2","res":{"statusCode":403},"responseTime":0.5597439999999096,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.519Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-vaje0l","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.519Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.520Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"de2377c8-0bd2-4f42-8d2c-502a7bc6cf6d","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.520Z","reqId":"req-1","res":{"statusCode":201},"responseTime":0.6085940000000392,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.520Z","reqId":"req-2","req":{"method":"POST","url":"/identity/sessions/exchange","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.521Z","reqId":"req-2","res":{"statusCode":403},"responseTime":0.6377860000000055,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.521Z","reqId":"req-3","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.522Z","reqId":"req-3","res":{"statusCode":403},"responseTime":0.4174350000000686,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.533Z","event":"user_assertion_config","audience":"identity","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":"2026-10-22T02:14:13.533Z","event":"user_assertion_signer","enabled":true,"kid":"clm-0519-test-6aurto","msg":"user assertion signer config"}
+{"level":30,"time":"2026-10-22T02:14:13.533Z","reqId":"req-1","req":{"method":"POST","url":"/identity/sessions","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.534Z","reqId":"req-1","event":"user_session_issued","wasla_public_id":"WS-0000000001","actor_type":"customer","channel":"telegram","session_id":"0232ce31-4524-4af0-82b2-9d01db57322b","expires_at":"2026-10-09T04:00:00.000Z","via":"customer-bot","msg":"user session issued"}
+{"level":30,"time":"2026-10-22T02:14:13.534Z","reqId":"req-1","res":{"statusCode":201},"responseTime":0.4505059999999048,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.534Z","reqId":"req-2","req":{"method":"POST","url":"/identity/sessions/exchange","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.534Z","reqId":"req-2","event":"user_session_exchanged","wasla_public_id":"WS-0000000001","actor_type":"customer","via":"customer-bot","aud":["orders"],"kid":"clm-0519-test-6aurto","jti":"R_MO_AojspCVimoM9ZmcYA","exp":1791504060,"session_id":"0232ce31-4524-4af0-82b2-9d01db57322b","msg":"user session exchanged"}
+{"level":30,"time":"2026-10-22T02:14:13.535Z","reqId":"req-2","res":{"statusCode":200},"responseTime":0.6498709999999619,"msg":"request completed"}
+{"level":30,"time":"2026-10-22T02:14:13.535Z","reqId":"req-3","req":{"method":"POST","url":"/identity/sessions/revoke","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":"2026-10-22T02:14:13.535Z","reqId":"req-3","event":"user_session_revoked","session_id":"0232ce31-4524-4af0-82b2-9d01db57322b","actor_type":"customer","via":"customer-bot","reason":"user_requested","msg":"user session revoked"}
+{"level":30,"time":"2026-10-22T02:14:13.535Z","reqId":"req-3","res":{"statusCode":200},"responseTime":0.34512199999994664,"msg":"request completed"}
+ ✓ src/__tests__/clm-0519-identity-sessions.e2e.test.ts (27 tests | 14 skipped) 176ms
+ ✓ src/__tests__/m1-02-session-gate.e2e.test.ts (17 tests | 10 skipped) 13ms
+
+ Test Files  3 passed (3)
+      Tests  27 passed | 25 skipped (52)
+   Start at  02:14:11
+   Duration  2.75s (transform 1.12s, setup 0ms, import 1.83s, tests 417ms, environment 0ms)
+
+
+> @wasla/customer-e2e@0.1.0 test /home/user/workspace/wasla/packages/customer-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/customer-e2e
+
+stdout | src/__tests__/phase04-exit-gate.e2e.test.ts
+[phase04-exit-gate] persistence=memory
+
+ ✓ src/__tests__/phase04-exit-gate.e2e.test.ts (11 tests) 2276ms
+     ✓ reports a timeout as a timeout when the engine never answers  2013ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  02:14:14
+   Duration  3.66s (transform 902ms, setup 0ms, import 1.22s, tests 2.28s, environment 0ms)
+
+
+> @wasla/delivery-e2e@0.1.0 test /home/user/workspace/wasla/packages/delivery-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/delivery-e2e
+
+ ✓ src/__tests__/phase13-exit-gate.e2e.test.ts (19 tests | 18 skipped) 2ms
+ ↓ src/__tests__/m5-13m-multi-line.e2e.test.ts (1 test | 1 skipped)
+
+ Test Files  1 passed | 1 skipped (2)
+      Tests  1 passed | 19 skipped (20)
+   Start at  02:14:18
+   Duration  1.73s (transform 861ms, setup 0ms, import 1.42s, tests 2ms, environment 0ms)
+
+
+> @wasla/dispatch-e2e@0.1.0 test /home/user/workspace/wasla/packages/dispatch-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/dispatch-e2e
+
+stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يقود الطلب من التسليم إلى القبول: موجة، رفض، موجة تستثني الرافض، ثم قبول
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يُنهي عرضاً صامتاً بانقضاء المهلة عبر ساعة مُحقونة، بلا انتظار حقيقي
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > يُصعِّد إلى المجتمع بلا مرشّحين ثم يُعلن النفاد بعد نافذة التصعيد
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · dispatch finds a driver over real HTTP > موجة بعرضين: يفوز واحد ويُغلق الآخر superseded لا rejected
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/phase07-exit-gate.e2e.test.ts > Phase 07 exit gate · the run is unambiguous about what it proved > يُصرِّح بمخزنه: /health يقول postgres عند رفع البوابة و memory دونه
+[phase07-gate] matching+dispatch persistence = memory
+
+ ✓ src/__tests__/phase07-exit-gate.e2e.test.ts (5 tests) 531ms
+stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > بلا هوية ⇒ 401، وقبل أيّ منطقِ عمل
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ مزوّرةٌ بسرٍّ آخر ⇒ 401: التوقيع يُفحَص، لا وجودُ الترويسة
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ صحيحةٌ ⇒ يمرّ الطلب إلى منطق العمل (404 لا 401)
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > هويّةٌ صحيحةٌ بصلاحيةٍ خاطئة ⇒ 403: التوثيق ليس التخويل
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > الرمزُ يُحرَق: النداء الثاني بالرمز نفسه ⇒ 401 (سياسةُ الإعادة، ADR-021)
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > الرمزُ مربوطٌ بالمسار والطريقة: رمزُ مسارٍ آخر ⇒ 401
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > مسارٌ غير مصنَّفٍ يُرفَض قبل 404: الافتراضُ منعٌ لا سماح
+[phase07-gate] matching+dispatch persistence = memory
+
+stdout | src/__tests__/service-identity-enforcement.e2e.test.ts > M1-03 · حدُّ المطابقة يفرض هوية الخدمة على السلك > ‏/health يبقى مفتوحاً: الإنفاذُ لا يُعمي المراقبة
+[phase07-gate] matching+dispatch persistence = memory
+
+ ✓ src/__tests__/service-identity-enforcement.e2e.test.ts (8 tests) 316ms
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  02:14:20
+   Duration  2.89s (transform 1.06s, setup 0ms, import 1.72s, tests 847ms, environment 0ms)
+
+
+> @wasla/driver-e2e@0.1.0 test /home/user/workspace/wasla/packages/driver-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/driver-e2e
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > المسار الكامل: من التسجيل إلى طلب مقبول > سائق مُراجَع يصير مؤهَّلاً بأهليّة محسوبة، فيصله عرض من التوزيع فيقبله
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > المسار الكامل: من التسجيل إلى طلب مقبول > الأهليّة ليست ادّعاءً: قبل المراجعة لا عرض، وبعدها عرض
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > تنتهي الرخصة، فتُخرجه نبضة واحدة، فلا يعود التوزيع يراه
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > النبضة الثانية لا تجد شيئاً ولا تنشر ثانية — سكونها من حالتها
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > نبضة واحدة تُخرجه من التجمّع > النبضة تُحدِّث `last_tick_at` الذي يقرأه `/health`، والتخزين مُعلَن
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > دليل المناطق يُسأل عبر HTTP > منطقة لا تعرفها الجغرافيا تُرفض، ولا يبقى للسائق منطقة
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > دليل المناطق يُسأل عبر HTTP > المنطقة المعروفة تُقبَل — فالرفض أعلاه ليس رفضاً لكل شيء
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الجهوزية: نواة السائق لا ترفع سائقاً مشغولاً > سائق مشغول يعلن «متاح» فيبقى `busy` عند المطابقة
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الجهوزية: نواة السائق لا ترفع سائقاً مشغولاً > إعلان `offline` ينزل إلى المطابقة فوراً — الأقلّ توافراً مسموح دائماً
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > التعليق يخرج السائق من التجمّع > سائق معلَّق لا يصله عرض، والمطابقة تقرأ `suspended` لا `ineligible`
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > التعليق يخرج السائق من التجمّع > إعادة التمكين تُعيده إلى التجمّع بنفس المسار
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > المطابقة تُنشئ الصفّ بـ200 لا 201، ومفتاح منع التكرار مطلوب
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > أحداث الأهليّة تُقيَّد في صندوق البريد — لا تغيّر صامت
+[phase05-gate] driver-core persistence = memory
+
+stdout | src/__tests__/phase05-exit-gate.e2e.test.ts > الحدّ بين الخدمتين مُسجَّل لا مُستنتَج > سائق بلا مركبة أساسية لا يصله عرض ولو كانت وثائقه مُتحقَّقة
+[phase05-gate] driver-core persistence = memory
+
+ ✓ src/__tests__/phase05-exit-gate.e2e.test.ts (14 tests) 1232ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  02:14:23
+   Duration  3.06s (transform 1.26s, setup 0ms, import 1.66s, tests 1.23s, environment 0ms)
+
+
+> @wasla/marketplace-e2e@0.1.0 test /home/user/workspace/wasla/packages/marketplace-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/marketplace-e2e
+
+ ↓ src/__tests__/phase11-exit-gate.e2e.test.ts (6 tests | 6 skipped)
+ ↓ src/__tests__/service-identity.e2e.test.ts (6 tests | 6 skipped)
+
+ Test Files  2 skipped (2)
+      Tests  12 skipped (12)
+   Start at  02:14:26
+   Duration  1.35s (transform 578ms, setup 0ms, import 1.03s, tests 0ms, environment 0ms)
+
+
+> @wasla/negotiation-e2e@0.1.0 test /home/user/workspace/wasla/packages/negotiation-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/negotiation-e2e
+
+stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > declares which store it ran against, and answers /health from it
+[phase08-gate] negotiations persistence = memory
+
+stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 1 · happy path: intake → wave → thread → accept → the engine holds the price
+[phase08-gate] negotiations persistence = memory
+
+stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 1b · the negotiated number is the one both parties last saw, after a counter
+[phase08-gate] negotiations persistence = memory
+
+stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 2 · the same accept key twice: one agreement, one price, one hand-off
+[phase08-gate] negotiations persistence = memory
+
+stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 3 · the engine refuses the second agreement, and the agreement survives it
+[phase08-gate] negotiations persistence = memory
+
+stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > scenario 4 · the engine is down at accept time: pending with a retry moment, then delivered
+[phase08-gate] negotiations persistence = memory
+
+stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the price crosses four services > refuses to open a thread on a customer_offer order, reading price_mode from the engine
+[phase08-gate] negotiations persistence = memory
+
+stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the wiring itself > answers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+[phase08-gate] negotiations persistence = memory
+
+stdout | src/__tests__/phase08-exit-gate.e2e.test.ts > Phase 08 exit gate · the wiring itself > answers 503 NEGOTIATION_UNAVAILABLE when ORDERS_SERVICE_URL is not configured
+[phase08-gate] negotiations persistence = memory
+
+ ✓ src/__tests__/phase08-exit-gate.e2e.test.ts (8 tests) 649ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  02:14:28
+   Duration  2.47s (transform 1.26s, setup 0ms, import 1.66s, tests 649ms, environment 0ms)
+
+
+> @wasla/order-e2e@0.1.0 test /home/user/workspace/wasla/packages/order-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/order-e2e
+
+stdout | src/__tests__/phase06-exit-gate.e2e.test.ts
+[phase06-gate] engine persistence = memory
+
+ ✓ src/__tests__/phase06-exit-gate.e2e.test.ts (16 tests) 2638ms
+     ✓ accepts exactly the published edges and refuses every other pair  2326ms
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  02:14:31
+   Duration  3.97s (transform 859ms, setup 0ms, import 1.17s, tests 2.64s, environment 0ms)
+
+
+> @wasla/reputation-e2e@0.1.0 test /home/user/workspace/wasla/packages/reputation-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/reputation-e2e
+
+ ✓ src/__tests__/phase09-exit-gate.e2e.test.ts (12 tests) 312ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  02:14:35
+   Duration  1.38s (transform 648ms, setup 0ms, import 898ms, tests 312ms, environment 0ms)
+
+
+> @wasla/search-e2e@0.1.0 test /home/user/workspace/wasla/packages/search-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/search-e2e
+
+ ✓ src/__tests__/phase12-exit-gate.e2e.test.ts (22 tests | 21 skipped) 2ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 21 skipped (22)
+   Start at  02:14:37
+   Duration  710ms (transform 414ms, setup 0ms, import 551ms, tests 2ms, environment 0ms)
+
+
+> @wasla/subscription-e2e@0.1.0 test /home/user/workspace/wasla/packages/subscription-e2e
+> vitest run
+
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/subscription-e2e
+
+ ↓ src/__tests__/phase10-exit-gate.e2e.test.ts (3 tests | 3 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  3 skipped (3)
+   Start at  02:14:38
+   Duration  1.15s (transform 709ms, setup 0ms, import 991ms, tests 0ms, environment 0ms)
+
+
+✓ الاختبارات: الشِّقّانِ نجحا (58 متوازيةً · 15 مُسلسَلةً).

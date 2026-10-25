@@ -1,0 +1,36 @@
+# playwright customer-mini-app @ 9e1c622d — expected=35 unexpected=0 skipped=0 flaky=0
+passed	accessibility.spec.ts	home screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	ride order screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	delivery order screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	saved places screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	marketplace screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	search screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	my orders screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	reputation screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	profile screen has no WCAG A/AA violations
+passed	auth-session.spec.ts	fresh browser shows loading state without session
+passed	auth-session.spec.ts	no API calls are made without a session token
+passed	auth-session.spec.ts	localStorage does not contain session token
+passed	auth-session.spec.ts	sessionStorage does not contain session token
+passed	auth-session.spec.ts	authenticated session shows app content
+passed	frontend-quality.spec.ts	locale override ?locale=en switches document lang/dir and renders English
+passed	frontend-quality.spec.ts	offline banner appears when the network drops and clears on reconnect
+passed	frontend-quality.spec.ts	no horizontal overflow at 375px
+passed	navigation.spec.ts	home shows all 8 menu items
+passed	navigation.spec.ts	navigates to ride order screen
+passed	navigation.spec.ts	navigates to delivery order screen
+passed	navigation.spec.ts	navigates to saved places screen
+passed	navigation.spec.ts	navigates to marketplace screen
+passed	navigation.spec.ts	navigates to search screen
+passed	navigation.spec.ts	navigates to my orders screen
+passed	navigation.spec.ts	navigates to reputation screen
+passed	navigation.spec.ts	navigates to profile screen
+passed	navigation.spec.ts	clicking menu items navigates correctly
+passed	order-flow.spec.ts	preview order sends Bearer token
+passed	order-flow.spec.ts	submit order sends Bearer token and Idempotency-Key
+passed	order-flow.spec.ts	submit error shows error message
+passed	order-flow.spec.ts	form validation prevents submit with empty fields
+passed	places-flow.spec.ts	loads saved places with Bearer token
+passed	places-flow.spec.ts	adds a new place with Bearer token
+passed	places-flow.spec.ts	deletes a place with Bearer token
+passed	places-flow.spec.ts	shows empty state when no places

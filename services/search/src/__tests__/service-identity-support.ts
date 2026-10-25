@@ -18,6 +18,7 @@ import { buildSearchHttpApp } from "../http/app.js";
 import { SEARCH_SCOPES, SEARCH_SERVICE_AUDIENCE } from "../http/service-identity.js";
 import type {
   SearchProductsReadPort,
+  SearchStoresReadPort,
   SearchIndexHealthPort,
   SearchDeadLetterReadPort,
   SearchRelayAcknowledgementPort,
@@ -77,6 +78,8 @@ export function buildEnforcedApp(options: {
   /** منفذُ إعادةِ المسمومِ (`G5` موجةُ اليدِ · `CLM-0248`) — يُحقَنُ وهميّاً بلا قاعدةٍ. */
   readonly relayRequeuePort?: SearchRelayRequeuePort;
   readonly relayAcknowledgementPort?: SearchRelayAcknowledgementPort;
+  /** منفذُ بحثِ المتاجرِ (G-S9.7 · CLM-0649). */
+  readonly storeSearchReadPort?: SearchStoresReadPort;
   /** ساعةٌ مُحقونةٌ لقياسِ حكمِ العمرِ بلا انتظارِ يومٍ. */
   readonly now?: () => Date;
   readonly keys?: ServiceAuthKeyRegistry;
@@ -96,6 +99,7 @@ export function buildEnforcedApp(options: {
     ...(options.relayRequeuePort === undefined
       ? {}
       : { relayRequeuePort: options.relayRequeuePort }),
+    ...(options.storeSearchReadPort === undefined ? {} : { storeSearchReadPort: options.storeSearchReadPort }),
     ...(options.now === undefined ? {} : { now: options.now }),
     serviceIdentity: {
       keys,
@@ -160,7 +164,7 @@ export async function rawInject(
 }
 
 /** ميناءُ قراءةٍ وهميٌّ يُعيدُ صفحةً فارغةً. */
-function fakeEmptyReadPort(): SearchProductsReadPort {
+export function fakeEmptyReadPort(): SearchProductsReadPort {
   return {
     async search() {
       return {

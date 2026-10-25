@@ -1,0 +1,72 @@
+# CLM-0662 — تشغيلُ الاختباراتِ على الرأسِ 1aca57ca5a30f8dee0fb908bbcc8b0e8b5b4e8ec
+# الوقت (UTC): 2026-10-22T14:27:01Z · node v20.20.2 · الشجرة: 0 ملفًا معدَّلًا
+
+## packages/channel-edge
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/channel-edge
+
+ ✓ src/__tests__/proxy-routing.test.ts (17 tests) 192ms
+ ✓ src/__tests__/create-channel-edge.test.ts (5 tests) 6ms
+
+ Test Files  2 passed (2)
+      Tests  22 passed (22)
+   Start at  14:27:02
+   Duration  1.19s (transform 461ms, setup 0ms, import 643ms, tests 198ms, environment 0ms)
+
+## exit=0 (packages/channel-edge)
+
+## bots/customer-bot
+
+ RUN  v4.1.12 /home/user/workspace/wasla/bots/customer-bot
+
+ ✓ src/__tests__/bot-role.test.ts (15 tests) 6148ms
+     ✓ answers /negotiations  2008ms
+     ✓ answers /accept  2006ms
+     ✓ answers /reject  2005ms
+ ✓ src/__tests__/customer-flows.test.ts (14 tests) 139ms
+ ✓ src/__tests__/customer-bot.test.ts (6 tests) 116ms
+ ✓ src/__tests__/edge-composition.test.ts (2 tests) 71ms
+ ✓ src/__tests__/http-negotiations-signing.test.ts (4 tests) 27ms
+ ✓ src/__tests__/user-assertion-propagation.test.ts (5 tests) 26ms
+ ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 10ms
+
+ Test Files  7 passed (7)
+      Tests  58 passed (58)
+   Start at  14:27:04
+   Duration  9.78s (transform 855ms, setup 0ms, import 2.07s, tests 6.54s, environment 1ms)
+
+## exit=0 (bots/customer-bot)
+
+## bots/driver-bot
+
+ RUN  v4.1.12 /home/user/workspace/wasla/bots/driver-bot
+
+ ✓ src/__tests__/bot-role.test.ts (17 tests) 6160ms
+     ✓ answers /negotiations  2006ms
+     ✓ answers /accept  2005ms
+     ✓ answers /reject  2006ms
+ ✓ src/__tests__/driver-flows.test.ts (21 tests) 127ms
+ ✓ src/__tests__/driver-bot.test.ts (6 tests) 88ms
+ ✓ src/__tests__/http-negotiations-signing.test.ts (4 tests) 27ms
+ ✓ src/__tests__/user-assertion-propagation.test.ts (5 tests) 26ms
+ ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 9ms
+
+ Test Files  6 passed (6)
+      Tests  65 passed (65)
+   Start at  14:27:14
+   Duration  9.29s (transform 834ms, setup 0ms, import 1.85s, tests 6.44s, environment 1ms)
+
+## exit=0 (bots/driver-bot)
+
+## packages/app-edge-e2e
+
+ RUN  v4.1.12 /home/user/workspace/wasla/packages/app-edge-e2e
+
+ ✓ src/__tests__/edge-session.e2e.test.ts (2 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  14:27:24
+   Duration  437ms (transform 220ms, setup 0ms, import 269ms, tests 3ms, environment 0ms)
+
+## exit=0 (packages/app-edge-e2e)

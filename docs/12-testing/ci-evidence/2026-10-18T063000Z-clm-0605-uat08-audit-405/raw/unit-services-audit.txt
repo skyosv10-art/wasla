@@ -1,0 +1,35 @@
+
+ RUN  v3.2.7 /home/user/workspace/wasla/services/audit
+
+ ✓ src/__tests__/http/audit-routes.test.ts > POST /audit/events > creates an audit event and returns 201
+ ✓ src/__tests__/http/audit-routes.test.ts > POST /audit/events > derives actor_id from obo when present
+ ✓ src/__tests__/http/audit-routes.test.ts > POST /audit/events > rejects missing required fields with 400
+ ✓ src/__tests__/http/audit-routes.test.ts > POST /audit/events > defaults metadata to empty object when omitted
+ ✓ src/__tests__/http/audit-routes.test.ts > POST /audit/events > rejects empty string fields with 400
+ ✓ src/__tests__/http/audit-routes.test.ts > POST /audit/events > ignores actor_id and actor_role in body (derived from token)
+ ✓ src/__tests__/http/audit-routes.test.ts > GET /audit/events > returns empty list when no events exist
+ ✓ src/__tests__/http/audit-routes.test.ts > GET /audit/events > returns seeded events newest-first
+ ✓ src/__tests__/http/audit-routes.test.ts > GET /audit/events > filters by action
+ ✓ src/__tests__/http/audit-routes.test.ts > GET /audit/events > filters by actor_id
+ ✓ src/__tests__/http/audit-routes.test.ts > GET /audit/events > filters by resource_type and resource_id
+ ✓ src/__tests__/http/audit-routes.test.ts > GET /audit/events > respects limit and offset
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > rejects PUT /audit/events with 405 and Allow: GET, HEAD, POST
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > rejects PATCH /audit/events with 405 and Allow: GET, HEAD, POST
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > rejects DELETE /audit/events with 405 and Allow: GET, HEAD, POST
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > rejects PUT /audit/events/:id with 405 and an empty Allow
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > rejects PATCH /audit/events/:id with 405 and an empty Allow
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > rejects DELETE /audit/events/:id with 405 and an empty Allow
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > rejects POST /audit/events/:id with 405 and an empty Allow
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > every method listed in Allow is actually served on /audit/events
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > modification attempts leave the stored events unchanged
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > an unsigned modification attempt is 401 before any 405 is disclosed
+ ✓ src/__tests__/http/audit-routes.test.ts > Audit immutability — UAT-08: 405 + Allow (ADR-072 D2) > non-modifying unknown requests keep the router's 404
+ ✓ src/__tests__/http/audit-routes.test.ts > Authz enforcement > rejects POST without audit:write scope
+ ✓ src/__tests__/http/audit-routes.test.ts > Authz enforcement > rejects GET without audit:read scope
+ ✓ src/__tests__/http/audit-routes.test.ts > Authz enforcement > rejects unsigned requests
+
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  06:20:15
+   Duration  833ms (transform 325ms, setup 0ms, collect 468ms, tests 158ms, environment 0ms, prepare 65ms)
+

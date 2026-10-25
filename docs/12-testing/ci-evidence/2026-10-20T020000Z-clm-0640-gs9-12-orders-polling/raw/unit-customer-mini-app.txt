@@ -1,0 +1,8 @@
+
+ Test Files  14 passed (14)
+      Tests  108 passed (108)
+   Start at  02:02:16
+   Duration  11.57s (transform 480ms, setup 1.03s, collect 1.24s, tests 1.95s, environment 4.79s, prepare 781ms)
+
+> tsc -p tsconfig.json --noEmit
+

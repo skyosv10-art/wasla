@@ -1,0 +1,26 @@
+rev=6131411629877b855a931bdccc285fdf8ae54886
+== F1 dispatch still requires ORD-########## (model · validation · DB CHECK)
+services/dispatch/src/domain/model.ts:42:export const ORDER_PUBLIC_ID_PATTERN = /^ORD-[0-9]{10}$/;
+services/dispatch/src/domain/validation.ts:44:    throw validationFailed("order_public_id", "ORD-########## (10 digits)", traceId);
+services/dispatch/src/infrastructure/drizzle/schema.ts:94:      sql`${table.orderPublicId} ~ '^ORD-[0-9]{10}$'`,
+== F2 implementations of DispatchJobRequester (non-test vs test)
+  non-test 'implements DispatchJobRequester':
+  (none)
+  test 'implements DispatchJobRequester':
+services/delivery/src/__tests__/mirror-fakes.ts:279:export class FakeDispatchJobRequester implements DispatchJobRequester {
+== F3 non-test callers of delegateToDispatch (outside its own module)
+  (none)
+  positive control — the same pattern finds test callers: 16
+== F4 HTTP client to POST /dispatch/jobs: in services/delivery (WS- path) vs services/customers (ORD- path), non-test
+  services/delivery:
+  (none)
+  services/customers (existing ORD- adapter, for contrast):
+services/customers/src/infrastructure/http-dispatch-job.ts:26:export const DISPATCH_JOBS_PATH = "/dispatch/jobs";
+== F5 ADR-026 bridge status lines + last commit touching it
+docs/15-decisions/ADR-026-store-orders-and-delivery-boundary.md:139:#### ما بقيَ مؤجّلاً (يُرفعُ بقرارِ المالكِ): جسرُ ORD-/
+  last ADR-026 commit: 0db52b67 2026-09-27 chore(M5-13M): compensation deferred by owner (option 1); → Ready for Gate (#516)
+== F6 any later ADR deciding the bridge (mentions ORD-/WS- bridge decision)
+  (none)
+== F7 launch gates (state, not changed here)
+  production_open=true count in channel-edge allowlists: 0
+  production_open=false count: 32

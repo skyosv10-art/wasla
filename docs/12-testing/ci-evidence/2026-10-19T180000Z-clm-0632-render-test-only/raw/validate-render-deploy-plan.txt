@@ -1,0 +1,185 @@
+  ✓ C1 docs-only target behind an undeployed code change
+      → A=deploy (1 input file(s) changed since live c0930060) · B=runtime-equivalent (runtime inputs identical between live c0930060 and target (image bytes not compared: COPY ) · O2=runtime-equivalent (runtime inputs identical between live c0930060 and target (image bytes not compared: COPY ) · W=runtime-equivalent (runtime inputs identical between live c0930060 and target (image bytes not compared: COPY ) · O=runtime-equivalent (runtime inputs identical between live c0930060 and target (image bytes not compared: COPY )
+  ✓ C2 live already carries the code change
+      → A=runtime-equivalent (runtime inputs identical between live 9bc8c051 and target (image bytes not compared: COPY )
+  ✓ C3 live is the target
+      → A=current (live commit is the target) · O=current (live commit is the target)
+  ✓ C4 lockfile change
+      → A=deploy (1 input file(s) changed since live c1ba1823) · B=deploy (1 input file(s) changed since live c1ba1823) · W=deploy (1 input file(s) changed since live c1ba1823) · O=runtime-equivalent (runtime inputs identical between live c1ba1823 and target (image bytes not compared: COPY )
+  ✓ C5 Docker context change
+      → A=runtime-equivalent (runtime inputs identical between live e3df7f2f and target (image bytes not compared: COPY ) · W=runtime-equivalent (runtime inputs identical between live e3df7f2f and target (image bytes not compared: COPY ) · O=deploy (1 input file(s) changed since live e3df7f2f)
+  ✓ C6 REGRESSION outside A's closure, inside the Docker build context
+      → A=runtime-equivalent (runtime inputs identical between live e3f35011 and target (image bytes not compared: COPY ) · B=deploy (1 input file(s) changed since live e3f35011) · O2=runtime-equivalent (runtime inputs identical between live e3f35011 and target (image bytes not compared: COPY ) · W=runtime-equivalent (runtime inputs identical between live e3f35011 and target (image bytes not compared: COPY ) · O=runtime-equivalent (runtime inputs identical between live e3f35011 and target (image bytes not compared: COPY )
+  ✓ C7 declared guarded-prefix read outside the closure (infra/targets/)
+      → O2=deploy (1 input file(s) changed since live 6c6be50b) · A=runtime-equivalent (runtime inputs identical between live 6c6be50b and target (image bytes not compared: COPY ) · B=runtime-equivalent (runtime inputs identical between live 6c6be50b and target (image bytes not compared: COPY )
+  ✓ C7d delegated read target (infra/allow.json via allowlistUrl)
+      → A=deploy (1 input file(s) changed since live 85bfafba) · O2=runtime-equivalent (runtime inputs identical between live 85bfafba and target (image bytes not compared: COPY ) · B=runtime-equivalent (runtime inputs identical between live 85bfafba and target (image bytes not compared: COPY )
+  ✓ C8 another package's manifest
+      → A=deploy (1 input file(s) changed since live 13781564) · O2=deploy (1 input file(s) changed since live 13781564) · W=deploy (1 input file(s) changed since live 13781564) · O=runtime-equivalent (runtime inputs identical between live 13781564 and target (image bytes not compared: COPY )
+  ✓ H1 absolute /app path, stale registration
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H1 absolute /app path, stale registration — audit
+      → services/o2/src/config.ts: fs calls changed (registered ["readFileSync(`${dir}/${name}.targets`, 'utf8') → prefix:infra/targets/", "readFileSync(SCHEMA, 'utf8') → repo:services/o2/contracts/s.sql"] · 
+  ✓ H1b absolute /app path, fingerprint re-measured, reads not extended
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H1b absolute /app path, fingerprint re-measured, reads not extended — audit
+      → services/o2/src/config.ts: readFileSync('/app/services/b/config.json', 'utf8') → repo:services/b/config.json outside services/o2 and not covered by registered reads ['infra/targets/']
+  ✓ H1c absolute /app path, honestly registered (reads += services/b/config.json)
+      → O2=deploy (1 input file(s) changed since live 044f723d) · A=runtime-equivalent (runtime inputs identical between live 044f723d and target (image bytes not compared: COPY )
+  ✓ H1c absolute /app path, honestly registered (reads += services/b/config.json) — audit
+      → clean
+  ✓ H2 composed "services/" + serviceName + "/config.json", not declared
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H2 composed "services/" + serviceName + "/config.json", not declared — audit
+      → services/o2/src/config.ts: readFileSync("services/" + serviceName + "/config.json", 'utf8') target cannot be resolved — unresolved (parameter `serviceName` of schema); declare it under `unresolved` (i
+  ✓ H2b composed path declared `unresolved` → conservative deploy of its services only
+      → O2=deploy (build inputs not derivable: unresolved runtime read declared in services/o2/src/config.ts ) · A=runtime-equivalent (runtime inputs identical between live 9600a3d9 and target (image bytes not compared: COPY )
+  ✓ H2b composed path declared `unresolved` → conservative deploy of its services only — audit
+      → clean
+  ✓ H3 const re-pointed to an absolute path (argument text unchanged), stale registration
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H3 const re-pointed to an absolute path (argument text unchanged), stale registration — audit
+      → services/o2/src/config.ts: fs calls changed (registered ["readFileSync(`${dir}/${name}.targets`, 'utf8') → prefix:infra/targets/", "readFileSync(SCHEMA, 'utf8') → repo:services/o2/contracts/s.sql"] · 
+  ✓ H3b const re-pointed via join(process.cwd(), '..', 'b', ...), fingerprint re-measured
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H3b const re-pointed via join(process.cwd(), '..', 'b', ...), fingerprint re-measured — audit
+      → services/o2/src/config.ts: readFileSync(SCHEMA, 'utf8') → repo:services/b/config.json outside services/o2 and not covered by registered reads ['infra/targets/']
+  ✓ H3c read target moved to infra/other/ while registered infra/targets/ still exists
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H3c read target moved to infra/other/ while registered infra/targets/ still exists — audit
+      → services/o2/src/config.ts: readFileSync(`${dir}/${name}.targets`, 'utf8') → prefix:infra/other/ outside services/o2 and not covered by registered reads ['infra/targets/']
+  ✓ H3d target moved and covered, but the old read left registered (stale registration)
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H3d target moved and covered, but the old read left registered (stale registration) — audit
+      → services/o2/src/config.ts: registered read 'infra/targets/' is not used by any resolved target or path literal — stale registration
+  ✓ H4 guard on the dynamic file name removed
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H4 guard on the dynamic file name removed — audit
+      → services/o2/src/config.ts: readFileSync(`${dir}/${name}.targets`, 'utf8') target cannot be resolved — unresolved (dynamic segment `${name}` without a verified guard (unsupported expression `env.OBS_EN
+  ✓ H5 guarded dir default overridden by a runtime caller
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H5 guarded dir default overridden by a runtime caller — audit
+      → services/o2/src/config.ts: readFileSync(`${dir}/${name}.targets`, 'utf8') target cannot be resolved — unresolved (dynamic segment `${dir}` without a verified guard (parameter `dir` default overridable
+  ✓ H6 fs function aliased (const r = readFileSync)
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H6 fs function aliased (const r = readFileSync) — audit
+      → services/o2/src/config.ts: fs binding `readFileSync` used other than as a direct call (aliasing hides its target)
+  ✓ H7 fs reached through a literal dynamic import
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H7 fs reached through a literal dynamic import — audit
+      → services/o2/src/config.ts: fs module 'node:fs' named outside a static import (dynamic import / require / re-export)
+  ✓ H8 fs re-exported by another module
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H8 fs re-exported by another module — audit
+      → services/b/src/fsx.ts: fs module 'node:fs' named outside a static import (dynamic import / require / re-export)
+  ✓ H9 process.getBuiltinModule('fs')
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H9 process.getBuiltinModule('fs') — audit
+      → services/o2/src/config.ts: process.getBuiltinModule/binding — hidden module access
+  ✓ H10 delegated allowlistUrl value turned into an environment value
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H10 delegated allowlistUrl value turned into an environment value — audit
+      → services/a/src/edge.ts: value of delegated `allowlistUrl` (process.env.ALLOW ?? '') unresolved: unsupported expression `process.env.ALLOW ?? ''`
+  ✓ H11 start script names a path outside its package
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H11 start script names a path outside its package — audit
+      → services/b/package.json: start script names a path outside the package: 'tsx ../../infra/run.ts'
+  ✓ H12 new fs-using file left unregistered
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H12 new fs-using file left unregistered — audit
+      → services/b/src/peek.ts: runtime fs use ['readFileSync("/app/infra/allow.json", "utf8") → repo:infra/allow.json'] / out-of-package paths ['infra/allow.json'] not registered in scripts/deploy/runtime-re
+  ✓ H13 out-of-package path literal handed to a non-fs consumer (no fs call changed)
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H13 out-of-package path literal handed to a non-fs consumer (no fs call changed) — audit
+      → services/o2/src/config.ts: out-of-package path 'services/b/config.json' not covered by registered reads ['infra/targets/']
+  ✓ H14 target outside the package reached by a dirname() chain (no `..` or /app literal)
+      → O2=deploy (build inputs not derivable: no audited runtime-read registry) · A=deploy (build inputs not derivable: no audited runtime-read registry)
+  ✓ H14 target outside the package reached by a dirname() chain (no `..` or /app literal) — audit
+      → services/o2/src/config.ts: readFileSync(SCHEMA, 'utf8') → repo:services/b/config.json outside services/o2 and not covered by registered reads ['infra/targets/']
+  ✓ A1 no registry at all
+      → A=deploy (build inputs not derivable: no audited runtime-read registry) · W=deploy (build inputs not derivable: no audited runtime-read registry) · O=runtime-equivalent (runtime inputs identical between live 9bc8c051 and target (image bytes not compared: COPY )
+  ✓ A2 live commit not in history
+      → A=deploy (live commit dddddddd not in history) · O=deploy (live commit dddddddd not in history)
+  ✓ A3 no live deploy
+      → A=deploy (no live deploy)
+  ✓ A4 WASLA_SERVICE unknown
+      → A=deploy (build inputs not derivable: image built from the repo root but WASLA_SERVICE=None is not a)
+  ✓ A5 static build command ambiguous
+      → W=deploy (build inputs not derivable: static site build command has no single known --filter package)
+  ✓ A6 --all
+      → A=deploy (forced (--all)) · B=deploy (forced (--all)) · O2=deploy (forced (--all)) · W=deploy (forced (--all)) · O=deploy (forced (--all))
+  ✓ plan: 55 cases · runtime-input equivalence (image bytes not compared) · every fs call bound to its evaluated target · unresolved never runtime-equivalent · registry audit 30 files clean · closure premise holds
+  self-test (each mutation → first catching case):
+    ✓ diff from the last push instead of the live commit
+        caught by: C1 docs-only target behind an undeployed code change — A = runtime-equivalent (runtime inputs identical between live c0930060 and target (image bytes not compared: COPY . .)), want deploy
+    ✓ history check removed
+        caught by: A2 live commit not in history — A reason 'git diff failed: fatal: bad object dddddddddddddddddddddddddddddddddddddddd' lacks 'not in history'
+    ✓ unknown inputs treated as equivalent
+        caught by: H1 absolute /app path, stale registration — O2 = runtime-equivalent (build inputs not derivable: no audited runtime-read registry), want deploy; A = runtime-equivalent (build inputs not derivabl
+    ✓ closure not transitive
+        caught by: C1 docs-only target behind an undeployed code change — A = runtime-equivalent (runtime inputs identical between live c0930060 and target (image bytes not compared: COPY . .)), want deploy
+    ✓ lockfile not an input
+        caught by: C4 lockfile change — A = runtime-equivalent (runtime inputs identical between live c1ba1823 and target (image bytes not compared: COPY . .)), want deploy; B = runtime-equi
+    ✓ Docker context not an input
+        caught by: C5 Docker context change — O = runtime-equivalent (runtime inputs identical between live e3df7f2f and target (image bytes not compared: COPY . .)), want deploy
+    ✓ always deploy (no saving)
+        caught by: C1 docs-only target behind an undeployed code change — B = deploy (0 input file(s) changed since live c0930060), want runtime-equivalent; O2 = deploy (0 input file(s) changed since live c0930060), want run
+    ✓ workspace manifests not inputs
+        caught by: C8 another package's manifest — A = runtime-equivalent (runtime inputs identical between live 13781564 and target (image bytes not compared: COPY . .)), want deploy; O2 = runtime-equ
+    ✓ declared runtime reads not inputs
+        caught by: C7 declared guarded-prefix read outside the closure (infra/targets/) — O2 = runtime-equivalent (runtime inputs identical between live 6c6be50b and target (image bytes not compared: COPY . .)), want deploy
+    ✓ registry not audited on the target
+        caught by: H1 absolute /app path, stale registration — O2 = runtime-equivalent (runtime inputs identical between live e5bba8fd and target (image bytes not compared: COPY . .)), want deploy; A = runtime-equ
+    ✓ CLM-0630 declared unresolved read not conservative
+        caught by: H2b composed path declared `unresolved` → conservative deploy of its services only — O2 = runtime-equivalent (runtime inputs identical between live b3ace51e and target (image bytes not compared: COPY . .)), want deploy
+    ✓ unregistered fs use ignored
+        caught by: H12 new fs-using file left unregistered — O2 = runtime-equivalent (runtime inputs identical between live f8238b9f and target (image bytes not compared: COPY . .)), want deploy; A = runtime-equ
+    ✓ fingerprint compared by call name only (argument/target ignored)
+        caught by: H1 absolute /app path, stale registration — audit on target: want 'fs calls changed', got ["services/o2/src/config.ts: readFileSync('/app/services/b/config.json', 'utf8') → repo:services/b/confi
+    ✓ out-of-package path literal coverage not checked
+        caught by: H13 out-of-package path literal handed to a non-fs consumer (no fs call changed) — O2 = runtime-equivalent (runtime inputs identical between live e95b4ff8 and target (image bytes not compared: COPY . .)), want deploy; A = runtime-equ
+    ✓ ../ literals not seen
+        caught by: H13 out-of-package path literal handed to a non-fs consumer (no fs call changed) — O2 = runtime-equivalent (runtime inputs identical between live b6e05bf3 and target (image bytes not compared: COPY . .)), want deploy; A = runtime-equ
+    ✓ CLM-0630 /app literals not seen
+        caught by: C1 docs-only target behind an undeployed code change — B = deploy (build inputs not derivable: no audited runtime-read registry), want runtime-equivalent; O2 = deploy (build inputs not derivable: no audite
+    ✓ CLM-0630 resolved target coverage not checked
+        caught by: H14 target outside the package reached by a dirname() chain (no `..` or /app literal) — O2 = runtime-equivalent (runtime inputs identical between live c823b2da and target (image bytes not compared: COPY . .)), want deploy; A = runtime-equ
+    ✓ CLM-0630 unresolved read silently treated as a write
+        caught by: C1 docs-only target behind an undeployed code change — B = deploy (build inputs not derivable: no audited runtime-read registry), want runtime-equivalent; O2 = deploy (build inputs not derivable: no audite
+    ✓ CLM-0630 undeclared unresolved read accepted
+        caught by: H2 composed "services/" + serviceName + "/config.json", not declared — O2 = runtime-equivalent (runtime inputs identical between live 4d2feaa8 and target (image bytes not compared: COPY . .)), want deploy; A = runtime-equ
+    ✓ CLM-0630 dynamic-segment guard not verified
+        caught by: H4 guard on the dynamic file name removed — O2 = runtime-equivalent (runtime inputs identical between live be60de7d and target (image bytes not compared: COPY . .)), want deploy; A = runtime-equ
+    ✓ CLM-0630 overriding callers of a defaulted parameter ignored
+        caught by: H5 guarded dir default overridden by a runtime caller — audit on target: want 'default overridable', got ["services/o2/src/config.ts: out-of-package path 'services/b' not covered by registered reads ['infra
+    ✓ CLM-0630 delegated values not evaluated
+        caught by: H10 delegated allowlistUrl value turned into an environment value — audit on target: want 'value of delegated', got ['services/a/src/edge.ts: registered in runtime-reads.json but no longer uses fs or out-of-package pat
+    ✓ CLM-0630 fs aliasing ignored
+        caught by: H6 fs function aliased (const r = readFileSync) — audit on target: want 'aliasing', got ["services/o2/src/config.ts: out-of-package path 'services/b/config.json' not covered by registered reads ['infr
+    ✓ CLM-0630 fs module outside a static import ignored
+        caught by: H7 fs reached through a literal dynamic import — audit on target: want 'outside a static import', got ["services/o2/src/config.ts: out-of-package path 'services/b/config.json' not covered by register
+    ✓ CLM-0630 getBuiltinModule ignored
+        caught by: H9 process.getBuiltinModule('fs') — audit on target: want 'getBuiltinModule', got ["services/o2/src/config.ts: fs module 'node:fs' named outside a static import (dynamic import / require
+    ✓ CLM-0630 stale registered read accepted
+        caught by: H3d target moved and covered, but the old read left registered (stale registration) — O2 reason '1 input file(s) changed since live 1994ddba' lacks 'not derivable'; A = runtime-equivalent (runtime inputs identical between live 1994ddba 
+    ✓ CLM-0630 start-script paths not checked
+        caught by: H11 start script names a path outside its package — O2 = runtime-equivalent (runtime inputs identical between live 730dedb1 and target (image bytes not compared: COPY . .)), want deploy
+    ✓ CLM-0630 re-export check and module-name check both removed
+        caught by: H7 fs reached through a literal dynamic import — audit on target: want 'outside a static import', got ["services/o2/src/config.ts: out-of-package path 'services/b/config.json' not covered by register
+    ✓ render-sync deploys every service
+        caught by: wiring — render-sync.py does not deploy only `deploy` decisions
+    ✓ render-sync reads the whole env list
+        caught by: wiring — render-sync.py must read WASLA_SERVICE by key, never the env-var list
+    ✓ render-sync skips the registry audit
+        caught by: wiring — render-sync.py does not audit the runtime-read registry against the target
+    ✓ render-sync drops why inputs were not derivable
+        caught by: wiring — render-sync.py does not record why inputs were not derivable
+    ✓ render-sync.json no longer states image bytes are not compared
+        caught by: wiring — render-sync.json (plan and result) must state that image bytes are not compared
+    ✓ plan-only render-sync.json drops the policy
+        caught by: wiring — render-sync.json (plan and result) must state that image bytes are not compared
+    ✓ workflow shallow clone
+        caught by: wiring — render-deploy.yml must fetch full history (fetch-depth: 0)
+    ✓ workflow deploys on every push again
+        caught by: wiring — render-deploy.yml must not deploy on push/schedule/PR/workflow_run (Render is test-only — CLM-0632)
+  ✓ self-test: 36/36 mutations caught

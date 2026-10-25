@@ -1,4 +1,4 @@
-name: Render deploy (main → Render, commit-pinned)
+name: Render test deploy (manual, test-only, commit-pinned)
 
 # CLM-0401 · M6-18B — replaces the inert `autoDeploy: yes` on Render.
 #
@@ -11,22 +11,54 @@ name: Render deploy (main → Render, commit-pinned)
 #
 # This workflow deploys the exact pushed commit and fails unless every service
 # reports that commit as live. It is NOT a required check on pull requests;
-# it runs only after a merge to main.
+# it ran after every merge to main until CLM-0632; it now runs on manual dispatch only.
 #
 # Requires repository secret RENDER_API_KEY. If the secret is absent the job
 # FAILS (visible red), it does not skip silently.
+#
+# CLM-0626 · RISK-0068 — selective deploy. render-sync.py deploys only the
+# services whose build inputs differ between their LIVE commit and the target
+# (scripts/deploy/render_plan.py), never "what the last push touched". So the
+# workflow now runs on every push to main, docs included: a docs-only push
+# costs Render API reads and zero builds, and still converges a service whose
+# earlier code change never went live (e.g. #772 behind the docs-only #773).
+# (Superseded by CLM-0632 below: no push trigger; the selective plan still applies
+# to every manual test deploy.)
+# fetch-depth 0: the live commits must be in history for the diff.
 
+# CLM-0632 · owner decision 2026-10-19 — Render is a TEST environment only: no
+# production deploy, no spend. The push trigger is removed: a merge to main never
+# deploys. A deploy is a deliberate manual dispatch that names its test-plan item
+# (docs/08-infrastructure/RENDER_TEST_ENVIRONMENT_PLAN.md) and types `test-only`;
+# render-sync.py refuses again unless infra/render/deploy-target.json is in deploy
+# mode with environment=test and the isolation preflight (no production database,
+# no production-named env group) is empty. While the target is frozen a dispatch
+# writes a FROZEN report and makes zero Render calls.
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
   workflow_dispatch:
     inputs:
       sha:
-        description: "Commit to deploy (defaults to the workflow commit)"
+        description: "Commit to deploy (required — no implicit HEAD)"
+        required: true
+      purpose:
+        description: "Approved test-plan item (infra/render/deploy-target.json test_plan_items) — FLEET only with full=true and its own approval"
+        required: true
+        type: choice
+        options:
+          - T1
+          - T2
+          - FLEET
+      confirm:
+        description: "Type test-only to confirm this is a test deploy, not production"
+        required: true
+      full:
+        description: "Whole fleet regardless of the plan — only with purpose FLEET (true/false)"
         required: false
+        type: choice
+        default: "false"
+        options:
+          - "false"
+          - "true"
 
 permissions:
   contents: read
@@ -41,11 +73,33 @@ jobs:
     timeout-minutes: 60
     env:
       RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-      TARGET_SHA: ${{ github.event.inputs.sha || github.sha }}
+      TARGET_SHA: ${{ github.event.inputs.sha }}
+      FULL_DEPLOY: ${{ github.event.inputs.full || 'false' }}
+      RENDER_DEPLOY_PURPOSE: ${{ github.event.inputs.purpose }}
+      RENDER_DEPLOY_CONFIRM: ${{ github.event.inputs.confirm }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+      - name: Require explicit test-only intent (CLM-0632)
+        run: |
+          if [ "${RENDER_DEPLOY_CONFIRM}" != "test-only" ] || [ -z "${RENDER_DEPLOY_PURPOSE// /}" ] || [ -z "${TARGET_SHA}" ]; then
+            echo "::error::Render is a test environment only. Dispatch with sha, purpose (test-plan item) and confirm=test-only."
+            exit 1
+          fi
+          # CLM-0635: the purpose is one approved item (render-sync.py re-checks approval
+          # against deploy-target.json); full=true never widens an item — FLEET only.
+          case "${RENDER_DEPLOY_PURPOSE}" in
+            T1|T2|FLEET) ;;
+            *) echo "::error::purpose ${RENDER_DEPLOY_PURPOSE} is not an item of the test plan"; exit 1 ;;
+          esac
+          if [ "${FULL_DEPLOY}" = "true" ] && [ "${RENDER_DEPLOY_PURPOSE}" != "FLEET" ]; then
+            echo "::error::full=true is only accepted with purpose FLEET"; exit 1
+          fi
+          if [ "${RENDER_DEPLOY_PURPOSE}" = "FLEET" ] && [ "${FULL_DEPLOY}" != "true" ]; then
+            echo "::error::purpose FLEET requires full=true"; exit 1
+          fi
+          echo "RENDER_DEPLOY_INTENT=test-only" >> "$GITHUB_ENV"
       - name: Require RENDER_API_KEY (fail-closed)
         run: |
           if [ -z "${RENDER_API_KEY}" ]; then
@@ -53,7 +107,10 @@ jobs:
             exit 1
           fi
       - name: Deploy commit and verify live commit per service
-        run: python3 scripts/deploy/render-sync.py "$TARGET_SHA" --out render-sync.json
+        run: |
+          ALL=""
+          if [ "${FULL_DEPLOY}" = "true" ]; then ALL="--all"; fi
+          python3 scripts/deploy/render-sync.py "$TARGET_SHA" $ALL --out render-sync.json
       - name: Upload deploy evidence
         if: always()
         uses: actions/upload-artifact@v4

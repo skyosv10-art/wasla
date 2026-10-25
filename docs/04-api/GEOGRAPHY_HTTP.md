@@ -32,6 +32,7 @@ services/geography/src/infrastructure/http-identity-lookup.ts ← IdentityLookup
 | GET | `/geo/cities/{cityId}/districts` | 200 | 404 `GEO_CITY_NOT_FOUND` |
 | GET | `/geo/districts/{districtId}/zones` | 200 | 404 `GEO_DISTRICT_NOT_FOUND` |
 | GET | `/geo/zones/{zoneId}` | 200 | يُرجع المسار الهرمي الكامل مترجماً |
+| GET | `/geo/zones/search` | 200 | G-S9.3 · CLM-0645: `?q=` (2..64 بعد القصّ) `&limit=` (1..20، الافتراضي 10) `&locale=` — المناطق **النشطة فقط** المطابقة جزئيًّا لأيّ اسمٍ مترجَمٍ (دون حساسيّةٍ لحالة الأحرف، و`%`/`_`/الشرطة العكسيّة حرفيّة)، مرتّبةً بـ`code` ثم `id`، بشكل `ZoneDetail[]`؛ لا تطابقَ ← `[]`؛ مدخلٌ غير صالح ← 400 `GEO_INVALID_SEARCH_QUERY` · صلاحيّة `geography:zone:read` |
 | GET | `/geo/users/{waslaPublicId}/location` | 200 | 404 `GEO_USER_LOCATION_NOT_FOUND` |
 | PUT | `/geo/users/{waslaPublicId}/location` | **201** أول تعيين · **200** تغيير/idempotent | جسم: `{ zone_id, source }` |
 | GET | `/geo/users/{waslaPublicId}/location/history` | 200 | `old_zone = null` في أول إدخال |

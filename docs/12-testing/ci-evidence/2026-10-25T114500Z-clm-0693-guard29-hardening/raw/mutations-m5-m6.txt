@@ -1,0 +1,20 @@
+── الطفرةُ M5 (ترطيبٌ في تعليقاتٍ فقط + alias لـbuildApp) ──
+── الحارسُ 29 · ترطيبُ حدِّ القناةِ في المدخلِ (D6 · CLM-0691/0693) ──
+  ✗ [EW-MAIN-IMPORT] main.ts لا يستوردُ buildAppWithEdge من ./edge.js
+  ✗ [EW-MAIN-LAUNCH] runBotApp لا يُمرَّرُ إليهِ buildAppWithEdge (الحدُّ غيرُ مرطَّبٍ في المدخلِ)
+  ✓ allowlistUrl في customer-bot يحلُّ إلى ملفٍّ موجودٍ: packages/channel-edge/allowlist/customer-mini-app.json
+  ✓ قائمةُ سماحِ customer-bot صالحةُ JSON
+  ✓ allowlistUrl في driver-bot يحلُّ إلى ملفٍّ موجودٍ: packages/channel-edge/allowlist/driver-mini-app.json
+  ✓ قائمةُ سماحِ driver-bot صالحةُ JSON
+
+✗ edge-wiring-guard: 2 إخفاق. الدفعُ مرفوضٌ.
+
+── الطفرةُ M6 (URL سليمٌ في متغيّرٍ مجاورٍ + allowlistUrl غائب) ──
+── الحارسُ 29 · ترطيبُ حدِّ القناةِ في المدخلِ (D6 · CLM-0691/0693) ──
+  ✓ main.ts يستوردُ buildAppWithEdge من ./edge.js
+  ✓ المُطلِقُ يمرِّرُ buildAppWithEdge إلى runBotApp
+  ✗ [EW-ALLOWLIST-URL] allowlistUrl في customer-bot يحلُّ إلى ملفٍّ غائبٍ: packages/channel-edge/allowlist/absent-file.json
+  ✓ allowlistUrl في driver-bot يحلُّ إلى ملفٍّ موجودٍ: packages/channel-edge/allowlist/driver-mini-app.json
+  ✓ قائمةُ سماحِ driver-bot صالحةُ JSON
+
+✗ edge-wiring-guard: 1 إخفاق. الدفعُ مرفوضٌ.

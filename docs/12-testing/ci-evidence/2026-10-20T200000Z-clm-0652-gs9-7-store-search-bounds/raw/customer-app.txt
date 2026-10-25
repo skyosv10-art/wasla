@@ -1,0 +1,13 @@
+typecheck ok
+ Test Files  16 passed (16)
+      Tests  133 passed (133)
+ ✓ src/__tests__/StoreSearch.test.tsx > StoreSearch component > calls the contract path with the trimmed, encoded query, the UI locale and bounded paging — no state/owner filter 45ms
+ ✓ src/__tests__/StoreSearch.test.tsx > StoreSearch component > a single character (after trim) is a valid query and reaches the service 11ms
+ ✓ src/__tests__/StoreSearch.test.tsx > StoreSearch component > an empty (whitespace-only) query does not call the service 8ms
+ ✓ src/__tests__/StoreSearch.test.tsx > StoreSearch component > 200 code points are sent; 201 are refused client-side and the input is capped at 200 12ms
+ ✓ src/__tests__/StoreSearch.test.tsx > StoreSearch component > shows the localized title the service returned 8ms
+ ✓ src/__tests__/StoreSearch.test.tsx > StoreSearch component > no match → empty state; failure → error, no results 11ms
+ ✓ src/__tests__/StoreSearch.test.tsx > StoreSearch component > a late response to an older search never replaces a newer one 9ms
+ ✓ src/__tests__/StoreSearch.test.tsx > StoreSearch component > uses the UI language as locale (ur) 11ms
+ ✓ src/__tests__/StoreSearch.test.tsx > Marketplace — store-name search wiring (G-S9.7) > choosing a result opens that store's products 13ms
+      Tests  9 passed (9)

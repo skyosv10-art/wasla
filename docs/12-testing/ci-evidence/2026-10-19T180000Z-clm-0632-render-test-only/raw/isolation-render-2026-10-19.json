@@ -1,0 +1,493 @@
+{
+ "measured_at": "2026-10-19 (Render API, owner tea-db0vtkpsrm7s739dm5c0; values never printed or stored)",
+ "env_group": {
+  "name": "wasla-prod-db",
+  "linked_services": 17,
+  "vars": [
+   "CUSTOMER_DATABASE_URL",
+   "DATABASE_URL"
+  ],
+  "classification": {
+   "DATABASE_URL": "supabase pooler · ap-south-1 · db postgres · role postgres · project = Supabase `wasla` (ppixaauyqoykrogwdxtv) — designated production in docs/08-infrastructure/HA_CAPACITY_DR.md",
+   "CUSTOMER_DATABASE_URL": "same project, same role"
+  },
+  "linked_service_names": [
+   "wasla-audit",
+   "wasla-customer-bot",
+   "wasla-customers",
+   "wasla-delivery",
+   "wasla-dispatch",
+   "wasla-driver-bot",
+   "wasla-drivers",
+   "wasla-geography",
+   "wasla-identity",
+   "wasla-marketplace",
+   "wasla-matching",
+   "wasla-negotiations",
+   "wasla-orders",
+   "wasla-partner-bot",
+   "wasla-reputation",
+   "wasla-search",
+   "wasla-subscriptions"
+  ],
+  "not_linked": [
+   "wasla-admin-app",
+   "wasla-alertmanager",
+   "wasla-customer-app",
+   "wasla-driver-app",
+   "wasla-observability",
+   "wasla-otel-collector",
+   "wasla-prometheus"
+  ]
+ },
+ "supabase_projects": {
+  "wasla (ppixaauyqoykrogwdxtv)": "ACTIVE_HEALTHY — the database Render services use",
+  "wasla-dr-replacement (pvyuhjadrygqqdoczmnd)": "INACTIVE — DR drills only, no Render link"
+ },
+ "database_content": {
+  "public_tables": 120,
+  "nonempty_tables": 13,
+  "live_rows": 41,
+  "note": "seed/config rows + audit_events 10, channel_updates 4, channel_outbox 2, channel_deliveries 1; no customer/order/driver rows (pg_stat_user_tables n_live_tup)"
+ },
+ "services": [
+  {
+   "name": "wasla-alertmanager",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": null,
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "AM_BASIC_AUTH_HASH",
+    "AM_BASIC_AUTH_USER",
+    "PORT",
+    "TELEGRAM_BOT_TOKEN",
+    "TELEGRAM_CHAT_ID"
+   ],
+   "bot_tokens": {
+    "TELEGRAM_BOT_TOKEN": "matches a test token supplied by the owner"
+   }
+  },
+  {
+   "name": "wasla-prometheus",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": null,
+   "WASLA_OBS_ENVIRONMENT": "render-singapore",
+   "env_keys": [
+    "AM_BASIC_AUTH_PASSWORD",
+    "PORT",
+    "WASLA_OBS_ENVIRONMENT"
+   ]
+  },
+  {
+   "name": "wasla-partner-bot",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "IDENTITY_SERVICE_URL",
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "PARTNER_BOT_MINI_APP_URL",
+    "PARTNER_BOT_TOKEN",
+    "PARTNER_BOT_WEBHOOK_SECRET",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ],
+   "bot_tokens": {
+    "PARTNER_BOT_TOKEN": "matches a test token supplied by the owner"
+   }
+  },
+  {
+   "name": "wasla-driver-bot",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "DRIVER_BOT_MINI_APP_URL",
+    "DRIVER_BOT_TOKEN",
+    "DRIVER_BOT_WEBHOOK_SECRET",
+    "IDENTITY_SERVICE_URL",
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ],
+   "bot_tokens": {
+    "DRIVER_BOT_TOKEN": "matches a test token supplied by the owner"
+   }
+  },
+  {
+   "name": "wasla-customer-bot",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "CUSTOMER_BOT_MINI_APP_URL",
+    "CUSTOMER_BOT_TOKEN",
+    "CUSTOMER_BOT_WEBHOOK_SECRET",
+    "IDENTITY_SERVICE_URL",
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ],
+   "bot_tokens": {
+    "CUSTOMER_BOT_TOKEN": "matches a test token supplied by the owner"
+   }
+  },
+  {
+   "name": "wasla-admin-app",
+   "type": "static_site",
+   "plan": null,
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": null,
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_VERSION"
+   ]
+  },
+  {
+   "name": "wasla-driver-app",
+   "type": "static_site",
+   "plan": null,
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": null,
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_VERSION"
+   ]
+  },
+  {
+   "name": "wasla-customer-app",
+   "type": "static_site",
+   "plan": null,
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": null,
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_VERSION"
+   ]
+  },
+  {
+   "name": "wasla-dispatch",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "DISPATCH_WAVE_SIZE",
+    "MATCHING_BASE_URL",
+    "NODE_ENV",
+    "ORDERS_BASE_URL",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-customers",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "GEOGRAPHY_SERVICE_URL",
+    "IDENTITY_SERVICE_URL",
+    "NODE_ENV",
+    "ORDER_SERVICE_URL",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-delivery",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "MARKETPLACE_SERVICE_URL",
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-matching",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "GEOGRAPHY_BASE_URL",
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS",
+    "WASLA_USER_ASSERTION_MODE",
+    "WASLA_USER_ASSERTION_PUBLIC_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-geography",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "IDENTITY_SERVICE_URL",
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-marketplace",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS",
+    "WASLA_USER_ASSERTION_MODE",
+    "WASLA_USER_ASSERTION_PUBLIC_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-audit",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-subscriptions",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-negotiations",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS",
+    "WASLA_USER_ASSERTION_MODE",
+    "WASLA_USER_ASSERTION_PUBLIC_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-reputation",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-drivers",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-search",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-orders",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS"
+   ]
+  },
+  {
+   "name": "wasla-identity",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "staging",
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "NODE_ENV",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "WASLA_PG_SSL_CA",
+    "WASLA_PG_SSL_MODE",
+    "WASLA_SERVICE",
+    "WASLA_SERVICE_AUTH_ACTIVE_KID",
+    "WASLA_SERVICE_AUTH_KEYS",
+    "WASLA_USER_ASSERTION_SIGNING_KEY"
+   ]
+  },
+  {
+   "name": "wasla-otel-collector",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": null,
+   "WASLA_OBS_ENVIRONMENT": null,
+   "env_keys": [
+    "PORT"
+   ]
+  },
+  {
+   "name": "wasla-observability",
+   "type": "web_service",
+   "plan": "free",
+   "autoDeploy": "no",
+   "suspended": "not_suspended",
+   "NODE_ENV": "production",
+   "WASLA_OBS_ENVIRONMENT": "render-singapore",
+   "env_keys": [
+    "NODE_ENV",
+    "WASLA_OBS_ENVIRONMENT",
+    "WASLA_SERVICE"
+   ]
+  }
+ ]
+}

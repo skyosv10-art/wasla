@@ -84,6 +84,14 @@ export interface GeographyRepository {
   findZone(zoneId: string): Promise<WithNames<Zone> | null>;
   /** A zone with its full parent path + localized names, or null. */
   getZoneDetail(zoneId: string): Promise<ZoneDetailRecord | null>;
+  /**
+   * G-S9.3 (CLM-0645): active zones (`status = 'active'` — the same validity
+   * rule customers applies to an order's zone_id) having at least one localized
+   * name (any locale) that contains `query` case-insensitively, as a literal
+   * substring (`%`, `_`, `\` are not wildcards). Ordered by zone code, then id;
+   * at most `limit` rows. `query` arrives already trimmed and length-checked.
+   */
+  searchActiveZones(query: string, limit: number): Promise<ZoneDetailRecord[]>;
 
   // --- user location ---
   /** The current location assignment for a user, or null if none set. */

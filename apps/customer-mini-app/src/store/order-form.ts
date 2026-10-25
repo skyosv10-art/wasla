@@ -46,7 +46,8 @@ export interface OrderRequestPreview {
 }
 
 export interface OrderRequestResult {
-  order_request_id: string;
+  /** G-S9.11 (CLM-0638): the submit DTO field is `id` per the published contract. */
+  id: string;
   status: "submitted" | "submission_failed";
   order_public_id?: string | null;
 }
@@ -58,8 +59,10 @@ interface OrderFormState {
   // Form fields
   pickupZoneId: string;
   pickupLabel: string;
+  pickupSource: StopSource;
   dropoffZoneId: string;
   dropoffLabel: string;
+  dropoffSource: StopSource;
   vehicleClass: VehicleClass;
   priceMode: PriceMode;
   offeredPrice: string;
@@ -78,8 +81,10 @@ interface OrderFormState {
   // Actions
   setPickupZoneId: (v: string) => void;
   setPickupLabel: (v: string) => void;
+  setPickupSource: (v: StopSource) => void;
   setDropoffZoneId: (v: string) => void;
   setDropoffLabel: (v: string) => void;
+  setDropoffSource: (v: StopSource) => void;
   setVehicleClass: (v: VehicleClass) => void;
   setPriceMode: (v: PriceMode) => void;
   setOfferedPrice: (v: string) => void;
@@ -99,8 +104,10 @@ interface OrderFormState {
 const initialState = {
   pickupZoneId: "",
   pickupLabel: "",
+  pickupSource: "manual_zone" as StopSource,
   dropoffZoneId: "",
   dropoffLabel: "",
+  dropoffSource: "manual_zone" as StopSource,
   vehicleClass: "sedan" as VehicleClass,
   priceMode: "negotiable" as PriceMode,
   offeredPrice: "",
@@ -117,8 +124,10 @@ export const useOrderFormStore = create<OrderFormState>((set) => ({
   ...initialState,
   setPickupZoneId: (v) => set({ pickupZoneId: v, preview: null, previewStatus: "idle" }),
   setPickupLabel: (v) => set({ pickupLabel: v, preview: null, previewStatus: "idle" }),
+  setPickupSource: (v) => set({ pickupSource: v, preview: null, previewStatus: "idle" }),
   setDropoffZoneId: (v) => set({ dropoffZoneId: v, preview: null, previewStatus: "idle" }),
   setDropoffLabel: (v) => set({ dropoffLabel: v, preview: null, previewStatus: "idle" }),
+  setDropoffSource: (v) => set({ dropoffSource: v, preview: null, previewStatus: "idle" }),
   setVehicleClass: (v) => set({ vehicleClass: v, preview: null, previewStatus: "idle" }),
   setPriceMode: (v) => set({ priceMode: v, preview: null, previewStatus: "idle" }),
   setOfferedPrice: (v) => set({ offeredPrice: v, preview: null, previewStatus: "idle" }),
@@ -142,14 +151,14 @@ export function buildOrderRequest(state: OrderFormState): OrderRequestInput {
     {
       kind: "pickup",
       zone_id: state.pickupZoneId,
-      source: "manual_zone",
+      source: state.pickupSource,
       label: state.pickupLabel || null,
       coordinates: null,
     },
     {
       kind: "dropoff",
       zone_id: state.dropoffZoneId,
-      source: "manual_zone",
+      source: state.dropoffSource,
       label: state.dropoffLabel || null,
       coordinates: null,
     },

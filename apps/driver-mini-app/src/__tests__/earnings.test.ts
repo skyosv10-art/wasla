@@ -41,6 +41,9 @@ describe("Earnings store", () => {
       setSession: vi.fn(),
       clearSession: vi.fn(),
       isAuthenticated: () => true,
+      initStatus: "ready" as const,
+      initError: null,
+      setInitState: vi.fn(),
     });
   });
 
@@ -96,6 +99,9 @@ describe("Earnings store", () => {
       setSession: vi.fn(),
       clearSession: vi.fn(),
       isAuthenticated: () => false,
+      initStatus: "idle" as const,
+      initError: null,
+      setInitState: vi.fn(),
     });
 
     await useEarningsStore.getState().fetchEarnings();
@@ -111,8 +117,35 @@ describe("Earnings store", () => {
     await useEarningsStore.getState().fetchEarnings("week");
 
     expect(mockApi.get).toHaveBeenCalledWith(
-      "/orders/drivers/drv_test_123/jobs?status=completed&period=week",
+      // G-S13 (CLM-0614): only the contract's parameter. (Was `?status=completed&period=week`
+      // — `status` is not in `listDriverJobs` and the service ignored it.)
+      "/orders/drivers/drv_test_123/jobs?period=week",
     );
+  });
+
+  it("excludes cancelled jobs from the list, the count and the total (G-S13)", async () => {
+    const job = (id: string, status: string, amount: number) => ({
+      order_public_id: id, order_type: "ride", vehicle_class: "sedan", status,
+      agreed_price: { amount_minor: amount, currency: "SAR" },
+      agreed_at: "2026-09-22T10:00:00Z", completed_at: "2026-09-22T10:30:00Z",
+      pickup_label: "A", dropoff_label: "B",
+    });
+    mockApi.get.mockResolvedValue({
+      jobs: [
+        job("ORD-0000000001", "completed", 2500),
+        job("ORD-0000000002", "driver_cancelled", 9000),
+        job("ORD-0000000003", "customer_cancelled", 7000),
+        job("ORD-0000000004", "completed", 1500),
+      ],
+    });
+
+    await useEarningsStore.getState().fetchEarnings("week");
+
+    const state = useEarningsStore.getState();
+    expect(state.jobs.map((j) => j.order_public_id)).toEqual(["ORD-0000000001", "ORD-0000000004"]);
+    expect(state.summary?.job_count).toBe(2);
+    expect(state.summary?.total_amount.amount_minor).toBe(4000);
+    expect(state.summary?.jobs.every((j) => j.status === "completed")).toBe(true);
   });
 
   it("computes summary with zero jobs", async () => {

@@ -109,7 +109,7 @@ describe("JobDetail screen", () => {
     expect(screen.getByTestId("transition-driver_en_route")).toBeInTheDocument();
   });
 
-  it("shows arrived button when status is in_progress", () => {
+  it("shows the complete transition button when status is in_progress", () => {
     setHash("job", { job_id: "job-1" });
     const inProgressJob = { ...mockJob, status: "in_progress" as const };
     useDispatchStore.setState({ activeJob: inProgressJob });

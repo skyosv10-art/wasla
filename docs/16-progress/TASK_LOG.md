@@ -1,3 +1,1162 @@
+# 2026-10-26 — CLM-0695 — M6-18B: دمجُ main داخلَ فرعِ #730 (ثالثةً) — إزالةُ التعارضِ بعدَ 4 دمجاتٍ (CLM-0691..0694)
+
+- **Work Item(s):** M6-18B (CLM-0695).
+- **Status:** Released — إصلاحُ تعارضِ سجلٍّ فقط؛ الحاجزُ (INC-0007) لم يُلمسْ و#730 يبقى HOLD.
+- **Risk(s):** none — إضافةٌ لا محوٌ. (سببُ none: تعارضُ سجلِّ توثيقٍ بالإضافةِ — لا قرارَ نشرٍ ولا تشغيلَ إنتاج.)
+- **(1) الوضعُ:** #730 عادَ CONFLICTING بعدَ دمجِ CLM-0691..CLM-0694 على main (4 دمجاتٍ) — التعارضُ في ROADMAP · INCIDENTS · BOARD · TASK_LOG · WORK_CLAIMS.
+- **(2) الحلُّ:** دمجٌ بالإضافةِ (سطورُ main أولًا ثمَّ سطورُ الفرعِ) · الكودُ (`ci.yml` · `scripts/ci/` · `scripts/checks/`) دُمجَ تلقائيًا بلا تعارضٍ.
+- **(3) الحوكمةُ:** تُقاسُ حزمةُ الحوكمةِ على الرأسِ الجديدِ؛ وعندَ انحرافِ الأساسِ (اتحادُ حالاتِ الفرعِ مع main) يُعادُ التوليدُ بقرارٍ مكتوبٍ (قيدَ القياسِ — يُسجَّلُ في التزامٍ لاحقٍ داخلَ الفرعِ).
+- **Deployment:** none — دفعُ فرعِ PR لا يصلُ main.
+- **Next:** قراءةُ حكمِ CI على الرأسِ الجديدِ · #730 يبقى HOLD حتى تدويرِ مفتاحِ Render (قرارُ المالكِ).
+# 2026-10-25 — CLM-0694 — استرجاعُ حقلِ `note` لبندِ T1 في `deploy-target.json` إلى نصّهِ الأصليِّ
+
+- **Work Item(s):** M0-53 (G-S9.7 · T1).
+- **Status:** Active (يُدمَجُ بعدَ الفحوصِ على الرأسِ).
+- **Kind:** corrective revert + docs — استرجاعُ حالةٍ؛ لا تغييرَ في أيِّ قرارِ نشرٍ.
+- **Risk(s):** none — `mode=frozen` · `approved=false` + `approval=null` · `isolation_evidence=null` كلُّها كما هي.
+- **Defect found and fixed:** CLM-0691 عدّلَ حقلَ `note` لبندِ T1 في `deploy-target.json` — تجاوزُ نطاقٍ (توجيهُ المالكِ 2026-10-25: «لا تغيّر deploy-target.json»). استُرجعَ النصُّ الأصليُّ (ما قبلَ #837) حرفيًّا، وتقادمُهُ (الوصلُ والقائمةُ قائمانِ بالقياسِ — الحارسُ 29) يُوثَّقُ في RENDER_TEST_ENVIRONMENT_PLAN لا في الحقلِ.
+- **Measured (local):** `validate-render-deploy-target.sh` 42/42 (بعدَ الاسترجاعِ) · فرقُ الملفِّ سطرٌ واحدٌ (الحقلُ وحدَهُ).
+- **Not changed:** كلُّ حقولِ القرارِ (`mode` · `approved` · `approval` · `isolation_evidence` · `production_database_refs`) · لا نشرَ · Render مجمَّدٌ · NO-GO.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-25T120000Z-clm-0694-deploy-target-note-revert/README.md
+- **Deployment:** none — استرجاعُ نصٍّ بلا أي أثرٍ حيٍّ (Render مجمَّدٌ · production_open=false).
+# 2026-10-25 — CLM-0693 — G-S9.7 · D6: تقويةُ الحارسِ 29 (تجريدُ التعليقاتِ + خاصيةُ allowlistUrl) + اختبارٌ سلوكيٌّ للمدخلِ
+
+- **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.11 · T1).
+- **Status:** Active (يُدمَجُ بعدَ الفحوصِ على الرأسِ).
+- **Kind:** guard-hardening + behavioral test + docs — لا تغييرَ في سلوكِ الإنتاجِ.
+- **Risk(s):** none — لا يتغيّرُ خطرٌ؛ المدخلُ مغلقٌ (`production_open=false`) · T1 لم يُشغَّل.
+- **Defects found and fixed (measured, not assumed):** طفرةُ M5: صيغُ الترطيبِ داخلَ تعليقاتٍ فقط معَ استدعاءِ `buildApp` مباشرةً عبرَ alias كانت تُمرِّرُ الحارسَ (المطابقةُ على النصِّ الخام) — الحارسُ الآن يجردُ التعليقاتِ (سطورَ `//` وكتلَ `/* */` خارجَ السلاسلِ) قبلَ المطابقةِ. طفرةُ M6: `new URL` سليمٌ في متغيّرٍ مجاورٍ قبلَ الخاصيةِ بينما قيمةُ `allowlistUrl` نفسُها تُشيرُ إلى غائبٍ كانت تُمرِّرُ (استخراجُ أولِ `new URL` في الملفِ) — الحارسُ الآن يستخرجُ مسارَ **الخاصيةِ** تحديدًا (`allowlistUrl: fileURLToPath(new URL(…, import.meta.url))`) ويُخفقُ مغلقاً إن غابت الصيغةُ.
+- **Changed units:** `scripts/checks/lib/edge_wiring_guard.py` (تجريدُ التعليقاتِ + استخراجُ الخاصيةِ) · `scripts/checks/lib/gov-cases-edge-wiring.sh` (طفرتا M5/M6) · `bots/customer-bot/src/__tests__/main-entry-wiring.test.ts` (جديدٌ — سلوكيٌّ: محاكاةُ `runBotApp` والتقاطُ المُمرَّرِ هُويّةً لا نصًّا، ومساراتُ النطاقِ حاضرةٌ في الحالتينِ، والحدُّ يُسجَّلُ فقطَ بتمكينٍ من `env` الترتيبِ) · تصحيحٌ مؤرَّخٌ لأدلّةِ CLM-0691 (البصمةُ · سجلُّ `verify-governance` الفاشلُ المُسمّى بوضوحٍ · سجلُّ الحالاتِ الغائبُ) · متابعةٌ مؤرَّخةٌ لـINC-0007 (لا صلاحيّةَ لقراءةِ الأسرارِ ⇒ لا دليلَ حديثاً على المعالجة) · `.env.example` + `packages/config/env-registry.json` + `packages/config/src/registry.generated.ts` (تسجيلُ قارئِ الاختبارِ السلوكيِّ لمتغيّرِ `WASLA_EDGE_ENABLED` وإعادةُ توليدِ الأرتفاكتَينِ المشتقّينِ) · `ROADMAP.md` (إضافةٌ مؤرَّخةٌ) · `BASELINE.json`/`txt` (إعادةُ توليدٍ — `governance_suite_cases` 823→826 بقرارٍ مكتوبٍ) · `scripts/baseline.sh` (إزالةُ تكرارِ بادئةِ `sha256:` في سطرِ بصمةِ المخرَجِ — أثرٌ مباشرٌ لتوليدِ الأساسِ الجديدِ).
+- **Measured (local):** وحداتُ بوتِ العميلِ 61/61 (منها السلوكيُّ 3/3) · الحارسُ 29 على الشجرةِ النظيفةِ ✓ · طفراتُ M1–M6 تُسقِطُ بأبوابِها المُعزولةِ (9/0 من مصدرٍ مستقلٍّ) · `verify-governance.sh` ✓ (بعدَ إعادةِ توليدِ الأساسِ).
+- **Declared limits:** تقويةُ قياسٍ محليّةٌ لا تشغيلَ لـT1 ولا دليلَ D4.3 · مدخلُ بوتِ السائقِ ما زالَ على `buildApp` · `WASLA_EDGE_ENABLED` غيرُ مسجَّلٍ في env-registry (فشلٌ مغلقٌ بقرارٍ).
+- **Not changed:** `production_open=false` · `approved=false` + `approval=null` · لا نشرَ · Render مجمَّدٌ · NO-GO · D4.3 «غيرُ منفَّذٍ» حتى قياسٍ حيٍّ بإذنِ المالكِ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-25T114500Z-clm-0693-guard29-hardening/README.md
+- **Deployment:** none — تقويةُ قياسٍ محليّةٌ بلا أي أثرٍ حيٍّ (Render مجمَّدٌ · production_open=false · T1 بقرار المالك).
+# 2026-10-25 — CLM-0692 — حكمُ ما بعدَ الدمجِ لـ#837 (وحدةُ D6 · CLM-0691)
+
+- **Work Item(s):** M0-53 (G-S9.7 · وحدةُ D6).
+- **Status:** Active (يُدمَجُ بعدَ الفحوصِ على الرأسِ).
+- **Kind:** docs — سابقةُ CLM-0666/0668؛ توثيقٌ فقط.
+- **Risk(s):** none — لا يُغيَّرُ خطرٌ ولا حالةٌ.
+- **Merge:** #837 ← `9ef059d8` عبرَ `merge-on-approved-head.sh` (ADR-071 · 42 فحصًا ناجحًا · لا --admin) في 2026-10-25T11:19:47Z؛ حذفُ الفرعِ مُتحقَّقٌ (404).
+- **CI على main (`9ef059d8`):** WASLA CI 40188403736 **success** (شاملاً governance-guard بفحصِهِ الـ29) · Roadmap freshness 40188403702 **success**.
+- **Not changed:** لا حالةَ ولا خطرَ ولا قرارَ إطلاقٍ — `approved=false` + `approval=null` · Render مجمَّدٌ · NO-GO · D4.3 «غيرُ منفَّذٍ» حتى قياسٍ حيٍّ بإذنِ المالكِ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-25T113000Z-clm-0692-post-merge-verdict-837/README.md
+- **Deployment:** none — توثيقٌ فقط بلا أي أثرٍ حيٍّ.
+# 2026-10-25 — CLM-0691 — G-S9.7 · D6: وصلُ `buildAppWithEdge` في مدخلِ بوتِ العميلِ + الحارسُ 29
+
+- **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.11 · T1).
+- **Status:** Active (يُدمَجُ بعدَ الفحوصِ على الرأسِ).
+- **Kind:** wiring + guard + docs — لا تغييرَ في سلوكِ الإنتاجِ (فشلٌ مغلقٌ).
+- **Risk(s):** none — لا يتغيّرُ خطرٌ؛ المدخلُ مغلقٌ (`production_open=false`) · T1 لم يُشغَّل.
+- **Changed units:** `bots/customer-bot/src/main.ts` (يبني عبرَ `buildAppWithEdge` لا `buildApp` — وحدةُ D6 من تدقيقِ CLM-0661) · `scripts/checks/validate-edge-wiring.sh` + `scripts/checks/lib/edge_wiring_guard.py` (الحارسُ 29) · `scripts/checks/lib/gov-cases-edge-wiring.sh` (M1–M4 + ضابطٌ موجبٌ · مسجَّلٌ في `test-governance.sh`) · `verify-governance.sh` (29) · تصحيحٌ مؤرَّخٌ للوثائقِ المتقادمةِ (RENDER_TEST_ENVIRONMENT_PLAN §T1 · T2_LOCAL_WEBHOOK_PROCEDURE · ملاحظةُ `deploy-target.json` T1) · ADR-025 §6.11 · `BASELINE.json`/`txt` (28→29 بقرارٍ مكتوبٍ — أثرُ الحارسِ الجديدِ لا نطاقٌ جديدٌ) · الدليل · السجلّات.
+- **Measured (local):** وحداتُ بوتِ العميلِ 58/58 (منها edge-composition 2/2) · `tsc --noEmit` نظيفٌ · الحارسُ 29 ✓ · طفراتُه M1–M4 تُسقِطُ بأبوابِها المُعزولةِ · `validate-render-deploy-target.sh` 42/42 (لا تغييرَ في `approved`/`approval`) · `verify-governance.sh` ✓ (بعدَ إعادةِ توليدِ الأساسِ).
+- **Discovery (measured, not assumed):** وثائقُ T1 كانت تقولُ «allowlistUrl يحلُّ إلى ملفٍّ مفقودٍ» — **متحجِّرةٌ منذ CLM-0662 (#809 · `771beb7f`)** الذي أصلَحَ الحلَّ إلى `import.meta.url`؛ القياسُ الحيُّ (الحارسُ 29) يُثبتُ حلولَهُ إلى ملفٍّ موجودٍ صالحٍ في البوتَينِ. المتبقي لتشغيلِ T1 قرارُ المالكِ وقياسٌ من البيئةِ الحيّةِ.
+- **Declared limits:** وصلٌ محلّيٌّ مقيسٌ لا تشغيلُ T1 ولا دليلَ D4.3 · مدخلُ بوتِ السائقِ ما زالَ على `buildApp` (وحدةٌ لاحقةٌ عندَ اختبارِ مسارِهِ) · `WASLA_EDGE_ENABLED` غيرُ مسجَّلٍ في env-registry (فشلٌ مغلقٌ بقرارٍ).
+- **Not changed:** `production_open=false` · `approved=false` + `approval=null` · لا نشرَ · Render مجمَّدٌ · NO-GO · D4.3 «غيرُ منفَّذٍ» حتى قياسٍ حيٍّ بإذنِ المالكِ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-25T110000Z-clm-0691-channel-edge-main-wiring/README.md
+- **Deployment:** none — وصلٌ محليٌّ مقيسٌ بلا أي أثرٍ حيٍّ (Render مجمَّدٌ · production_open=false · T1 بقرار المالك).
+
+# 2026-10-25 — CLM-0690 — مراجعةُ RISK-0069 (موعدُ 2026-10-26) — قراءةٌ فقط
+
+- **Work Item(s):** M0-53 (حوكمةُ المخاطر · ADR-073).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Kind:** docs — مراجعةُ خطرٍ بالإضافة.
+- **Risk(s):** RISK-0069 → open (بلا تغيير · sev high · review 2026-10-26 ⇒ 2026-11-09).
+- **Measured:** `deploy-target.json` frozen · `isolation_evidence=null` · حارسُ المضمونِ 42/42 · `RENDER_API_KEY` آخرُ تحديثٍ 2026-10-08 (لا تدويرَ بعدَ INC-0007).
+- **Not measured:** العزلُ الحيُّ على Render/Supabase (قرارُ المالكِ «لاحقًا»).
+- **Not changed:** Render مجمَّد · لا عزلَ · لا نشر · NO-GO.
+
+# 2026-10-25 — CLM-0689 — G-S9.7 · D4.2: حارسُ أهليّةِ المتاجرِ `E-20:store-eligible`
+
+- **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.7 D4.2 · §6.10).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Owner directive:** «D4.2 هو العمل الهندسي التالي قبل T1» · «قبول D4.1 لا يعفي من D4.2».
+- **Kind:** guard + tests — لا تغييرَ في سلوكِ الإنتاجِ.
+- **Risk(s):** none — لا يتغيّرُ خطرٌ؛ المدخلُ مغلقٌ (`production_open=false`).
+- **Changed units:** `services/search/src/__tests__/support/store-eligibility-seed.ts` (جديد) · `services/search/src/__tests__/store-search-journey.integration.test.ts` · `scripts/checks/lib/ts_evidence.cjs` · `scripts/checks/lib/edge_allowlist_guard.py` · `scripts/checks/lib/gov-cases-edge-allowlist.sh` (21 حالة) · `packages/channel-edge/allowlist/customer-mini-app.json` (دليلٌ + `blocked_until`) · ADR-025 §6.10 · `docs/12-testing/EDGE_ALLOWLIST.md` · الدليل · السجلّات.
+- **Measured (local):** الحالةُ الجديدةُ ضمنَ 8/8 · تكاملُ search 95/95 · وحداتُه 187/187 · حالاتُ الحارسِ 28: 119/0 · طفراتُ SQL: 4 من 5 تُسقِطُ (m2 مكافئةٌ — مُعلَنة) · طفرتا البذرة تُسقِطان · طفراتُ الحارسِ الأربعُ تُسقِط.
+- **Defect found in draft and fixed before commit:** طفرةُ «المساواة ← جزء» نجتْ؛ أُضيفتْ حالةُ «المتوقَّعُ ينقصُه متجرٌ مؤهَّل».
+- **Declared limits:** شرطُ `DATABASE_URL` على `describe` لا يراه المحلّل · قائمةُ سماحٍ اصطناعيّة · ليسَ T1.
+- **Not changed:** `production_open=false` · لا نشرَ · Render مجمَّدٌ · `deploy-target.json` · NO-GO · M0-53 In Progress · D4.3/T1 ينتظرُ إذنًا منفصلًا.
+
+# 2026-10-25 — CLM-0688 — G-S9.7: اعتمادُ عقدِ `GET /search/stores` وقبولُ D4.1 بقرارِ المالك
+
+- **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.7 D4).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Owner decision:** 2026-10-25 06:37 (+03) «اعتمادُ العقدِ ومعه D4» — #797 (issuecomment-6393032052).
+- **Kind:** decision record — توثيقٌ وحدَه؛ لا شيفرةَ.
+- **Risk(s):** none — لا يتغيّرُ خطرٌ؛ المدخلُ مغلقٌ (`production_open=false`).
+- **Changed units:** `docs/15-decisions/ADR-025-marketplace-search-read-model.md` (§6.9 بالإضافةِ) · `docs/12-testing/ci-evidence/2026-10-25T060000Z-clm-0688-search-stores-contract-d4/README.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md` · `ROADMAP.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`.
+- **Declared gap:** دليلُ CLM-0684 لا يبذرُ متجرًا مؤرشَفًا (المؤرشَفُ منتجٌ)؛ القبولُ على الدليلِ كما هو.
+- **Not done:** D4.2 (نوعُ برهانِ `E-20:store-eligible` وطفراتُه) · D4.3 (T1، إذنٌ منفصلٌ).
+- **Not changed:** قائمةُ السماحِ · `blocked_until` · لا نشرَ · Render مجمَّدٌ · NO-GO · M0-53 In Progress.
+
+# 2026-10-25 — CLM-0687 — RISK-0055/#570: الخيارُ (ب) بقرارِ المالك — RISK-0072 ضيّقُ النطاقِ
+
+- **Work Item(s):** M6-18B (DR) · RISK-0055 · RISK-0072.
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Owner decision:** 2026-10-25 06:37 (+03) «الخيارُ (ب) كما هو مقترح» — #797 (issuecomment-6393032052) · المراجعةُ في #570 (issuecomment-6392373977).
+- **Kind:** risk register — توثيقٌ وحدَه؛ لا تغييرَ في الشيفرةِ ولا في البنيةِ.
+- **Risk(s):** RISK-0072 → open (جديدٌ) · RISK-0055 → closed (بلا تغييرٍ في الحالةِ؛ ملاحظةُ نطاقٍ فقط).
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (RISK-0072 جديدٌ `open`/`high` · ملاحظةُ نطاقٍ على RISK-0055 بالإضافةِ والحالةُ تبقى `closed`) · `docs/12-testing/BASELINE.json` · `docs/12-testing/BASELINE.txt` (إعادةُ توليدٍ — `risks_not_closed` 26→27) · السجلُّ الخامُّ · الدليلُ · `docs/16-progress/TASK_LOG.md` · `ROADMAP.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md`.
+- **Correction recorded:** مراجعةُ 2026-10-25 الأولى في #570 قالتْ إنّ كلَّ الاستعاداتِ محليّةٌ؛ والصحيحُ أنّ CLM-0436/CLM-0450 قاسا استعادةً إلى مشروعٍ بديلٍ حقيقيٍّ (RTO بياناتٍ 471.1 ث · كاملٌ 541.7 ث) لكنّه قياسٌ غيرُ معتمَدٍ وغيرُ محدَّثٍ.
+- **After merge:** إغلاقُ #570 بتعليقٍ يربطُ السببَ الجذريَّ المعالَجَ (CLM-0415 · CLM-0482) — بتفويضِ المالكِ نفسِه.
+- **Not changed:** RISK-0055 `closed` · ADR-066 · لا DR حيٌّ · لا إنفاقَ · M6-18B Blocked · NO-GO.
+
+# 2026-10-25 — CLM-0686 — M0-08: إنذارُ قِدَمِ الأساسِ (96 ساعةً) بقرارِ المالك
+
+- **Work Item(s):** M0-08 (حدُّ قِدَمِ الأساسِ — القرارُ الذي عرضَهُ CLM-0680 وتركَهُ للمالك).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Owner decision:** 2026-10-25 06:37 (+03) «اعتمادُ إنذارِ 96 ساعةً» — مسجَّلٌ في #797 (issuecomment-6393032052).
+- **Kind:** governance guard — إنذارٌ فقط؛ لا يتغيّرُ رمزُ خروجِ `validate-baseline.sh`.
+- **Changed units:** `scripts/checks/validate-baseline.sh` (البابُ 4(هـ)) · `scripts/checks/test-governance.sh` (7 حالاتٍ) · `docs/12-testing/BASELINE_FORMAT.md` · `docs/12-testing/ci-evidence/2026-10-25T040000Z-clm-0686-m0-08-baseline-staleness-warn/README.md` · `docs/16-progress/TASK_LOG.md` · `ROADMAP.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md`.
+- **Measured (local):** `test-governance.sh` 797/0 (790 + 7) · على الشجرةِ الحقيقيّةِ عمرُ الأساسِ 0.7 س، rc=0 · بزمنٍ مفروضٍ 2026-11-01 إنذارٌ عندَ 169.7 س، rc=0.
+- **Defect found in draft and fixed before commit:** أنبوبٌ يُغذّي `grep -q` (RISK-0037) كشفَهُ حارسُ الأنابيبِ — استُبدِلَ بـhere-string.
+- **Not changed:** لا بوّابةَ فشلٍ (قرارٌ مستقلٌّ للمالكِ) · لا نشرَ · Render مجمَّدٌ · `production_open=false` · NO-GO · M0-53 In Progress · M6-18B Blocked.
+
+# 2026-10-24 — CLM-0685 — M0-53: اختباراتُ مستوىِ HTTP لمساراتِ الشركاءِ الثلاثةِ غيرِ المُختبَرةِ (المرحلةُ 8)
+
+- **Work Item(s):** M0-53 (المرحلةُ الثامنةُ — فجوةُ قياسٍ مُعلَنةٌ في `PRODUCT_STATUS_2026-10-19.md` §3.4).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Kind:** tests — اختباراتٌ وحدَها؛ لا تغييرَ في سلوكِ الإنتاجِ.
+- **Changed units:** `services/partners/src/__tests__/http-routes.unit.test.ts` (الاختبارُ الجديدُ · 15 حالةً) · `docs/12-testing/BASELINE.json` · `docs/12-testing/BASELINE.txt` (إعادةُ توليدٍ — عدَّادُ ملفاتِ الاختبارِ 586→587) · السجلُّ الخامُّ للتحققِ داخلَ دليلِ الدليلِ · `docs/16-progress/TASK_LOG.md` · `ROADMAP.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md`.
+- **Measured (branch):** `services/partners` 68/68 (53 قائمةً + 15 جديدةً) · tsc نظيفٌ · 3 طفراتٍ حاكمةٍ مُلتقَطةٍ (حذفُ حارسِ الدورِ · تخطّي التدقيقِ · فتحُ تصنيفِ المسارِ) وكُلُّها أُعيدتْ ولم تُدفَعْ.
+- **ما سُدَّ:** ثلاثةُ مساراتِ شركاءَ كانتْ قائمةً بلا اختبارٍ (‎`DELETE /partners/credentials/:id` · `POST /partners/lifecycle/suspend` · `POST /partners/lifecycle/reinstate`) صارتْ مُختبَرةً على طبقتينِ: السلوكُ (204/200 · 401 بلا فاعلٍ · 403 غيرُ عضوٍ · 403 دورٌ دونَ مديرٍ · رفضُ الانتقالِ غيرِ المشروعِ · التدقيقُ والسببُ) وفرضُ هويّةِ الخدمةِ الحقيقيِّ بتوقيعٍ حقيقيٍّ (401 بلا رمزٍ · 403 بصلاحيّةٍ ناقصةٍ · نجاحٌ بالمعلَنةِ).
+- **Risk(s):** لا تغييرَ في المخاطرِ القائمةِ.
+- **Baseline (M0-08):** إعادةُ توليدٍ مع التغييرِ نفسِهِ (عدَّادُ ملفاتِ الاختبارِ) والسجلُّ الخامُّ مُلتزَمٌ داخلَ الشجرةِ (`BASELINE_FORMAT.md` §5).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-24T215000Z-clm-0685-partners-http-routes/README.md`
+
+# 2026-10-24 — CLM-0684 — M0-53: اختبارُ تكاملٍ حقيقيٌّ لرحلةِ بحثِ المتاجرِ عبرَ الحدودِ (G-S9.7)
+
+- **Work Item(s):** M0-53 (CLM-0684 · G-S9.7 — المرحلةُ السادسةُ من التكليفِ: إثباتُ السلكِ الكاملِ للرحلةِ عبرَ الحدودِ).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Kind:** tests — اختبارُ تكاملٍ جديدٌ؛ لا سلوكَ إنتاجٍ مُغيَّر ولا فتحَ مسارٍ ولا منحةً.
+- **Changed units:** `services/search/src/__tests__/store-search-journey.integration.test.ts` (اختبارُ الرحلةِ الجديدُ · 7 حالاتٍ) · `services/search/package.json` (`@wasla/channel-edge` تبعيةَ تطويرٍ) · `pnpm-lock.yaml` · `packages/channel-edge/allowlist/customer-mini-app.json` (إضافةُ الحالةِ إلى `evidence_tests` لمدخلِ `/search/stores` — بلا مساسٍ بـ`production_open=false` ولا `blocked_until`) · `docs/16-progress/TASK_LOG.md` · `ROADMAP.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md` · دليلُ الدليلِ الجديد.
+- **Measured (branch):** وحدةٌ 187/187 (بلا قاعدةٍ) · تكاملٌ 94/94 على PostgreSQL 18 حقيقيٍّ محليًّا بـ`DATABASE_URL` (بينها الرحلةُ الجديدةُ بسبعِ حالاتِها) · 3 طفراتٍ حاكمةٍ مُلتقَطةٍ (تسريبُ الموقوفِ · إسقاطُ الرفضِ المغلقِ E-20 · فتحُ المسارِ من التصنيفِ) وكُلُّها أُعيدتْ ولم تُدفَعْ.
+- **السلكُ المُثبَتُ:** عميلٌ → الحدُّ الحقيقيُّ (`createChannelEdge` على Fastify بقائمةِ سماحٍ اصطناعيةٍ مؤقتةٍ للاختبارِ وحدَهُ · `production_open=true` في القائمةِ الاصطناعيةِ لا في قائمةِ الإنتاجِ) يوقِّعُ بدورِ `search-exit-gate` المُعلَنِ ويحوِّلُ بتوقيعٍ مربوطٍ إلى حدِّ البحثِ الحقيقيِّ (تحقُّقُ service-auth حقيقيٌّ: مفتاحٌ مزوَّفٌ → 401 من حدِّ البحثِ · بلا صلاحيةٍ → 403) الذي يقرأُ من إسقاطٍ مشتقٍّ عبرَ المُرحِّلِ الحقيقيِّ على PostgreSQL (مؤهَّلٌ معتمَدٌ بمنتجٍ ظاهرٍ وحدَهُ يظهرُ · ثلاثةُ حقولٍ فقط). **الوحدةُ الوحيدةُ المُحوَّرةُ:** `exchangeSession` (مُوثَّقةٌ — مُثبَتةٌ في app-edge-e2e) · E-20 مغلقٌ عبرَ الرحلةِ (`store_state` غيرُ مصرَّحٍ بهِ → 400 من الحدِّ).
+- **Risk(s):** لا تغييرَ — RISK-0027/0041 وغيرُها كما هي؛ فتحُ P وقرارُ الإنتاجِ للمالكِ.
+- **Baseline (M0-08):** يُعادُ توليدُ `docs/12-testing/BASELINE.json` و`docs/12-testing/BASELINE.txt` بقرارٍ مكتوبٍ مع التغييرِ نفسِهِ: بصمةُ `pnpm-lock.yaml` تغيّرت (تبعيةُ تطويرٍ جديدةٌ) و`test_files_tracked` زادَ ملفَّ اختبارٍ (585→586) — `BASELINE_FORMAT.md` §5.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-24T193000Z-clm-0684-gs9-7-store-search-journey/README.md`
+
+# 2026-10-24 — CLM-0683 — M0-53: العملياتُ الخامُّ في بصرِ البابِ 7-د وأنماطُ الهروبِ المقيسةُ (G-S9.19 · RISK-0027)
+
+- **Work Item(s):** M0-53 (CLM-0683 · RISK-0027 — المرحلةُ الثانيةُ من التكليف: قياسُ أنماطِ الهروبِ من الحارسِ النصّيِّ وإغلاقُ ما يُغلَقُ بأمانٍ).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Kind:** guard — لا سلوكَ إنتاجٍ مُغيَّر.
+- **Changed units:** `scripts/checks/validate-service-auth-coverage.sh` (إدماجُ `child_process`/`dns` في نمطِ بابِ 7-د) · `scripts/checks/test-governance.sh` (7 حالاتٍ) · `docs/07-security/RISK_REGISTER.md` · `ROADMAP.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md` · دليلُ الدليلِ الجديد.
+- **Measured (branch):** ثلاثةُ أنماطِ هروبٍ مُثبَتةٍ عمليًا تمرُّ خضراءَ على الشجرةِ النظيفةِ قبلَ التوسعةِ: (أ) التفويضُ عبرَ ملفٍّ مستثنٍ يصدِّرُ fetch الخامَ باسمٍ محايدٍ (استيرادُهِ من ملفِّ إنتاجٍ لا يُرى) · (ب) الاسمُ الديناميكيُّ للوحدةِ `require("node:"+"net")` · (ج) `node:child_process` (`exec("curl …")` قناةُ اتصالٍ كاملةٌ بلا أيِّ بصرٍ). أُغلِقَ (ج) — معَ `node:dns` — بإدماجِهما في نمطِ بابِ 7-د بآليّةِ CLM-0682 نفسِها (الاستثناءُ النوعيُّ تعليمةً لا سطراً)؛ الجردُ قبلَ الشيفرةِ: **صفرُ مراجعَ تشغيليّةٍ** لهما في نطاقِ الحارسِ فلا استثناءً جديداً ولا جرداً يتغيّرُ. (أ) و(ب) يوثَّقانِ حدًّا متبقّيًا بقرارِ المالكِ (خياراتُ تحليلِ الاستيرادِ AST وتكلفتُها في دليلِ الدليلِ) — لا يُدَّعى إغلاقُهُما.
+- **Tests:** 6 حالاتٍ جديدةٍ في `test-governance.sh`: 4 سالبةً (استيرادٌ ثابتٌ · require بلا بادئةٍ · ديناميكيٌّ · تعليقُ `// import type` على سطرٍ تشغيليٍّ) + تحكّمٌ موجبٌ (استيرادٌ نوعيٌّ) + طفرتانِ حاكمتانِ (حذفُ بابِ 7-د يُمرِّرُ الهروبَ عبرَ child_process — ثابتٌ وديناميكيٌّ).
+- **Risk(s):** RISK-0027 → open (بلا تغيير — الإغلاقُ قرارُ المالكِ).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-24T190000Z-clm-0683-risk-0027-process-dns-escape/README.md`
+
+# 2026-10-24 — CLM-0682 — M0-53: الاستثناءُ النوعيُّ في بابِ 7-د تعليمةً لا سطراً (G-S9.19 · RISK-0027)
+
+- **Work Item(s):** M0-53 (CLM-0682 · RISK-0027 — إصلاحُ عيبِ CLM-0681 الذي كشفتْهُ مراجعةٌ مستقلةٌ بعدَ الدمجِ).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Kind:** guard fix — لا سلوكَ إنتاجٍ مُغيَّر.
+- **Changed units:** `scripts/checks/validate-service-auth-coverage.sh` (قصُّ تعليمةِ الاستيرادِ النوعيِّ من رأسِ السطرِ ثمّ فحصُ الباقي) · `scripts/checks/test-governance.sh` (حالتانِ للثغرةِ + تحكّمٌ موجبٌ متعدّدُ الأسطرِ + طفرتانِ) · دليلُ CLM-0681 (تصحيحُ العددِ 10←11 والصياغةِ).
+- **Measured (branch):** الحاكمةُ 783/0 محليًّا؛ الحارسُ على الشجرةِ الحيّةِ: 42 ملفّاً · 0 مقابسٍ تشغيليّةٍ (العيبُ كانَ كامناً لا مُفعَّلًا في الشجرةِ).
+- **Risk(s):** RISK-0027 → open (بلا تغيير — الإغلاقُ قرارُ المالكِ).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-24T171500Z-clm-0682-risk-0027-socket-guard-line-test/README.md`
+
+# 2026-10-24 — CLM-0681 — M0-53: المقابسُ الخامُّ في بصرِ البابِ 7 (G-S9.19 · RISK-0027)
+
+- **Work Item(s):** M0-53 (CLM-0681 · RISK-0027 — الفجوةُ المُعلَنةُ الأخيرةُ في نصِّ الخطرِ بعدَ CLM-0654/0667).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Kind:** guard — لا سلوكَ إنتاجٍ مُغيَّر.
+- **Changed units:** `scripts/checks/validate-service-auth-coverage.sh` (بابٌ 7-د: `SOCKET_PATTERN` للمقابسِ الخامّ معَ استثناءِ `import type` النوعيِّ · بلا أنبوبٍ يُغذّي `grep -q` (RISK-0037)) · `scripts/checks/test-governance.sh` (3 حالاتٍ سالبةٍ + تحكّمٌ موجبٌ + 3 طفراتٍ حاكمةٍ).
+- **Measured (branch):** الحاكمةُ الكاملةُ 778/0 محليًّا؛ الحارسُ على الشجرةِ الحيّةِ: 42 ملفّاً (19 عميلاً + 23 استثناءً · مقابسٌ تشغيليّةٌ: 0) — القياسُ قبلَ الشيفرةِ: كلُّ مراجعِ net/tls/dgram نوعيّةٌ (`import type { AddressInfo }` في 10 ملفّاتِ e2e) لا تشغيليّة.
+- **Risk(s):** RISK-0027 → open (بلا تغيير — الإغلاقُ قرارُ المالكِ).
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-24T155500Z-clm-0681-risk-0027-raw-socket-guard/README.md`
+
+# 2026-10-24 — CLM-0680 — M0-08: سلامةُ طابعِ الأساسِ وقياسُ اتّصالِهِ (RISK-0011)
+
+- **Work Item(s):** M0-08 (CLM-0680 · RISK-0011 — الأجزاءُ غيرُ القراريّةِ من مراجعةِ CLM-0674).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ النهائيّ).
+- **Kind:** guard — لا سلوكَ توليدٍ مُغيَّر.
+- **Changed units:** `scripts/checks/validate-baseline.sh` (البابُ 4(د): فحصُ `generated_at` صيغةً ومستقبلاً واتّساقاً معَ التزامِ الشجرةِ + إشعارُ قياسِ الاتّصالِ بـorigin/main) · `scripts/checks/test-governance.sh` (تأريخُ الالتزامِ الصناعيِّ + 3 حالاتٍ + 3 طفراتٍ + إعادةُ إرساءِ طفرةِ حالةِ قانونِ البصمةِ) · `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0011 بالإضافةِ وخياراتُ قرارِ المالكِ) · دليلُ `ci-evidence/2026-10-24T134500Z-clm-0680-…` · سجلّاتُ التقدّم.
+- **Measured (branch):** الحارسُ أخضرُ على الفرعِ والشجرةِ الحقيقيّةِ (الأساسُ الحاليُّ متّسقٌ — وُلِّدَ بعدَ التزامِهِ) · الحالاتُ الستُّ الجديدةُ خضراءُ وكلُّ فرعٍ مثبَتٌ ضروريّاً بطفرةٍ · `test-governance.sh` كاملٌ أخضرُ محليّاً (0 فشل).
+- **Risk(s):** RISK-0011 → mitigating (بلا تغيير).
+- **Owner decision required:** (@uxxxu · M0-08) بوّابةُ الانجرافِ مقابلَ حدِّ القِدَمِ (الخياراتُ (أ)/(ب)/(ج) موثَّقةٌ في السجلِّ والدليلِ) — لم يُنفَّذْ أحدُها.
+- **No-Test-Reason:** حارسٌ فقط — القياسُ: الحالاتُ والطفرات.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T134500Z-clm-0680-risk-0011-baseline-staleness/README.md
+- **Deployment:** none.
+- **Not changed:** سلوكُ `baseline.sh` · BOّاباتُ الانجرافِ القائمةُ · NO-GO.
+# 2026-10-24 — CLM-0679 — M0-36: إتمامُ توثيقِ 401/403 في العقودِ وبابُ 9-هـ لكلِّ عمليّةٍ (RISK-0041)
+
+- **Work Item(s):** M0-36 (CLM-0679 · RISK-0041 — تنفيذُ الخيارِ (b) من مراجعةِ CLM-0675).
+- **Status:** Active (يُدمجُ بعدَ نجاحِ 43/43 فحصاً على الرأسِ النهائيِّ ومراجعةٍ مستقلّةٍ).
+- **Kind:** guard + contract documentation — إصلاحُ جذرِ بقيّتَي المراجعةِ، لا سلوكَ خدمةٍ مُغيَّر.
+- **Changed units:** عقودُ الحدودِ الستةَ عشرَ (`services/*/contracts/api.openapi.yml`: `security: []` للصحةِ/الجهوزيةِ المفتوحةِ + `401`/`403` ومكوّناتُ `AuthUnauthorized`/`AuthForbidden` لكلِّ عمليةٍ مؤمَّنةٍ ناقصةٍ في audit/support/billing) · `scripts/checks/validate-service-auth-coverage.sh` (البابُ 9-هـ) · `scripts/checks/test-governance.sh` (5 حالاتٍ + 5 طفراتٍ) · `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0041 بالإضافة) · `docs/12-testing/ci-evidence/2026-10-24T131500Z-clm-0679-risk-0041-contract-security-coverage/` · سجلّاتُ التقدّم.
+- **Measured (branch):** 0 مشكلةٍ متبقيةٍ عبرَ العقودِ الستةَ عشرَ (البابُ 9-هـ) · الحارسُ أخضرُ على شجرةِ الفرعِ (`raw/guard-local-branch.txt`) · حالاتُ 9-هـ العشرُ خضراءٌ في test-governance وكلُّ فرعٍ من الحارسِ مثبَتٌ ضروريّاً بطفرةٍ.
+- **Risk(s):** RISK-0041 → mitigating (بلا تغيير؛ القفلُ النهائيُّ قرارُ المالكِ).
+- **Owner decision required:** (@uxxxu) القفلُ النهائيُّ وتغييرُ الشدةِ — الخيارُ (b) نُفِّذَ؛ البابُ المفتوحُ: إغلاقٌ معَ تقييمٍ لبقيةِ الفجواتِ أو إبقاءٌ.
+- **No-Test-Reason:** لا سلوكَ مُغيَّر — عقودٌ وحارسٌ فقط؛ القياسُ: الحارسُ + 5 حالاتٍ سالبة/موجبةٍ + 5 طفراتٍ لكلِّ فرعٍ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T131500Z-clm-0679-risk-0041-contract-security-coverage/README.md
+- **Deployment:** none.
+- **Not changed:** `registerServiceIdentity` · بوّاباتُ M1-04 · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+# 2026-10-24 — CLM-0678 — M0-53: حارسُ محتوى دليلِ العزلِ E1–E4 (RISK-0069)
+
+- **Work Item(s):** M0-53 (CLM-0678 · RISK-0069 — إصلاحُ جذرِ بقيّةِ مراجعةِ #822: القبولُ بوجودِ الملفِّ وحده).
+- **Status:** Released (تُدمَجُ بعدَ 43/43 على الرأسِ النهائيّ).
+- **Kind:** guard hardening — لا سلوكَ نشرٍ مُغيَّر ولا إذنَ فحصٍ حيّ.
+- **Changed units:** `scripts/deploy/render-sync.py` (`isolation_evidence_errors()` — E1–E4 وفقَ ADR-073 D4 + استدعاؤه في `load_target()`) · `scripts/checks/validate-render-deploy-target.sh` (عينُ VALID_EVIDENCE + 12 حالةً سالبةً + عينٌ موجبٌ P3 + 4 طفراتٍ) · سجلُّ RISK-0069 (إضافةٌ) · دليلُ `ci-evidence/2026-10-24T130000Z-clm-0678-…` · سجلّاتُ التقدّم.
+- **Measured (branch):** 12/12 حالةً سالبةً مرفوضةً · العينُ الموجبُ مقبولٌ · 42/42 طفرةً مُكتشفةً (الحارسُ المحليُّ في `raw/guard-local-main.txt`).
+- **Risk(s):** RISK-0069 → open/high بلا تغيير — القفلُ وإزالةُ التجميدِ قرارُ المالكِ.
+- **No-Test-Reason:** حارسٌ فقط — لا تغييرَ في سلوكِ النشرِ؛ القياسُ: الحالاتُ والطفراتُ داخلَ الحارسِ نفسِهِ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T130000Z-clm-0678-risk-0069-evidence-content-guard/README.md
+- **Deployment:** none.
+- **Not changed:** deploy-target.json · production_open · Render مجمّدٌ · T1/T2 · #730/INC-0007 HOLD · NO-GO.
+
+# 2026-10-24 — CLM-0677 — M6-18B: مراجعةُ RISK-0069 الفعليّة (عزلُ بيئةِ Render الاختباريّة)
+
+- **Work Item(s):** M6-18B (CLM-0677 · RISK-0069) — يبقى Blocked.
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** risk review — بتكليفِ المالكِ 2026-10-24؛ قراءةٌ فقط (بلا نشرٍ ولا Render/Supabase API ولا استعلامٍ على قاعدةِ بيانات).
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0069: `review:2026-11-09` + النتيجةُ بالإضافة) · `docs/12-testing/ci-evidence/2026-10-24T120000Z-clm-0677-risk-0069-review/measure.sh` · `docs/12-testing/ci-evidence/2026-10-24T120000Z-clm-0677-risk-0069-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T120000Z-clm-0677-risk-0069-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `7b7afa45`):** الهدفُ `frozen` و`isolation_evidence: null` و0 التزامٍ عليه منذ 2026-10-19 · لا دليلَ E1–E4 · الحارسُ 38/38 · N1–N3 مرفوضة · **N4 (ملفٌّ قائمٌ لا صلةَ له دليلًا) مقبول** · E1–E4 الحيّةُ **غيرُ مُعادةِ القياس**.
+- **Risk(s):** RISK-0069 → open (بلا تغيير؛ `review:2026-11-09` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** (@uxxxu) مسارُ الإغلاق (D4 حيًّا بإذنٍ صريح، أو إعادةُ تعيينٍ مسجَّلة)، وتشديدُ الحارسِ ليفحصَ مضمونَ الدليل (CLM مستقلّ).
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ بضوابطَ سالبةٍ (N1–N4).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T120000Z-clm-0677-risk-0069-review/README.md
+- **Deployment:** none.
+- **Not changed:** deploy-target.json · أيُّ شيفرةٍ أو فحص · #730/INC-0007 HOLD · production_open · NO-GO · M6-18B Blocked.
+# 2026-10-24 — CLM-0676 — M6-18B: مراجعةُ RISK-0068 الفعليّة (دقائقُ بناءِ Render)
+
+- **Work Item(s):** M6-18B (CLM-0676 · RISK-0068) — يبقى Blocked.
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** risk review — بتكليفِ المالكِ 2026-10-24؛ قراءةٌ فقط (بلا نشرٍ ولا dispatch ولا Render API).
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0068: `review:2026-11-09` + النتيجةُ بالإضافة) · `docs/12-testing/ci-evidence/2026-10-24T110000Z-clm-0676-risk-0068-review/measure.sh` · `docs/12-testing/ci-evidence/2026-10-24T110000Z-clm-0676-risk-0068-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T110000Z-clm-0676-risk-0068-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `7b7afa45`):** المحفّزُ `workflow_dispatch` فقط · الهدفُ `frozen` و`isolation_evidence: null` · 0 تشغيلٍ منذ التجميد · الحرّاسُ 38/38 و36/36 و7/7 · محفّزُ `push` مُعادٌ مرفوضٌ من حارسَين · رصيدُ الدقائق **غيرُ مقيس**.
+- **Risk(s):** RISK-0068 → open (بلا تغيير؛ `review:2026-11-09` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** (@uxxxu) إبقاءٌ حتى نشرٍ اختباريٍّ معزولٍ ناجح، أو إعادةُ تقديرٍ/إغلاقٌ بقرارٍ مسجَّلٍ مربوطٍ بقرارِ «الاختباراتِ فقط» وبـ RISK-0069.
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ بضابطٍ سالبٍ (B5).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T110000Z-clm-0676-risk-0068-review/README.md
+- **Deployment:** none.
+- **Not changed:** deploy-target.json · render-deploy.yml · أيُّ شيفرة · #730/INC-0007 HOLD · production_open · NO-GO · M6-18B Blocked.
+# 2026-10-24 — CLM-0675 — M0-36: مراجعةُ RISK-0041 الفعليّة (العقودُ المنشورةُ تجاهَ المُصادقةِ المفروضة)
+
+- **Work Item(s):** M0-36 (CLM-0675 · RISK-0041)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** risk review — بتكليفِ المالكِ 2026-10-24.
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0041: `review:2026-11-09` + النتيجةُ بالإضافة) · `docs/12-testing/ci-evidence/2026-10-24T100000Z-clm-0675-risk-0041-review/measure.sh` (قراءةٌ فقط) · `docs/12-testing/ci-evidence/2026-10-24T100000Z-clm-0675-risk-0041-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T100000Z-clm-0675-risk-0041-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `7b7afa45`):** 16 حدًّا مفروضًا · البابُ 9 أخضرُ و16/16 عقدًا تُعلِنُ المُصادقة · جردا §5.9 والبابِ 10 صفر · K1/K4 مرفوضة · K2/K3 مقبولةٌ من البابِ 9، ومكتشفةٌ باختبارِ الانحرافِ في 12/16 عقدًا لا في audit/billing/delivery/search (delivery: 29/29 و602/602 تنجحُ على الطفرة) · `401`/`403` غائبةٌ في billing (0/6) وsupport (0/7) وناقصةٌ في audit.
+- **Risk(s):** RISK-0041 → mitigating (بلا تغيير؛ `review:2026-11-09` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** (@uxxxu) القفلُ: (أ) إغلاقٌ معَ خطرٍ جديدٍ أدنى للبقيّتَين، أو (ب) إبقاءٌ حتى CLM يُكمِلُ الإفصاحَ ويمدُّ البابَ 9 لكلِّ عمليّة.
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ بضوابطَ موجبةٍ (T0 · D0) وسالبةٍ (K1–K4 · T1–T2 · D1).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T100000Z-clm-0675-risk-0041-review/README.md
+- **Deployment:** none.
+- **Not changed:** أيُّ عقدٍ أو شيفرةٍ أو فحص · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+# 2026-10-24 — CLM-0674 — M0-08: مراجعةُ RISK-0011 الفعليّة (الأساسُ يبيتُ بيدٍ)
+
+- **Work Item(s):** M0-08 (CLM-0674 · RISK-0011)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** risk review — بتكليفِ المالكِ 2026-10-24 (مراجعةٌ منفصلةٌ لكلِّ خطرٍ مستحقٍّ في 2026-10-26).
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0011: `review:2026-11-09` + النتيجةُ بالإضافة؛ وفقرةٌ في قسمِه) · `docs/12-testing/ci-evidence/2026-10-24T090000Z-clm-0674-risk-0011-review/measure.sh` (قراءةٌ فقط) · `docs/12-testing/ci-evidence/2026-10-24T090000Z-clm-0674-risk-0011-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T090000Z-clm-0674-risk-0011-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `7b7afa45`):** رقمٌ حركيٌّ مُحرَّرٌ يُرفَض (rc=1)؛ أساسٌ بالتزامٍ وتاريخٍ من 2026-09-25 يمرّ (rc=0)؛ 0 سيرِ عملٍ يستدعي `baseline.sh`؛ RISK-0001 مغلقٌ منذ 2026-09-01؛ 116 إعادةَ توليدٍ في 30 يومًا (وسيطُ الفاصلِ 0.5 س · أقصاه 72.8 س)؛ أكبرُ قفزةٍ +321؛ الانحرافُ مقابلَ مهمّةِ `test` على `7b7afa45`: 0.
+- **Risk(s):** RISK-0011 → mitigating (بلا تغيير؛ `review:2026-11-09` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** (@uxxxu) سدُّ الفجوة — بابُ انحرافٍ مقابلَ CI أو مهلةُ قِدَم — في CLM مستقلّ.
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ في الدليلِ بضابطٍ موجبٍ (G1) وسالبٍ (G2).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T090000Z-clm-0674-risk-0011-review/README.md
+- **Deployment:** none.
+- **Not changed:** أيُّ شيفرةٍ أو فحص · `BASELINE.json` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+# 2026-10-24 — CLM-0671 — M0-53: الخيارُ B (مرآةُ apt لمهامِّ e2e) — معتمَدٌ بقرارِ المالك: معالجةٌ مدعومةٌ بقياسٍ محدود
+
+- **Work Item(s):** M0-53 (CLM-0671)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** ci-fix — قرارا المالكِ 2026-10-24: «ابدأ CLM-0671 لقياس الخيار B مع إبقاء المهلة 10 دقائق» ثمّ اعتمادُ B «معالجةً مدعومةً بقياسٍ محدود». **`timeout-minutes: 10` بلا تغيير.**
+- **Changed units:** `.github/workflows/ci.yml` (المهامُّ الثلاثُ customer/driver/admin-e2e وحدَها: خطوةُ اختبارٍ + خطوةُ تحويلِ مرآةٍ قبلَ التثبيت) · `scripts/ci/apt-mirror-archive-ubuntu.sh` · `scripts/ci/test-apt-mirror-archive-ubuntu.sh` · `docs/12-testing/ci-evidence/2026-10-24T010000Z-clm-0671-apt-mirror-option-b/*` · سجلّاتُ التقدّم. **حُذف قبلَ الدمج:** خطوةُ `Probe` وسكربتُ المسبارِ apt-mirror-probe.sh (موجودٌ في رأسِ القياسِ 58658d6f فقط) وتصديرُ `CLM0671_JOB_T0`.
+- **Measured (CI، رأسُ القياس `58658d6f`، WASLA CI 40039556210):** 30 محاولةً فريدة (10 لكلِّ مهمّة) · 30/30 success · 0 إلغاءٍ بالمهلة · B ≥ 3756 kB/s (وسيطٌ 5518) · azure بطيئةٌ في محاولتَين (109 و141 kB/s، `complete=no`) نجحَ B فيهما بـ 4703 و4830 kB/s ⇒ «فعّال» بالمعيارِ المعلَنِ مسبقًا.
+- **Measured (محلّيًّا، النسخةُ المعتمَدة):** الاختباراتُ 8/8 (P1–P4 · N1–N4) · الطفراتُ 9/9 مقتولة (`mutants-final.sh`) · `check-ci-scope.py` 0 مخالفات + 3/3 ضوابطَ سالبةٍ مرفوضة.
+- **Not proven:** (1) حدثا بطءِ azure في المهمّةِ نفسِها خلالَ 15 دقيقة؛ (2) انقطاعُ `archive.ubuntu.com` لم يُختبَرْ فعليًّا (الفشلُ المغلقُ مُختبَرٌ على جذرٍ وهميٍّ فقط)؛ (3) فرقُ مدّةِ التثبيتِ (28 مقابلَ 23 ث) غيرُ معزول. لا يُدَّعى انتهاءُ إلغاءاتِ المهلة.
+- **Risk(s):** لا تغيير.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T010000Z-clm-0671-apt-mirror-option-b/README.md
+- **Deployment:** none.
+- **Not changed:** `timeout-minutes` · خطوةُ `playwright install --with-deps` نفسُها · بقيّةُ المهامّ · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
+# 2026-10-24 — CLM-0673 — M0-07: مراجعةُ RISK-0034 الفعليّة (جسرُ ORD-/WS-)
+
+- **Work Item(s):** M0-07 (CLM-0673 · RISK-0034)
+- **Status:** Released (يُدمجُ معَ CLM-0672 في PR واحدٍ بقرارِ المالكِ — كلٌّ منهما يحجبُ الآخرَ في `verify`؛ التزاماتٌ وسجلّاتٌ منفصلة)
+- **Kind:** risk review — بقرارِ المالكِ 2026-10-24 «راجع الخطر الآن» بعدَ انقضاءِ موعدِ 2026-10-23.
+- **Changed units:** `docs/07-security/RISK_REGISTER.md` (سطرُ RISK-0034: `review:2026-11-07` + نتيجةُ المراجعةِ بالإضافة؛ وفقرةٌ في قسمِه) · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/measure.sh` (قراءةٌ فقط) · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/README.md` · `docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `61314116`):** dispatch يشترطُ `^ORD-[0-9]10$` في النموذجِ والتحقّقِ وقيدِ القاعدة؛ `DispatchJobRequester` بلا تنفيذٍ غيرِ `FakeDispatchJobRequester`؛ `delegateToDispatch` بلا مستدعٍ خارجَ الاختبارات (ضابطٌ موجبٌ: 16 فيها)؛ لا عميلَ HTTP إلى `POST /dispatch/jobs` في delivery (يوجدُ في customers لمسارِ `ORD-`)؛ قرارُ الجسرِ مؤجّلٌ في ADR-026 §4.7 (آخرُ تغييرٍ 2026-09-27)؛ `production_open` true=0 · false=32.
+- **Result:** الحالةُ `open` والخطورةُ `medium` بلا تغيير — فجوةٌ وظيفيّةٌ معماريّةٌ بلا تعرّضٍ حيّ، وشرطٌ قبلَ فتحِ توصيلِ المتاجرِ؛ المراجعةُ التاليةُ 2026-11-07 أو فورَ قرارِ المالكِ في الجسر.
+- **Risk(s):** RISK-0034 → open (بلا تغيير؛ `review:2026-11-07` بعدَ مراجعةٍ فعليّة).
+- **Owner decision required:** بنيةُ الحجزِ بينَ orders وdelivery (ADR-026 §4.7 · §5) — لم تُتَّخذ.
+- **No-Test-Reason:** مراجعةُ خطرٍ وتوثيقٌ — لا سلوكَ مُغيَّر؛ القياسُ سكربتٌ قابلٌ لإعادةِ التشغيلِ في الدليل.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T070000Z-clm-0673-risk-0034-review/README.md
+- **Deployment:** none.
+- **Not changed:** أيُّ شيفرة · ADR-026 · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
+# 2026-10-24 — CLM-0672 — M0-06: إغلاقُ أربعِ ثغراتِ fast-uri (2026-10-23) في شجرةِ الإنتاج
+
+- **Work Item(s):** M0-06 (CLM-0672 · RISK-0004)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** security dependency override — بقرارِ المالكِ 2026-10-24 (يشملُ القفزةَ الثانويّةَ 4.1.5→4.2.3).
+- **Changed units:** `package.json` (`pnpm.overrides`: `fast-uri@3` ^3.1.9 · `fast-uri@4` ~4.2.3) · `pnpm-lock.yaml` (أسطرُ fast-uri وحدَها) · `docs/00-rules/SECURITY_RULES.md` §11 (سطرا fast-uri) · `docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/*` · سجلّاتُ التقدّم.
+- **Measured:** قبلُ على main `61314116`: التدقيقُ exit 1 (البابُ 1: 8 ثغراتٍ في شجرةِ الإنتاج)؛ بعدُ: exit 0 و`pnpm audit --prod` صفرٌ في كلِّ الدرجات؛ `pnpm test` 58 حزمةً · 5968 ناجحًا · 59 متخطًّى · 0 فاشل على الجانبَين بملخّصاتٍ متطابقةٍ سطرًا بسطر؛ اختباراتُ الأمانِ من المشرفين تفشلُ على 3.1.8/4.1.5 (مثلًا host-delimiter 233/463 فشلًا · c0-reference 333/541) وتنجحُ كاملةً على 3.1.9/4.2.3؛ الواجهةُ المُصدَّرةُ متطابقة.
+- **Not proven:** قابليّةُ استغلالِ الثغراتِ في Wasla نفسِها (الإغلاقُ بالترقيةِ لا بالتحليل).
+- **No-Test-Reason:** ترقيةُ اعتماديّةٍ غيرِ مباشرةٍ بلا تغييرٍ في شيفرةِ Wasla — الدليلُ السلوكيُّ اختباراتُ المستودعِ كاملةً (5968 ناجحًا قبلُ وبعدُ بملخّصاتٍ متطابقة) واختباراتُ المشرفين الأمنيّةُ قديمٌ/جديد (`upstream-security-tests.sh`)؛ اختبارٌ جديدٌ في الشجرةِ لسلوكِ مكتبةٍ خارجيّةٍ لا يحرسُ شيفرتَنا.
+- **Baseline:** يُعادُ توليدُ `BASELINE` لأنّ بصمةَ `pnpm-lock.yaml` تغيّرت (BASELINE_FORMAT §5) — مع التغييرِ نفسِه.
+- **Risk(s):** RISK-0004 → mitigating (بلا تغيير؛ التثبيتاتُ القسريّةُ ما زالت 7).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T060000Z-clm-0672-fast-uri-ghsa/README.md
+- **Deployment:** none.
+- **Not changed:** شيفرةُ الخدمات · `.github/workflows/*` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
+# 2026-10-24 — CLM-0670 — M0-53: إلغاءاتُ e2e بمهلةِ تثبيتِ Playwright — قياسٌ وتحليلٌ
+
+- **Work Item(s):** M0-53 (CLM-0670)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** docs-only — **لا تغييرَ في CI ولا في `timeout-minutes`.**
+- **Changed units:** `docs/12-testing/ci-evidence/2026-10-24T000000Z-clm-0670-playwright-install-timeout/collect.py` (جمعٌ قابلٌ لإعادةِ التشغيلِ، قراءةٌ فقط من واجهةِ GitHub) · `docs/12-testing/ci-evidence/2026-10-24T000000Z-clm-0670-playwright-install-timeout/README.md` · `docs/12-testing/ci-evidence/2026-10-24T000000Z-clm-0670-playwright-install-timeout/raw/*` · سجلّاتُ التقدّم.
+- **Measured:** 310 محاولاتِ مهامِّ e2e في 99 تشغيلًا (10-20 → 10-23): وسيطُ التثبيتِ 23 s؛ البطيءُ (≥300 s) 0 قبلَ 10-22T11:21Z ثمّ 17؛ الفارقُ محصورٌ في جلبِ حزمِ `.deb` لـ `--with-deps` من `azure.archive.ubuntu.com` (43.9–64.4 kB/s مقابلَ وسيطِ 18.3 MB/s) بينما الفهارسُ وCDN والاختبارُ متماثلة؛ 10 إلغاءاتٍ كلُّها بهذا السببِ وإعاداتُها دونَ تغييرٍ 10/10 ناجحة؛ فشلٌ واحدٌ مختلفُ السببِ (10-20، 403 من packages.microsoft.com). خطوةُ الاختبارِ لم تفشلْ قطُّ ⇒ عطلُ بيئةٍ لا عيبُ اختبار.
+- **Inferred:** يطابقُ actions/runner-images#14823 (نقلٌ متقطّرٌ لا يُطلقُ `Acquire::http::Timeout`) — مفتوحةٌ ومُقَرٌّ بها.
+- **Owner decision required:** خياراتُ العلاجِ A–G بكلفتِها ومخاطرِها في §5؛ لا يُنفَّذُ شيءٌ قبلَ القرار.
+- **Risk(s):** لا تغييرَ في أيِّ حالة.
+- **Sample scope (2026-10-24, rebase on `7b7afa45`):** الأرقامُ عيّنةٌ تاريخيّةٌ (2026-10-20T02:08Z → 2026-10-23T21:37Z، حتى `61314116`) لا قياسٌ جديدٌ على main الحالي، وتسبقُ تبديلَ المرآة (CLM-0671).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-24T000000Z-clm-0670-playwright-install-timeout/README.md
+- **Deployment:** none.
+- **Not changed:** `.github/workflows/*` · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
+# 2026-10-23 — CLM-0669 — M0-53: G-S9.20 وRISK-0071 على PostgreSQL 18.6 — دليلٌ قابلٌ لإعادةِ التشغيل
+
+- **Work Item(s):** M0-53 (CLM-0669 · RISK-0070 · RISK-0071)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Kind:** docs-only — لا تغييرَ شيفرةٍ (القياسُ لم يكشفْ انحرافًا).
+- **Changed units:** `docs/12-testing/ci-evidence/2026-10-23T180000Z-clm-0669-gs9-20-risk-0071-pg18-repro/repro.sh` (سكربتُ إعادةِ إنتاجٍ محلّيٌّ) · `docs/12-testing/ci-evidence/2026-10-23T180000Z-clm-0669-gs9-20-risk-0071-pg18-repro/README.md` · `docs/12-testing/ci-evidence/2026-10-23T180000Z-clm-0669-gs9-20-risk-0071-pg18-repro/raw/*` · سجلّاتُ التقدّم.
+- **Measured (main `5944152e` · services/search `a3f2448f` · PostgreSQL 18.6 UTF8):** شوطُ البحثِ 87/87؛ G-S9.20 بالقفلِ 20/20 (1200 جولةً · 0 خرق)، والطفرةُ L بلا قفلٍ: البوابةُ 0/10 والجولاتُ المضخَّمةُ 1/10 (18/600 جولةً خارقةً: 17 صفٌّ `pending` بـ `ux_search_store_index_slug` + 1 `docs=0`)؛ RISK-0071 تكامل 17/17 ووحدة 46/46، A وC مقتولتانِ، B تنجو سلوكيًّا وتُقتَلُ نصّيًّا ومكافئةٌ دلاليًّا (24180 زوجًا · 0 فرق · ضابطُ `ESCAPE ''` 684 فرقًا).
+- **Correction:** ملخّصُ قياسِ `2bd8cdbf` المنشورُ في #797 قالَ إنّ الحالتَينِ فشلتا في كلِّ تشغيلٍ؛ خامُهُ يقولُ البوابة 10/10 والجولات 7/10 — مُصحَّحٌ في `raw/prior-2bd8cdbf-measurement-and-correction.txt` دونَ تعديلِ القياسِ.
+- **Risk(s):** RISK-0070 `mitigating` · RISK-0071 `open` — بلا تغيير؛ الإغلاقُ قرارُ المالك.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-23T180000Z-clm-0669-gs9-20-risk-0071-pg18-repro/README.md
+- **Deployment:** none.
+- **Not changed:** الشيفرة · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
+# 2026-10-23 — CLM-0667 — G-S9.19 / RISK-0027: عملاءُ HTTP غيرُ المباشرينَ في البابِ 7
+
+- **Work Item(s):** M0-53 (G-S9.19 · CLM-0667)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **What:** البابُ 7 كانَ أعمى (مقيسٌ على 8 أشكالٍ) عن `node:http`/`node:https`/`node:http2` والتفكيكِ بإعادةِ التسميةِ والأقواسِ و`Reflect.get`؛ وُسِّعَ `RAW_PATTERN` بخمسةِ بدائلَ بلا حذفٍ، وأُعلِنَ الخادمانِ الواردانِ اللذانِ ظهرا (`stub-order-engine.ts` · `observability/src/index.ts`) استثناءً بسببِهما.
+- **Change:** `scripts/checks/validate-service-auth-coverage.sh` (`RAW_PATTERN` + تعليقُ الحدِّ المُعلَنِ) · `scripts/checks/test-governance.sh` (15 حالةً) · `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md` (استثناءانِ) · `docs/07-security/RISK_REGISTER.md` (RISK-0027 نصّاً لا حالةً).
+- **Tests:** 15 حالةً في test-governance.sh (6 موجبةٌ · 3 سالبةٌ + حارسُ كتابةِ الإعلانِ · 6 طفراتٍ بالنمطِ القديمِ). الأحمرُ قبلَ الإصلاحِ 738/6 (الستُّ الموجبةُ). المحاولةُ الخضراءُ الأولى 743/1 بعيبِ `sed` في الاختبارِ نفسِهِ — مُسجَّلٌ ومُصحَّحٌ.
+- **Risk(s):** RISK-0027 → `open` (لا إغلاقَ: grep لا AST — القفزةُ عبرَ الملفّاتِ و`node:net`/`node:tls` والاسمُ المبنيُّ ديناميكيّاً خارجَ البصرِ).
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-23T142000Z-clm-0667-gs9-19-indirect-http-clients/README.md
+- **Deployment:** none — حارسُ حوكمةٍ فقط؛ لا شيفرةَ إنتاجٍ ولا نشرَ.
+- **Not changed:** شيفرةُ الإنتاجِ · deploy-target.json · production_open · رحلةُ customer-bot → search · #730/INC-0007 HOLD · NO-GO.
+
+# 2026-10-23 — CLM-0668 — M0-53: سجلُّ أدلةٍ دائمٌ لما بعدَ الدمجِ — سلسلةُ #812 → #809
+
+- **Work Item(s):** M0-53 (CLM-0668)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **What:** قياساتُ رؤوسِ PR مفصولةٌ عن قياساتِ main لدمجَي #812 (CLM-0666 · `2bd8cdbf`) و#809 (CLM-0662 · `771beb7f`)، بأرقامِ التشغيلاتِ وكلِّ محاولاتِها وسلسلةِ موافقاتِ #809 الثلاثِ مربوطةً بـcommit_id (الصالحةُ `5630404689` على `15a01e88` وحدَها).
+- **Measured:** WASLA CI على main: 39966310455 و39977044634 — المحاولةُ 1 `cancelled` في كلَيهما بمهلةِ تثبيتِ Playwright (مُسجَّلةٌ كما هيَ)، والمحاولةُ 2 success 41/41؛ Roadmap freshness 39966310495 و39977044737 success؛ check-runs 42/42 على الالتزامَينِ؛ شجرةُ كلِّ دمجٍ = شجرةُ رأسِهِ.
+- **Risk(s):** لا تغييرَ في أيِّ حالةٍ. خطرٌ تشغيليٌّ مقيسٌ مُعلَنٌ (مهلةُ Playwright) بلا معالجةٍ هنا.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-23T153500Z-clm-0668-post-merge-verdicts-812-809/README.md
+- **Deployment:** none — توثيقٌ فقط.
+- **Not changed:** دليلُ CLM-0666 وقياساتُهُ · #730/INC-0007 HOLD · deploy-target.json · production_open · NO-GO · M6-18B Blocked.
+
+# 2026-10-23 — CLM-0662 (إعادةُ تأسيسٍ) — M0-53: إعادةُ تطبيقِ الفرعِ على main بعدَ دمجِ #810 وتجديدُ الأساسِ بقياسٍ جديدٍ
+
+- **Work Item(s):** M0-53 (CLM-0662 · إضافةٌ مؤرَّخة)
+- **Status:** Released (القياسُ المحليُّ كاملٌ؛ الحُكمُ الحاكمُ CI على الرأسِ النهائيِّ + مراجعةٌ مستقلةٌ على رأسِهِ الجديد)
+- **What:** فرعُ #809 كانَ CONFLICTING مقابلَ main بعدَ دمجِ #810 (`ea98c4c8`)، وفحصُ CI الذي أسقطَهُ سابقًا (15) أُصلِحَ في #810. أُعيدَ تأسيسُ الفرعِ على `ea98c4c8` بإعادةِ تطبيقِ الالتزاماتِ الثمانيةِ؛ التعارضُ الوحيدُ في ملفَّي الأساسِ المولَّدينِ حُلَّ بأخذِ نسخةِ main ثمَّ تجديدِ الأساسِ بقياسٍ جديدٍ لا بدمجٍ يدويٍّ (قرارٌ مكتوب M0-08).
+- **Measured:** `bash scripts/verify.sh` على شجرةٍ نظيفةٍ (الخامُّ `raw/verify-f43ef67c.log` في دليلِ الأدلةِ): 6292 اختبارًا ناجحًا · 443 ملفًّا منفَّذًا · typecheck ناجحٌ · الحوكمةُ اجتازَت بعدَ التجديد · `validate-baseline.sh` أربعةُ أبواب. مجموعاتُ تكاملِ PostgreSQL تُتخطّى محليًّا بوسمٍ وتُقاسُ في CI.
+- **Risk(s):** لا تغييرَ في الحجوزاتِ: رحلةُ customer-bot → search محجوبةٌ بقرارِ منحٍ · `production_open=false` · لا نشرَ ولا تدويرَ مفاتيحَ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-22T111200Z-clm-0662-channel-edge-proxy-routing/README.md (قسمُ إعادةِ التأسيس)
+- **Deployment:** none.
+- **Not changed:** شيفرةُ الإنتاجِ كما هيَ من التطبيقِ الأصليِّ (لا تغييرَ دلاليًّا) · `deploy-target.json` · أيُّ منحٍ أو أسرارٍ.
+
+# 2026-10-23 — CLM-0666 — M0-53: سجلُّ أدلةٍ دائمٌ لما بعدَ الدمجِ — سلسلةُ #811 → #810
+
+- **Work Item(s):** M0-53 (CLM-0666)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **What:** تحويلُ القياساتِ النهائيةِ لدمجَي #811 (CLM-0664/0665 · التزامُ الدمجِ `57b8bd04`) و#810 (CLM-0663 · التزامُ الدمجِ `ea98c4c8`) إلى سجلِّ أدلةٍ دائمٍ في الشجرةِ وفقَ سابقةِ CLM-0658، بدلَ بقاءِ النتائجِ محصورةً في تعليقاتِ PRs (#811#issuecomment-6357072819 · #810#issuecomment-6357729587).
+- **Measured:** كلُّ الأرقامِ مقروءةٌ من واجهةِ GitHub في 2026-10-23: رأسُ #810 `1611cb5c` أقرّتْ موافقةُ xuuux-voox (`5626881905` · 10:16:19Z) رأسَهُ حرفيًّا قبلَ الدمجِ بـ12 دقيقةً؛ الدمجُ عبرَ `merge-on-approved-head.sh` (بلا `--admin` · `--match-head-commit`)؛ على main بعدَهُ: WASLA CI [39939382125](https://github.com/skyosv10-art/wasla/actions/runs/39939382125) success · Roadmap freshness [39939381402](https://github.com/skyosv10-art/wasla/actions/runs/39939381402) success · 42/42 check-runs. وعلى رأسَي الفروعِ: 43/43 و43/43 (المعرفاتُ في الدليلِ). فرقُ الشجرةِ بينَ كلِّ رأسٍ والتزامِ دمجِهِ فارغٌ (squash).
+- **Risk(s):** لا تغييرَ في أيِّ حالةٍ — RISK-0058 `mitigating` · RISK-0066 `open` · RISK-0067 `mitigating` · #730/INC-0007 HOLD · NO-GO.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-23T104500Z-clm-0666-post-merge-verdicts-810-811/README.md
+- **Deployment:** none — توثيقٌ فقط؛ لا شيفرةَ ولا نشرَ ولا اتصالٌ خارجيٌّ.
+- **Not changed:** #809 (ما زال CONFLICTING ويُعادُ قياسُهُ كعملٍ مستقلٍّ) · #730/INC-0007 HOLD · `deploy-target.json` · أيُّ حالةِ لوحةٍ أو خطرٍ.
+
+# 2026-10-23 — CLM-0664 + CLM-0665 — استردادُ البوّابتين 9 و10: fastify 5.12.7 ومراجعةُ RISK-0058/0066/0067 قراءةً فقط
+
+- **Work Item(s):** M0-06 (CLM-0665) · M0-07 (CLM-0664)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Why one branch:** الفحص 9 والفحص 10 يسقطانِ على كلِّ PR منذ 2026-10-23 ويحجبُ كلٌّ منهما PR الآخر؛ حجزانِ مستقلّانِ على الفرعِ نفسِه، والاحتواءُ يُقاسُ على اتّحادِ نطاقيهما المعلنينِ مسبقًا.
+- **CLM-0665 (M0-06):** fastify `^5.12.5` ⇒ `^5.12.7` في 22 `package.json` (+ نطاقُ نظيرِ `observability` ‎`^4.0.0 || ^5.12.7`)، قفلٌ مجدَّد: 22 مستورِدًا ⇒ 5.12.7، مدخلٌ واحدٌ، السلامةُ تطابقُ npm؛ الحلُّ الفعليُّ 5.12.7 × 22. الفحص 9: exit=1 ⇒ **exit=0** بلا استثناء. typecheck 22/22؛ الاختبارات 4429 ناجح · 8 متخطّى · 0 فاشل. يغلقُ GHSA-389g-gv7q-r4x8 بالترقية.
+- **CLM-0664 (M0-07):** مراجعةُ قراءةٍ فقط وفقَ CLM-0564: RISK-0058 `mitigating` (scenario 2 success 39728298017) · RISK-0066 `open` (service-health 14/14، 39859217316؛ Render API لم يُقرأ) · RISK-0067 `mitigating` (الإنتاجُ قراءةً: 60 · 15 اتصالًا · `EMAXCONNSESSION`=0 في 24 ساعة — خمولٌ لا حمل). الحالاتُ بلا تغيير؛ لا إغلاقَ ولا قبولَ للخطرِ المتبقّي؛ التالية 2026-11-05 بمبرّرٍ في كلِّ صفّ. الفحص 10: exit=1 ⇒ **exit=0**.
+- **Changed units:** 22 `package.json` (packages/bot-runtime · packages/channel-edge · packages/observability · packages/partners-e2e · packages/service-auth · services/{audit,billing,customers,delivery,dispatch,drivers,geography,identity,marketplace,matching,negotiations,orders,partners,reputation,search,subscriptions,support}) · `pnpm-lock.yaml` · `docs/12-testing/BASELINE.json` و`docs/12-testing/BASELINE.txt` (بصمةُ القفلِ تغيّرت ⇒ إعادةُ توليدٍ بقرارٍ مكتوب، M0-08) · `docs/07-security/RISK_REGISTER.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · مجلّدُ الدليل.
+- **Regression caught by verify:** `packages/channel-e2e/src/__tests__/clm-0519-identity-sessions.e2e.test.ts` (I-13) سقطَ حتميًّا مع fastify 5.12.7 — `lib/route.js` صارَ يورّثُ المُسجِّلَ الفرعيَّ دوالَّ الأبِ فالتقطَ ترقيعُ `app.log.info` كائنَ `res` الدائريّ. الإصلاحُ في الاختبارِ وحدَه: قياسُ ما كتبَه pino عبرَ `stream`؛ طفرتا تسريبِ الرمزِ (info · warn) مقتولتان.
+- **Risk(s):** RISK-0058 → mitigating (مراجعةٌ قراءةً فقط، بلا تغيير) · RISK-0066 → open (بلا تغيير) · RISK-0067 → mitigating (بلا تغيير) · GHSA-389g-gv7q-r4x8 → none — ليست صفًّا في السجلّ ولا استثناءً في §11؛ أُغلقت بالترقيةِ قبلَ أن تحتاجَ أيًّا منهما.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-23T011500Z-clm-0664-0665-gate-recovery/README.md
+- **Deployment:** none — لا نشرَ ولا T1/T2 ولا Render ولا كتابةَ على قاعدة؛ قراءاتُ الإنتاجِ SELECT وسجلّاتٌ فقط.
+- **Not changed:** #809 · #810 · `SECURITY_RULES.md` §11 · `deploy-target.json`. NO-GO · M6-18B `Blocked` · #730/INC-0007 HOLD · `production_open=false` · رحلةُ customer-bot → search محجوبة.
+
+# 2026-10-23 — CLM-0663 — M0-40: الفحصُ 15 — الجوابُ الفارغُ لقائمةِ التشغيلاتِ لقطةٌ لا حكم
+
+- **Work Item(s):** M0-40 (CLM-0663)
+- **Status:** Released (يُدمجُ بعدَ مراجعةٍ مستقلّةٍ على الرأسِ النهائيِّ نفسِه ونجاحِ كلِّ الفحوصِ المطلوبةِ عليه)
+- **Incident:** على #809 (`5a659680`) سقطَ التحققُ الموحَّدُ مرّتينِ (2026-10-22T14:59Z و15:29Z) وWASLA CI [39805730912](https://github.com/skyosv10-art/wasla/actions/runs/39805730912) بالفحصِ 15: صفوفٌ `real`/`blackout` قُرِئت «no_verdict»، والمجموعةُ تتغيّرُ من تشغيلٍ لآخرَ والمحتوى ثابت.
+- **Root cause (مقيس):** `actions/runs?head_sha=<FULL>` يُجيبُ 200 وJSON صالحًا بلا سيرِ WASLA CI عابرًا (4/50 في 2026-10-22T15:51Z؛ 0/50 في 2026-10-23T00:05Z)، والحارسُ قرأَ أوّلَ جوابٍ كذلك حكمًا قاطعًا؛ و`_gh_read` (CLM-0560) لا يُعيدُه لأنّه ناجح.
+- **Fix:** `_runs_lookup` في `scripts/checks/audit-ci-verdicts.sh` + وضعُ `run-lookup <FULL_SHA>` في `scripts/checks/lib/audit_runs.py` (بدلَ `run-id`): found/empty/invalid لا تختلط؛ `AUDIT_EMPTY_ATTEMPTS` (4) و`AUDIT_EMPTY_WAIT` (2 ث مضاعَفًا = 14 ث)؛ دليلُ السيرِ لا يُمحى؛ `no_verdict` باتّفاقِ كلِّ المحاولاتِ الصالحةِ فقط؛ التعذُّرُ إخفاقٌ «غيرُ محسوم»؛ البصمةُ 40 خانةً وإلّا إخفاق؛ سيرُ بصمةٍ أخرى مرفوض؛ سطرُ تشخيصٍ لكلِّ صفّ.
+- **Tests:** +22 حالةً في `scripts/checks/lib/gov-cases-ci-verdict-audit.sh` (§١٤) بـ`gh` بديلٍ متسلسلٍ بلا شبكة + 4 للقارئِ مباشرةً. **قبلُ** على `fffacfb1`: 28 ناجح · 14 فاشل (exit=1). **بعدُ** على `b6c86dd0`: 46/0. **طفرات:** 7 كلُّها مقتولة (M1 السلوكُ القديمُ يُسقطُ 8)، والاستعادةُ بـ`cmp` ثمّ 46/0.
+- **Correction (مراجعة 2026-10-23):** `scripts/checks/lib/audit_runs.py` كانَ يُسقِطُ العنصرَ غيرَ القاموسيِّ بصمتٍ فيصيرُ `[null]` مجموعةً فارغةً صالحة؛ صارَ `invalid`. +7 حالاتٍ في `scripts/checks/lib/gov-cases-ci-verdict-audit.sh`: قبلُ على `f80d76b0` 47/6 (exit=1)، بعدُ 53/0؛ 8 طفراتٍ مقتولة (M8 الإسقاطُ الصامتُ يُسقطُ 6)، الاستعادةُ `cmp` ثمّ 53/0.
+- **Rebase (2026-10-23):** على main `57b8bd04` بعدَ دمجِ #811؛ `scripts/checks/audit-ci-verdicts.sh` و`scripts/checks/lib/audit_runs.py` و`scripts/checks/lib/gov-cases-ci-verdict-audit.sh` مطابقةٌ بالبصمة؛ صفٌّ مكرَّرٌ في `docs/16-progress/WORK_CLAIMS.md` حُذف. أُعيدَ القياس: 28/14 ⇒ 47/6 ⇒ 53/0، 8 طفراتٍ مقتولة.
+- **Baseline:** `docs/12-testing/BASELINE.json` و`docs/12-testing/BASELINE.txt` أُعيدَ توليدُهما بقرارٍ مكتوبٍ (M0-08) من سجلِّ التحقّقِ على `93f57c84` (EXIT=0 · الحوكمة 730/0 · `verify_overall=passed`)؛ البصمةُ `sha256:92e03621…` بلا تغيير.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-23T000000Z-clm-0663-audit-ci-verdicts-empty-runs/README.md
+- **Deployment:** none — نصُّ حوكمةٍ واختباراتُه فقط؛ لا خدمةَ ولا Render ولا قاعدة.
+- **Not changed:** معيارُ `real`/`blackout`، وصفوفُ `CI_VERDICT_AUDIT.md`، و#809 (لم يُعدَّل). NO-GO · M6-18B `Blocked` · #730/INC-0007 HOLD · `production_open=false` كما هي.
+# 2026-10-22 — CLM-0661 — تدقيقُ ما بعدَ CLM-0658: خطُّ الأساسِ، المخاطرُ، #730، ومسارُ Channel Edge إلى search
+
+- **Work Item(s):** M0-53 (G-S9.7) · M6-18B (RISK-0066 · RISK-0067 · INC-0007)
+- **Kind:** docs-only + قياسٌ محلّيٌّ — لا شيفرةَ إنتاجيّةَ ولا نشرَ ولا كتابةَ إنتاجٍ ولا Telegram ولا T1/T2.
+- **Status:** Released (CLM-0661 — يُحرَّرُ بالدمجِ).
+- **Changed units:** docs/12-testing/ci-evidence/2026-10-22T091200Z-clm-0661-post-0658-audit/README.md, docs/12-testing/ci-evidence/2026-10-22T091200Z-clm-0661-post-0658-audit/raw/, docs/12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/README.md, docs/16-progress/LAUNCH_EXECUTION_BOARD.md, docs/16-progress/WORK_CLAIMS.md, docs/16-progress/TASK_LOG.md
+- **Change:** خطُّ أساسٍ على main `ac3af2a5` (CI 39751349909 · Roadmap 39751350080 · حمايةٌ 41 سياقًا بلا Rulesets — «44» في CLM-0658 خطأُ نسخٍ)؛ بيانُ انحرافِ مسارِ الدمجِ (#804–#807 بـ`gh pr merge` المباشرِ لا `merge-on-approved-head.sh` — ADR-071)؛ مصفوفةُ المخاطرِ بالدليلِ؛ #730 HOLD (dirty · متأخّرٌ 102 · لا دليلَ تدويرٍ لـINC-0007)؛ عيوبُ مسارِ الحدِّ D1–D8 (لا يُسجَّلُ أيُّ مسارِ توجيهٍ · حذفُ `authorization` قبلَ قراءتِه · الهدفُ identity لكلِّ خدمةٍ · إسقاطُ الاستعلام · T1 بلا search)؛ إعادةُ عنوانِ `### M1` الملتصقِ بصفِّ M0-53 منذ #807.
+- **No-Test-Reason:** توثيقٌ وقياسٌ — المسبارُ المحلّيُّ محفوظٌ نصًّا في الدليلِ ولم يُضَفْ إلى الشجرة؛ لا سلوكَ مُغيَّر.
+- **Risk(s):** RISK-0027 → open · RISK-0070 → mitigating · RISK-0071 → open · RISK-0050 → open · RISK-0052 → mitigating · RISK-0058 → mitigating · RISK-0066 → open · RISK-0067 → mitigating
+- **Next:** قرارُ المالكِ في مراجعةِ RISK-0058/0066/0067 (تنقضي 2026-10-22 ← البابُ 2 يُسقطُ كلَّ PR من 2026-10-23)؛ حجزٌ مستقلٌّ لإصلاحِ D1–D8 بقرارِ تصميم؛ تأكيدُ تدويرِ INC-0007 قبلَ #730.
+- **Evidence:** [دليلُ CLM-0661](../12-testing/ci-evidence/2026-10-22T091200Z-clm-0661-post-0658-audit/README.md)
+
+# 2026-10-22 — CLM-0658 — تابع: أحكامُ ما بعدَ دمجِ #804 و#806 و#805 + ملاحظةُ إسنادِ التأليفِ
+
+- **Work Item(s):** M0-53
+- **Kind:** state-correction — توثيقُ أحكامِ CI بعدَ الدمجِ؛ لا شيفرةَ.
+- **Status:** Released (CLM-0658 — يُحرَّرُ بالدمجِ).
+- **Changed units:** docs/12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/README.md, docs/12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/raw/chain-verdicts.txt
+- **Change:** صفوفُ #804 (`c8fd6a6e` · main WASLA CI 39704732009 failure بسببِ GHSA-qxg6-89mg-rqv8 القائمةِ على main · Roadmap 39704731882 success) و#806 (`76a223a2` · 39739354566/39739354537 success · مراجعة 5610465955 على 9495d88b) و#805 (`affdda63` · 39744863985/39744863951 success · مراجعة 5610942615 على 0aea61cc)؛ تحديثُ §6 و§6-مكرر؛ و§6-ثالثًا: مقطورةُ `Co-authored-by: syyad` في `76a223a2` و`affdda63` مصدرُها بياناتُ تأليفِ ستةِ التزاماتٍ أنشأها الوكيلُ — مقيسٌ أنَّ syyad ليس متعاونًا ولا فاعلًا في الأحداثِ المفحوصةِ؛ ومصدرُ الهويةِ وسجلُّ الوصولِ التاريخيُّ غيرُ محسومَين.
+- **No-Test-Reason:** توثيقُ أحكامٍ مقروءةٍ من GitHub — لا سلوكَ قابلًا للاختبار.
+- **Risk(s):** RISK-0052 → mitigating · RISK-0071 → open · RISK-0050 → open
+- **Verified:** الأحكامُ مقروءةٌ مباشرةً من واجهةِ GitHub في 2026-10-22؛ الدليلُ لا يرقّي عنصرًا ولا يغلقُ خطرًا.
+
+# 2026-10-22 — CLM-0660 — ترقيةُ vitest إلى ^4.1.12: إغلاقُ استشاراتِ @vitest/mocker وtinypool وsource-map-js
+
+- **Work Item(s):** M0-53 (RISK-0031 · RISK-0062)
+- **Kind:** fix — ترقيةُ اعتماديّاتِ تطويرٍ.
+- **Change:** 72 ملفَّ package.json: كلُّ تصريحاتِ `vitest` (^2.1.0/^2.1.8/^3.0.0/^3.1.1/^3.2.7) → `^4.1.12` + تثبيتُ الجذرِ القسريُّ `3.2.7` → `4.1.12` + `pnpm install` (`pnpm-lock.yaml` مجدَّدٌ: `vitest@4.1.12` · `@vitest/mocker@4.1.12` · `source-map-js@1.2.2` · بلا tinypool أصلًا)؛ أُزيل تثبيتانِ قسريّانِ منجزانِ (tinypool · source-map-js) من الجذرِ ومن §11؛ `apps/admin-portal/src/__tests__/{orders,audit}.test.ts`: `vi.spyOn(global, "fetch")` → `globalThis` (9 مواضعَ — أنواعُ vitest 4 لم تعد تجلبُ أنواعَ Node)؛ `docs/00-rules/SECURITY_RULES.md` §11: أُزيلت 4 صفوفِ استشاراتٍ منجزةٍ + إضافةٌ مؤرَّخةٌ لصفِّ تثبيتِ vitest؛ `docs/07-security/RISK_REGISTER.md`: RISK-0031 وRISK-0062 → closed بقرارِ المالكِ الحرفيِّ «ترقية 4.1.12»، وإزالةُ أسطرِ الربطِ الستّةِ، وإضافةٌ مؤرَّخةٌ إلى RISK-0010، وتمديدُ مراجعةِ RISK-0052 إلى 2026-11-05 (سطرٌ داخلَ النطاقِ — حوكمةُ الفرعِ تقيسُ سجلَّ main المنقضيَ، والجوابُ الكاملُ في CLM-0659 المفتوحةِ).
+- **Tests:** وحدةٌ كاملةٌ على 4.1.12: 441 ملفًا / 6273 اختبارًا ناجحًا (الأساسُ 6272 — +1 اختلافُ عدٍّ لا فشل)؛ تحققٌ نوعيٌّ كاملٌ أخضرُ؛ تدقيقُ الاعتماديّاتِ: البابُ 1 (شجرةُ الإنتاجِ) صفرُ ثغراتٍ والبابُ 2 (الشجرةُ الكاملةُ) بلا ثغرةٍ معروفةٍ — «لا حاجةَ لاستثناءٍ أصلاً». قياساتٌ محلّيّةٌ لا تحلُّ محلَّ CI. [الدليل](../12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/README.md)
+- **Risk(s):** RISK-0031 → closed (قرارُ المالكِ «ترقية 4.1.12» + قياسُ التدقيقِ) · RISK-0062 → closed (الترقيةُ نفسُها) · RISK-0010 → mitigating (إضافةٌ مؤرَّخةٌ) · RISK-0052 → mitigating (تمديدُ مراجعةٍ فقط؛ الجوابُ في CLM-0659).
+
+# 2026-10-22 — CLM-0660 — ترقيةُ vitest إلى ^4.1.12 (قرارُ المالكِ: «ترقية 4.1.12») — حجزٌ قبلَ التغييرِ
+
+- **Work Item(s):** M0-53 (RISK-0031 · RISK-0062 · GHSA-qxg6-89mg-rqv8)
+- **Kind:** claim — حجزٌ قبلَ التغييرِ.
+- **Status:** Active (الفرعُ `stage-zero/clm-0660-vitest-4-1-12-mocker-cves` مستقلٌّ على main `c8fd6a6e`).
+- **Change:** لا شيفرةَ بعدُ.
+- **No-Test-Reason:** حجزٌ حوكميٌّ لا شيفرةَ فيه.
+- **Next:** رفعُ تصريحاتِ vitest إلى ^4.1.12 ← قفلٌ مجدَّدٌ ← اختباراتٌ وتحققٌ نوعيٌّ ← تحديثُ §11 والسجلِّ ← تمديدُ مراجعةِ RISK-0052 (سطرٌ داخلَ النطاقِ — حوكمةُ الفرعِ تقيسُ سجلَّ main المنقضيَ، والجوابُ الكاملُ في CLM-0659) ← تجديدُ BASELINE.
+# 2026-10-22 — CLM-0659 — RISK-0052: مهلةٌ صريحةٌ لكلِّ وظائفِ CI + البابُ 5 في حارسِ «CI مانعٌ»
+
+- **Work Item(s):** M0-53 (RISK-0052)
+- **Kind:** fix — حارسُ مهلاتٍ لا شيفرةَ تطبيقٍ.
+- **Change:** `.github/workflows/ci.yml`: `timeout-minutes` لتسعِ وظائفَ كانت بلا حدٍّ (repo-structure/doc-coverage 15 · governance-guard/verify 30 · typecheck/test/db-integration/db-integration-shared/exit-gate-e2e 20) — والأربعُ الباقيةُ كانت محدودةً سلفاً؛ `scripts/checks/validate-ci-mandatory.sh`: البابُ 5 يرفضُ أيَّ وظيفةٍ حيّةٍ بلا مهلةٍ صريحةٍ موجبةٍ ويُسمّيها؛ `scripts/checks/test-governance.sh`: حالتا `cim_gh_no_timeout`/`cim_mut_door5`؛ `docs/00-rules/VERIFY_COMMAND.md` §7 صفٌّ جديدٌ؛ صفُّ RISK-0052 بإضافةٍ مؤرَّخةٍ تحملُ قرارَ المالكِ الحرفيَّ («راجعه الآن فعليًّا») وتمديدِ المراجعةِ إلى 2026-11-05.
+- **Tests:** قياسُ المددِ من سيرَي main (39588221242 · 39660605222): الحدُّ الأقصى المقيس 11m55s (governance-guard) وكلُّ الحدودِ ≥2.5× القياسِ؛ البابُ 5 مرَّ على المستودعِ الحقيقيِّ وارفضَ في الجذرِ الصناعيِّ المُفتقرَ (طفرةُ إبطالِ سطرِ الرفضِ مقتولةٌ)؛ حزمةُ الحوكمةِ كاملةً محليًّا. قياسٌ محلّيٌّ لا يحلُّ محلَّ CI. [الدليل](../12-testing/ci-evidence/2026-10-22T030000Z-clm-0659-risk-0052-ci-job-timeouts/README.md)
+- **Risk(s):** RISK-0052 → mitigating (قرارُ الإغلاقِ للمالكِ) — المهلةُ تحصرُ التنفيذَ لا انتظارَ الطابورِ (حدٌّ معلَنٌ: واقعةُ 2026-09-23 كانت وظيفةً في الطابورِ).
+# 2026-10-22 — CLM-0659 — RISK-0052: مهلةٌ صريحةٌ لكلِّ وظائفِ CI (حجزٌ قبلَ أيِّ تغييرٍ)
+
+- **Work Item(s):** M0-53 (RISK-0052)
+- **Kind:** claim — حجزٌ قبلَ التغييرِ.
+- **Status:** Active (الفرعُ `stage-zero/clm-0659-risk-0052-ci-job-timeouts` · التأسيسُ على main `c8fd6a6e` بعدَ دمجِ #804).
+- **Change:** لا شيفرةَ بعدُ.
+- **No-Test-Reason:** حجزٌ حوكميٌّ لا شيفرةَ فيه.
+- **Next:** `timeout-minutes` لتسعِ وظائفَ بلا حدٍّ (المقياسُ من سيرَي 39588221242/39660605222) ← البابُ 5 في `validate-ci-mandatory.sh` ← حالاتُ حوكمةٍ وطفراتٌ ← تحديثُ صفِّ RISK-0052 بإضافةٍ مؤرَّخةٍ تُسجِّلُ قرارَ المالكِ (2026-10-22: «راجعه الآن فعليًّا») وحدودَ ما لا يُغطّيه timeout-minutes (انتظارُ الطابور).
+# 2026-10-21 — CLM-0657 — التأسيسُ على main `2a1f7348` من استنساخٍ كاملٍ (بالإضافةِ)
+
+- **Work Item(s):** M0-53 (RISK-0071)
+- **Kind:** rebase + evidence — لا شيفرةَ جديدةً (أسطرُ الشيفرةِ المتغيّرةُ مطابقةٌ بالبصمةِ).
+- **Change:** تعارضاتُ الحوكمةِ بالاتّحادِ؛ صفُّ RISK-0070 من main (إضافاتُ #803) وصفُّ RISK-0071 من هذا الفرعِ. BASELINE يُعادُ من `scripts/verify.sh` على هذا الالتزامِ.
+- **Tests:** وحدةٌ 187/187 · تكاملٌ 12×87/87 · M1–M4 مقتولةٌ (M4 بالوحدةِ فقط) — PostgreSQL 17 محلّيٌّ لا CI. الإخفاقُ القديمُ 1 من 12 غيرُ مفسَّرٍ.
+- **Risk(s):** RISK-0071 → open (حتى قرارِ المالكِ)
+
+# 2026-10-21 — CLM-0657 — RISK-0071: محارفُ LIKE في بحثِ المنتجاتِ تُطابَقُ حرفيّاً
+
+- **Work Item(s):** M0-53 (RISK-0071 · G-S9.19 شقُّه الثاني)
+- **Kind:** fix — مستقلٌّ عن #800 (مدموجٌ) و#803.
+- **Change:** `services/search/src/infrastructure/search-index-reader.ts`: مسندا ILIKE يربطانِ `$2 = escapeLike(q)` مع `ESCAPE` صريحٍ؛ trigram والنصُّ الكاملُ على `$1` الخامِ؛ الفئةُ `$3`.
+- **Tests:** 5 حالاتِ تكاملِ PostgreSQL (`%` · `_` · `\` في sku؛ q=`%` وq=`_` في title_ar) حمراءُ قبلَ الإصلاحِ وخضراءُ بعدَهُ؛ حالةُ وحدةٍ تلتقطُ SQL والمعاملاتِ؛ طفراتٌ M1–M4 مقتولةٌ (M4 بالوحدةِ فقط — مكافئٌ في SQL). قياسٌ محلّيٌّ على PostgreSQL 17 لا يحلُّ محلَّ CI. [الدليل](../12-testing/ci-evidence/2026-10-21T100000Z-clm-0657-risk-0071-product-search-like-escape/README.md)
+- **Risk(s):** RISK-0071 → open (يبقى مفتوحًا حتى قرارِ إغلاقٍ موثَّقٍ من المالكِ؛ الإصلاحُ دليلٌ لا إغلاقٌ — إضافةُ 2026-10-21 تعدِّلُ «mitigating» السابقةَ على هذا الفرعِ)
+
+# 2026-10-21 — CLM-0657 — RISK-0071: هروبُ LIKE في بحثِ المنتجاتِ (حجزٌ قبلَ أيِّ تغييرٍ)
+
+- **Work Item(s):** M0-53 (RISK-0071)
+- **Kind:** claim — حجزٌ قبلَ التغييرِ.
+- **Status:** Active (الفرعُ `stage-zero/clm-0657-risk-0071-product-search-like-escape`).
+- **Change:** لا شيفرةَ بعدُ.
+- **No-Test-Reason:** حجزٌ حوكميٌّ لا شيفرةَ فيه.
+- **Next:** اختباراتُ PostgreSQL حمراءُ قبلَ الإصلاحِ → `$2 = escapeLike(q)` بـ ESCAPE صريحٍ → طفراتٌ. لا يُدفَعُ قبلَ دمجِ #800 (حيثُ يُعرَّفُ RISK-0071).
+# 2026-10-22 — CLM-0658 — دليلُ إغلاقِ سلسلةِ الدمجِ #802 → #800 → #801 → #803 (توثيقٌ فقط)
+
+- **Work Item(s):** M0-53 (G-S9.7 · G-S9.19 · G-S9.20) · M2-01 (RISK-0050)
+- **Kind:** docs-only — أحكامُ CI على main لكلِّ التزامِ دمجٍ؛ لا شيفرةَ ولا نشرَ ولا كتابةَ إنتاجٍ.
+- **Change:** دليلُ إغلاقٍ يوثّقُ أحكامَ CI على main لالتزاماتِ الدمجِ الأربعةِ (50545970 · 1066cdfc · 16e7f44e · 2a1f7348) بأرقامِ التشغيلاتِ وروابطِها، وبيانًا بالإضافةِ لانحرافٍ إجرائيٍّ في #800: الموافقةُ البشريةُ (5597954276 · 09:56:22Z) كانت على الرأسِ ما قبلَ إعادةِ التأسيسِ (8ab18b9d — وCI عليهِ كانَ أحمرَ في image-supply-chain بتشغيلِ 39573425797 بسببِ CVE-2026-111943 المعروفةِ)، وأُعيدَ تأسيسُ الفرعِ قسرًا (10:56:46Z) ودُمجَ (11:16:42Z) دونَ موافقةٍ جديدةٍ على الرأسِ النهائيِّ (80d27676)؛ فرقُّ الشجرةِ بينَ الرأسَينِ مقيسٌ = تغييراتُ #802 حصرًا (لا ملفَّ شيفرةٍ واحدٍ). وإخفاقُ فحصِ التكاملِ الواحدِ في الشوطِ 39640217300 (db-integration (search) · المحاولةُ 1) مسجَّلٌ حدثاً غيرَ مفسرٍ لا مُنسَبًا لسببٍ مُثبَتٍ.
+- **Risk(s):** RISK-0050 → open (استثناءٌ محدودُ النطاقِ · مهلةٌ 2026-12-15 · التقريرُ الكاملُ يكشفُ الثغرةَ) · RISK-0027 → open · RISK-0070 → mitigating · RISK-0071 → open
+- **PR #804 (CLM-0657):** مفتوحٌ وجاهزٌ (موافقةُ 5607947083 على الرأسِ 5acfaa22 نفسِهِ بعدَ CI أخضرَ) ولم يُدمجْ — قرارُ دمجِهِ للمالكِ.
+- **Evidence:** [دليلُ CLM-0658](../12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/README.md)
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+# 2026-10-21 — CLM-0655 — إعادةُ التأسيسِ على main `16e7f44e` (بعدَ دمجِ #801) من استنساخٍ كاملٍ
+
+- **Work Item(s):** M0-53 (G-S9.20)
+- **Kind:** rebase + governance — لا شيفرةَ جديدةً (فرقُ services/packages مطابقٌ بالبصمةِ لما قبلَ التأسيسِ).
+- **Change:** تعارضاتُ الحوكمةِ بالاتّحادِ (WORK_CLAIMS · TASK_LOG · ROADMAP · صفُّ M0-53 بإضافاتِ CLM-0652/0654/0655). رصدُ CI على main: الشوطُ 39640217300 أخفقَ في المحاولةِ 1 بسباقِ ناقلَينِ متزامنَينِ ونجحَ في المحاولةِ 2 — مسجَّلانِ معًا. BASELINE يُعادُ توليدُهُ من `scripts/verify.sh` على هذا الالتزامِ في استنساخٍ كاملٍ.
+- **Tests:** القياساتُ السابقةُ محلّيّةٌ على PostgreSQL 17؛ 0/300 لا يُثبتُ انعدامَ السباقِ.
+- **Risk(s):** RISK-0070 → mitigating (لا closed)
+
+# 2026-10-21 — CLM-0655 — إعادةُ التأسيسِ على main `1066cdfc` + RISK-0070 بالإضافةِ (بعدَ دمجِ #802 و#800)
+
+- **Work Item(s):** M0-53 (G-S9.20)
+- **Kind:** rebase + governance — لا شيفرةَ جديدةً.
+- **Change:** تعارضاتُ الحوكمةِ حُلَّت بالاتّحادِ (WORK_CLAIMS · TASK_LOG · ROADMAP · صفُّ M0-53 يحملُ إضافتَي CLM-0652 وCLM-0655). أدلّةُ PostgreSQL الأصليّةُ محفوظةٌ دونَ مساسٍ. BASELINE يُعادُ توليدُهُ بـ`scripts/verify.sh` → `scripts/baseline.sh`.
+- **Tests:** 0/300 و50/50 قياسٌ محلّيٌّ على PostgreSQL 17 — ليسا دليلَ CI ولا إنتاجٍ.
+- **Risk(s):** RISK-0070 → mitigating (لا closed — الإغلاقُ بعدَ الدمجِ وCI على main وقرارِ المالكِ)
+
+# 2026-10-21 — CLM-0655 — G-S9.20: قفلُ المستهلِكِ لناقلِ البحثِ — السباقُ منسوخٌ قبلُ ومُبرهَنٌ بعدُ على PostgreSQL 17
+
+- **Work Item(s):** M0-53 (G-S9.20)
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Released (الفرعُ `stage-zero/clm-0655-gs9-20-relay-consumer-lock`).
+- **Change:** `services/search/src/ports.ts` (`withConsumerLock` مطلوبٌ) · `infrastructure/projection-store.ts` (قفلٌ استشاريٌّ لجلسةٍ · مساحةُ 42627 · رفضُ مجمَّعٍ < 2) · `relay.ts` (الدفعةُ كلُّها داخلَ القفلِ) · اختباراتٌ: 3 حالاتِ تكاملٍ + 2 وحدةٍ؛ الحالةُ الأصليّةُ لم تُمَسَّ.
+- **Tests:** تكاملٌ 80/80 · وحدةٌ 177/177 (محلّيٌّ على PostgreSQL 17.11) · مضخَّمٌ قبلُ 2/300 خرقٌ ← بعدُ 0/300 · الأصليّةُ 50/50 · الطفراتُ M1/M2/M3 قُتِلت.
+- **Security / Data / Deployment:** لا مُنادٍ إنتاجيٌّ للناقلِ؛ لا نشرَ (`frozen`)؛ لا سرَّ؛ لا تخفيفَ لاختبارٍ ولا لمهلةٍ.
+- **Evidence:** [دليلُ CLM-0655](../12-testing/ci-evidence/2026-10-21T090000Z-clm-0655-gs9-20-relay-consumer-lock/README.md)
+- **Deployment:** none.
+- **Next:** RISK-0070 مسجَّلٌ على فرعِ #800 فقط — بعدَ دمجِ #800 (و#802 لخضرةِ image-supply-chain) يُعادُ تأسيسُ هذا الفرعِ ويُحدَّثُ RISK-0070 بالإضافةِ (mitigating لا closed) ويُعادُ توليدُ BASELINE.
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
+# 2026-10-21 — CLM-0655 — G-S9.20: إقصاءُ ناقلَي بحثٍ متزامنَينِ (حجزٌ قبلَ أيِّ تغييرٍ)
+
+- **Work Item(s):** M0-53 (G-S9.20 · اكتُشِفَ في CLM-0649).
+- **Kind:** claim — حجزٌ قبلَ التغييرِ.
+- **Status:** Active (الفرعُ `stage-zero/clm-0655-gs9-20-relay-consumer-lock`).
+- **Change:** لا شيفرةَ بعدُ — هذا السطرُ يسبقُ التغييرَ.
+- **No-Test-Reason:** حجزٌ حوكميٌّ لا شيفرةَ فيه؛ الاختباراتُ في الإيداعِ التالي.
+- **Next:** قياسُ السباقِ قبلَ الإصلاحِ على PostgreSQL 17 → إصلاحٌ أدنى (قفلٌ استشاريٌّ لكلِّ مستهلِكٍ) → برهانٌ بتكرارٍ مسجَّلٍ ≥ 50 وطفرةِ إزالةِ القفلِ.
+
+# 2026-10-21 — CLM-0654 — إعادةُ التأسيسِ على main `1066cdfc` (بالإضافةِ)
+
+- **Work Item(s):** M0-53 (G-S9.19)
+- **Kind:** rebase — لا شيفرةَ جديدةً.
+- **Change:** حلُّ تعارضاتِ الحوكمةِ بالاتّحادِ؛ صفُّ G-S9.19 استعادَ نصَّ الأساسِ الذي كانَ الالتزامُ الأصليُّ يستبدلُه، وأُلحِقَ CLM-0654 إضافةً مؤرَّخةً ([التفصيل](../12-testing/ci-evidence/2026-10-21T000000Z-clm-0654-gs9-19-injected-fetcher-census/raw/rebase-onto-1066cdfc.txt)).
+- **Tests:** test-governance 695/0 محلّيّاً · حارسُ التغطيةِ rc=0 · طفراتُ حذفِ التوقيعِ الثلاثُ مقتولةٌ — قياسٌ محلّيٌّ لا يحلُّ محلَّ CI.
+- **Risk(s):** RISK-0027 → open (يبقى — لا إغلاقَ قبلَ قياسِ ما بعدَ الدمجِ وقرارِ المالكِ)
+
+# 2026-10-21 — CLM-0654 — G-S9.19 / RISK-0027: جردُ الجالبِ المحقونِ وتوسيعُ بصرِ البابِ 7
+
+- **Work Item(s):** M0-53 (G-S9.19 — العلاجُ البنيويُّ لحارسِ تغطيةِ هويّةِ الخدمة · RISK-0027).
+- **Kind:** security-governance — إصلاحُ عمى الحارسِ (البابُ 7 في `validate-service-auth-coverage.sh`) عن الجالبِ المحقونِ (`this.fetchImpl(` · `globalThis.fetch` · `*Fetch(`)، بجردٍ بنيويٍّ وتصنيفٍ وطفرةٍ حاكمةٍ، لا بشيفرةِ إنتاجٍ.
+- **Units:** `scripts/checks/validate-service-auth-coverage.sh` · `scripts/checks/test-governance.sh` (+4 حالاتِ طفرةٍ) · `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md` (§4.1 صفوفُ الاستثناءاتِ الأربعةُ + تصحيحٌ مؤرَّخٌ في §4.2/§6) · `docs/07-security/RISK_REGISTER.md` (RISK-0027: إضافةٌ مؤرَّخةٌ لا إغلاقٌ) · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-21T000000Z-clm-0654-gs9-19-injected-fetcher-census/`.
+- **Status:** Released (الفرعُ `stage-zero/clm-0654-gs9-19-injected-fetcher-census` — الحكمُ بعدَ المراجعةِ المستقلةِ وCI على الرأسِ النهائيِّ).
+- **Change:** (1) نمطُ البابِ 7-ج اتسعَ من `\bfetch\(` إلى إحصاءِ **إشارةِ القيمةِ** إلى fetch — نداءً أو حقنًا (globalThis.fetch · typeof fetch) أو **تخزينًا باسمٍ آخرَ** (= fetch · تمريرًا وسيطًا) — بحدٍّ معلنٍ: النمطُ يقيسُ الإشارةَ المباشرةَ للاسمِ، وإعادةُ التسميةِ عبر أكثرَ من قفزةٍ تحتاجُ تحليلَ تدفقِ بياناتٍ (AST) ولا يُدَّعى بعدُ، وذكرُ fetch في تعليقٍ لا يُحصى. (2) الجردُ المُقيسُ: 40 ملفًّا (19 عميلًا + 21 استثناءً)، منها خمسةٌ كانت عمياءً بالكاملِ (user-assertion.ts · identity-bootstrap.ts · bot-api-client.ts · tick-scheduler/src/main.ts · tick-scheduler/src/scheduler.ts) صُنِّفتْ وأُعلنتْ استثناءاتٍ موثّقةَ السببِ. (3) خمسُ حالاتِ طفرةٍ معزولةِ السببِ تُثبِتُ أنّ أشكالَ الهروبِ (المحقونُ · المرجعُ المخزَّنُ · التخزينُ بالإسنادِ) تُسقِطُ جميعاً وأنّ النمطَ القديمَ يُمرِّرُ الهروبَ التاريخيَّ (طفرةُ الحارسِ نفسِهِ). (4) تصحيحٌ مؤرَّخٌ بالإضافةِ للحدِّ المُعلَنِ في السجلِّ (§4.2/§6) وفي تعليقاتِ الحارسِ. (5) RISK-0027: إعادةُ قياسٍ مؤرَّخةٌ — **يبقى open؛ الإغلاقُ للمالكِ** (§9) بعدَ نجاحِ الحارسِ على main بأدلةٍ مرتبطةٍ بـSHA.
+- **Tests:** حزمةُ الحوكمةِ قيستْ على main والفرعِ في البيئةِ نفسِها: main 653 ناجح · 36 فاشل — الفرعُ 658 ناجح · 36 فاشل، ومجموعاتُ الفشلِ **متطابقةٌ** (فشلٌ محلّيٌّ مسبقٌ في الرملةِ: بلا DATABASE_URL/سياقِ git/تسجيلِ npm — لا يُدَّعى تفسيرُ كلِّ سببٍ فرديًّا، بل أنّ المجموعةَ لم تتغيّرْ بإضافةِ هذا الحجزِ)؛ الفارقُ الوحيدُ +5 حالاتٍ ناجحةٍ. الحارسُ أخضرُ على الفرعِ. لا PostgreSQL هنا: الحجزُ حوكميٌّ لا سلوكيٌّ، ولا يدّعي غيرَ ذلكَ.
+- **Risk(s):** RISK-0027 → open (يُغلقُهُ المالكُ بعدَ قياسِ ما بعدَ الدمجِ — بصرُ البابِ 7 وُسِّعَ إلى إشاراتِ القيمةِ بحدٍّ معلنٍ، ولا يُدَّعى اكتمالُ تحليلِ تدفقِ البياناتِ) · لا شيفرةَ إنتاجٍ مُغيَّرةٌ.
+- **Evidence:** [دليلُ CLM-0654](../12-testing/ci-evidence/2026-10-21T000000Z-clm-0654-gs9-19-injected-fetcher-census/README.md) · `raw/guard-output.txt` · `raw/census-all-fetch-references.txt` · `raw/mutation-gs9-19.txt` · `raw/governance-main-vs-branch.txt`.
+- **Deployment:** لا شيء (`frozen` — ADR-073 · `deploy-target.json` لم يُمَسَّ · لا مدخلَ مفتوحٌ · لا Telegram ولا T1 حيٌّ ولا Render · لا نشرَ).
+- **Next:** مراجعةٌ مستقلةٌ ودمجُ PR هذا · ثم قياسُ ما بعدَ الدمجِ (CI على main + Roadmap freshness) وتوثيقُهُ لإحالةِ إغلاقِ RISK-0027 إلى المالكِ · وحدةُ G-S9.20 (سباقُ المرحّلينِ المتزامنينِ على PostgreSQL حقيقيٍّ) التاليةَ.
+
+# 2026-10-21 — CLM-0656 — M2-01 / RISK-0050: CVE-2026-111943 في ثنائيِّ esbuild — استثناءٌ محروسٌ (لا تعطيلَ للبوّابةِ)
+
+- **Work Item(s):** M2-01
+- **Author/Owner:** @skyosv10-art (agent:perplexity-computer)
+- **Status:** Released (الفرعُ `stage-zero/clm-0656-esbuild-cve-2026-111943`).
+- **Risk(s):** RISK-0050 → open
+- **What / Why:** WASLA CI على main بعدَ دمجِ #799 (`6b620e41` · الشوطُ 39568230432) فشلَ في image-supply-chain وحدَهُ: ثغرةٌ HIGH جديدةٌ CVE-2026-111943 (Go crypto/x509 · إصلاحُها 1.26.10/1.27.3) في مكتبةِ Go القياسيّةِ داخلَ ثنائيِّ esbuild 0.25.12 (go1.23.12). القفلُ نفسُهُ كانَ أخضرَ على رأسِ PR قبلَ ساعةٍ (39563121894) — فشلٌ زمنيٌّ بتحديثِ قاعدةِ الثغراتِ. قيسَ: لا إصدارَ esbuild مبنيّاً بـGo مصحّحٍ (0.28.2 = go1.26.5).
+- **Change:** `docs/07-security/IMAGE_VULN_EXCEPTIONS.yaml` (+1 إدخالٍ بالمسارِ والبيانِ والمهلةِ نفسِها · سابقتا CLM-0515/CLM-0521) · `docs/07-security/RISK_REGISTER.md` (تحديثُ RISK-0050 بالإضافةِ).
+- **No-Test-Reason:** استثناءٌ YAML محروسٌ + سجلُّ خطرٍ — التحقّقُ هوَ حارسُ البابِ 10 (الفحصُ 19 · يعملُ في CI) وimage-supply-chain نفسُهُ؛ لا شيفرةَ.
+- **Security / Data / Deployment:** لا تغييرَ إنتاجٍ؛ الثغرةُ مقيسةٌ ومنشورةٌ وغيرُ معالَجةٍ (الاستثناءُ من الحَجزِ لا من القياسِ)؛ لا سرَّ؛ لا نشرَ (`frozen`).
+- **Evidence:** [دليلُ CLM-0656](../12-testing/ci-evidence/2026-10-21T084500Z-clm-0656-esbuild-cve-2026-111943/README.md)
+- **Deployment:** none.
+- **Next:** حكمُ CI على هذا الفرعِ ثمّ على main؛ ومتابعةٌ حيّةٌ: إصدارُ esbuild بـGo ≥ 1.26.10 → ترقيةٌ وحذفُ استثناءِ الفئةِ كلِّها (المهلةُ تعضُّ 2026-12-15).
+- **Primary / Secondary:** @skyosv10-art (agent:perplexity-computer) / —
+
+# 2026-10-21 — CLM-0653 — M0-06: ترقيعٌ أمنيٌّ vite 6.4.3 → 6.4.5 (CVE-2026-112942 HIGH)
+
+- **Work Item(s):** M0-06 (تحديثُ الاعتمادياتِ والثغراتِ) · فحصا CI: تدقيقُ الاعتمادياتِ (M0-06) وimage-supply-chain (M2-01).
+- **Kind:** security-patch — ثغرةٌ HIGH جديدةٌ في vite 6.4.3 (CVE-2026-112942 · launch-editor `fs.existsSync()` bypass · الإصلاحُ 6.4.4+) نُشِرت بعدَ آخرِّ تشغيلٍ أخضرَ على main (39413130734 · 2026-10-20)، فأُسقِطَ فحصا تدقيقِ الاعتمادياتِ (بابُ 2: 3 ثغراتٍ غيرَ مُعلَنةٍ) وimage-supply-chain (trivy: HIGH) في CI على أيِّ رأسٍ جديدٍ — حاجزٌ خارجيٌّ زمنيٌّ لا عيبُ شيفرةٍ في المشروعِ.
+- **Units:** `package.json` (pnpm override `vite: ^6.4.3 → ^6.4.4`) · `pnpm-lock.yaml` (توليدٌ جديدٌ: vite 6.4.5).
+- **Status:** Released (الفرعُ `stage-zero/clm-0653-vite-644-security-patch`). أُعيدَ توليدُ الأساسِ (`docs/12-testing/BASELINE.json`) بقرارٍ مكتوبٍ من سجلِّ تحققٍ كاملٍ داخلَ الشجرةِ (`raw/verify.log` · RISK-0028: قابليةُ إعادةِ القراءةِ): بصمةُ `pnpm-lock.yaml` تغيَّرت بالضرورةِ بالترقيعِ (بابُ 2)، والأرقامُ الحركيّةُ مقيسةٌ من التشغيلِ (6256 اختباراً · 441 ملفًّا · الحوكمةُ 688 حالةً · فاشلٌ واحدٌ بلا GH_TOKEN كما يشترطُ فحصُ CI-audit · verify_overall=failed بيئيًّا محليًّا) — لا يُهمَلُ.
+- **Change:** ترقيعٌ ضمنَ النطاقِ الرئيسيِّ (تبعيةُ تطويرٍ/بناءٍ فقطَ — vite ليست في شجرةِ استيرادِ الإنتاجِ لكنها داخلَ الارتفاكتِ المفحوصِ من M2-01؛ فحصُ حارسِ استيرادِ الإنتاجِ أخضرُ) · الإصلاحُ أدنى اتساعٍ ممكنٍ: bump في override واحدٍ + توليدُ القفلِ.
+- **No-Test-Reason:** vite أداةُ بناءٍ (ليست في شجرةِ استيرادِ الإنتاجِ لكنها داخلَ الارتفاكتِ المفحوصِ من M2-01) لا تُمسُّ عقودَ الخدمةِ؛ الفحصُ الحاكمُ هو تدقيقُ الاعتمادياتِ وimage-supply-chain في CI نفسِهِ — لا اختبارَ سلوكيًّا يُعقِلُ ترقيعَ أداةِ بناءٍ، والنوعُ والبناءُ أُثبتا (أدناه). حصيلةُ سجلِ التحققِ كما هي: 688 ناجح · 1 فاشل (بابُ الأساسِ قُيس قبلَ إعادةِ توليدِ الأساسِ في هذا الحجزِ نفسِهِ — دجاجةٌ وبيضةٌ موثقةٌ؛ وعلى الرأسِ النهائيِّ في CI: الحوكمةُ كلُّها خضراءُ 41/41).
+- **Tests:** `pnpm -r typecheck` ناجحٌ بالكاملِ · بناءُ @wasla/customer-mini-app بـvite 6.4.5 ناجحٌ (1.29s) · فحصُ تدقيقِ الاعتمادياتِ ناجحٌ محلّيًّا (البابانِ 1-2 يُتخطيانِ في الرملةِ بلا شبكةِ npm — CI يسألُهما). لا اختباراتٍ سلوكيةٍ مطلوبةً: vite أداةُ بناءٍ لا تُمسُّ عقودَ الخدمةِ.
+- **Risk(s):** لا شيءَ جديدًا — RISK-0031 (الاستثناءُ الأمنيُّ للاعتمادياتِ القديمةِ) لم يُمَسَّ؛ الاستثناءُ القائمُ (GHSA-82fw-gwwq-j7x9 · vitest) باقٍ كما هو: مهلتُهُ في SECURITY_RULES §11 حتى 2026-12-08 وخطرُهُ المقابلُ RISK-0031 بمراجعةٍ 2026-11-24 (أسبقَ بقصدٍ).
+- **Evidence:** [دليلُ CLM-0653](../12-testing/ci-evidence/2026-10-21T054500Z-clm-0653-vite-644-security-patch/README.md) · `raw/dependency-audit.txt` · `raw/pnpm-lock.diff` · `raw/typecheck.txt` · `raw/build.txt`.
+- **Deployment:** لا شيء (`frozen` — ADR-073).
+- **Next:** CI على هذا الفرعِ هو البرهانُ (فحصا M0-06 وM2-01 يعودانِ أخضرينِ) · ثم فتحُ PR من فرعِ الوكيلِ السابقِ `stage-zero/clm-0652-gs9-7-store-search-bounds` (حدودُ عقدِ بحثِ المتاجرِ — المتبنّى) لإعفائِهِ من فحصِ النضارةِ.
+
+# 2026-10-20 — CLM-0652 — G-S9.7: مطابقةُ حدودِ عقدِ `GET /search/stores` للقرارِ المعتمَدِ
+
+- **Work Item(s):** M0-53 (G-S9.7 — تصحيحُ عقدٍ بعدَ الدمجِ؛ #795 و#796 لا يُمَسّانِ).
+- **Units:** `packages/contracts/search/` (الثوابتُ · الأنواعُ · اختبارُ العقدِ) · `services/search/` (OpenAPI · `errors.md` · المحلِّلُ · القارئُ · اختباراتُ الوحدةِ والتكاملِ) · `apps/customer-mini-app/` (`StoreSearch` · i18n · الاختبارُ) · ADR-025 §6.4 (إحالةٌ) + §6.8 · `SEARCH_HTTP.md` · دليلُ CLM-0649 §9 · `REQUIREMENTS_REGISTRY.md` · `RISK_REGISTER.md` · السجلّاتُ.
+- **Status:** Released (الحكمُ بعدَ CI على main في دليلِ إغلاقٍ مستقلٍّ).
+- **Change:** الحدودُ قبلُ ← بعدُ: `q` 2..64 ← **1..200** · `page` 1..50 ← **≥ 1 بلا حدٍّ أعلى** (صحيحٌ دقيقٌ؛ إزاحةٌ `bigint`) · `page_size` 1..20 = 10 ← **1..50 = 20**. `SEARCH_QUERY_TOO_SHORT` متقاعدٌ (الأدنى ⇒ `SEARCH_QUERY_EMPTY` كالمنتجاتِ). الحزمةُ مصدرُ الحقيقةِ، وOpenAPI والمحلِّلُ وثوابتُ التطبيقِ مربوطةٌ بها باختباراتٍ؛ الأرقامُ الحرفيّةُ للقرارِ مثبَّتةٌ في اختبارِ الحزمةِ. 12/12 طفرةً مقتولةً. لا تغييرَ للإتاحةِ ولا الهويّةِ ولا E-20 ولا `production_open=false`.
+- **Risk(s):** RISK-0070 → open (جديدٌ · G-S9.20: لا إقصاءَ بينَ ناقلَينِ متزامنَينِ) · RISK-0071 → open (جديدٌ · G-S9.19 شقُّه الثاني: بحثُ المنتجاتِ لا يهرّبُ `LIKE`) · RISK-0027 → open (بلا تغييرٍ · G-S9.19). هذا العملُ لا يُغلِقُ أيًّا منها.
+- **Evidence:** [دليلُ CLM-0652](../12-testing/ci-evidence/2026-10-20T200000Z-clm-0652-gs9-7-store-search-bounds/README.md) · `raw/mutation-checks.txt` · مخرجاتُ الفحوصِ.
+- **Deployment:** لا شيء (`frozen` · `deploy-target.json` لم يُمَسَّ · المدخلُ مغلقٌ · لا Render ولا Telegram ولا T1 حيٌّ · #730 كما هو · NO-GO).
+- **Next:** حكمُ CI على main ودليلُ الإغلاقِ · G-S9.19/G-S9.20 بحجوزاتٍ مستقلّةٍ.
+
+- **استكمالُ حوكمةِ التبنّي (2026-10-21 · بعدَ فتحِ PR #800 من الوكيلِ الحاليِّ):** أُعيدَ توليدُ الأساسِ (`docs/12-testing/BASELINE.json`) بقرارٍ مكتوبٍ: `risks_not_closed` 26 ← 28 (RISK-0070 وRISK-0071 اللذانِ فتحَهُ هذا الحجزِ لم يُعادْ توليدُ الأساسِ بعدهما). ولا تغييرَ آخرَ في الشيفرةِ: رأسُ الفرعِ كما تركَهُ صاحبُ الحجزِ الأصليُّ (`0edecad`)، والتبنّيُ موثَّقٌ في جسمِ PR #800.
+
+# 2026-10-20 — CLM-0651 — دليلُ ما بعدَ دمجِ CLM-0649: حكمُ CI الفعليُّ على main (G-S9.7)
+
+- **Work Item(s):** M0-53 (G-S9.7 — توثيقُ الحكمِ فقط).
+- **Kind:** state-correction — تسجيلُ حكمِ CI الفعليِّ بعدَ دمجِ #795 وإغلاقِ G-S9.7 في السجلِّ والدليلِ (§8) بدلَ «يُكتَبُ بعدَ الاكتمالِ».
+- **Units:** `docs/16-progress/TASK_LOG.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · دليلُ CLM-0649 (§8 + `raw/main-ci-1e50fce.json` + `raw/pr-795-ci.json`).
+- **Status:** Released.
+- **Change:** #795 ← `1e50fce` — **WASLA CI** 39409451731 **نجاحٌ 41/41** · Roadmap freshness 39409451631 نجاحٌ. سيرا الفرعِ الفاشلانِ مسجَّلانِ بأسبابِهما: `d2c3355` (أساسٌ قديمٌ + صفُّ M0-41) و`cd88f6d` (أساسٌ غيرُ مُلتزَمٍ + `admin-portal-e2e`: 403 من `packages.microsoft.com` عندَ تثبيتِ Playwright — خارجيٌّ، نجحَ لاحقًا بلا تغييرٍ).
+- **Risk(s):** لا شيءَ جديدًا.
+- **Evidence:** [دليلُ CLM-0649 §8](../12-testing/ci-evidence/2026-10-20T150000Z-clm-0649-gs9-7-store-search/README.md).
+- **Deployment:** لا شيء.
+- **Next:** فتحُ مدخلِ P لبحثِ المتاجرِ قرارُ مالكٍ (برهانُ E-20 للمتاجرِ + T1) · G-S9.19 (باقيه · RISK-0027) وG-S9.20 بحجزٍ مستقلٍّ · البندُ التالي القابلُ للتنفيذِ في G-S9 (G-S9.6 · G-S9.8).
+
+# 2026-10-20 — CLM-0649 — G-S9.7: بحثُ المتاجرِ بالاسمِ في search — نموذجُ قراءةٍ مشتقٌّ بقرارِ المالكِ
+
+- **Work Item(s):** M0-53 (G-S9.7 — على RQ-CMA-29 · اكتشافا G-S9.19 وG-S9.20) · M0-41 (CLM-0650 على الفرعِ نفسِه: `gov-cases-app-port-wiring.sh` كانَ يحملُ `ROOT_WIRED_PORTS = 16`/`OPTIONAL_PORTS = 16` حرفاً فأسقطَتْه إضافةُ `storeSearchReadPort` (16→17)؛ صارَ يقرأُ المنشورَ — مصدرُ حقيقةٍ واحدٌ، والطفرتانِ ما زالتا تُسقِطانِ).
+- **Units:** `services/search/` (العقدُ · `search_store_index` + ترحيلُ 0006 · `domain/store-search.ts` · `store-search-reader.ts` · `http-marketplace-catalog.ts` الموقَّعُ بدلَ `catalog-read-port.ts` · الناقلُ · المسارُ) · `packages/contracts/search/` · `packages/authz-policy/` (عمليّةٌ + ربطٌ + منحةُ `search`) · `packages/search-e2e/src/harness.ts` · `packages/channel-edge/allowlist/customer-mini-app.json` · `apps/customer-mini-app/` (`StoreSearch` في شاشةِ السوقِ) · ADR-025 §6 (إضافةٌ مؤرَّخةٌ) · ADR-025 §6.7 · `SERVICE_AUTH_ENFORCEMENT.md` · `SEARCH_HTTP.md` · `EDGE_ALLOWLIST.md` · `APP_API_ROUTES.md` · لقطةُ `route-enforcement.json` (إضافةٌ مؤرَّخةٌ) · السجلّاتُ.
+- **Status:** Released (التنفيذُ مدموجٌ بعدَ CI؛ G-S9.7 يُغلَقُ بحكمِ CI على main).
+- **Change:** (0) حكمُ الجولةِ السابقةِ: WASLA CI على `92064ac` (39390629630) **ناجحٌ 41/41** وRoadmap freshness (39390629845) ناجحٌ. (1) قرارُ المالكِ مقتبَسٌ في ADR-025 §6 (إضافةٌ لا محوٌ): نموذجٌ مشتقٌّ في search، marketplace مصدرُ الحقيقةِ، لا `?q=` في marketplace (ADR-016 §9). (2) العقدُ أوّلًا: `GET /search/stores?q=&locale=&page=&page_size=` ⇒ `{items:[{store_slug,title,category_slug}],page,page_size,total}` مغلقٌ · رمزا خطأٍ جديدانِ `SEARCH_QUERY_TOO_SHORT`/`SEARCH_UNKNOWN_PARAMETER` · ثوابتُ الحدودِ في `@wasla/contracts-search` يطابقُها اختبارُ العقدِ. (3) `search_store_index` (أسماءٌ ثلاثٌ + مطبَّعاتُها؛ لا مالكَ ولا حالةَ ولا رايةَ) · الأهليّةُ في SQL: `approved` ∧ ∃ منتجٌ منشورٌ معتمَدٌ بمخزونٍ > 0 غيرُ مؤرشَفٍ. (4) الناقلُ يجلبُ الاسمَ عندَ `store_approved` **قبلَ** التعديلِ بمنفذٍ موقَّعٍ (`PRODUCTION_GRANTS[search]` → marketplace `product:read`+`store:read`)؛ `rebuildAll` يمحو الجدولَ والإعادةُ تملؤه. (5) التطبيعُ المعلَنُ + تهريبُ `% _ \` + ترتيبٌ حتميٌّ. (6) `StoreSearch` بحارسِ تسلسلٍ ضدَّ الجوابِ المتأخّرِ. (7) مدخلُ P مغلقٌ + إضافةٌ للّقطةِ (69→70) بـADR-025 §6.7؛ **حارسُ E-20 الحاليُّ لا يعبّرُ عن قاعدةِ المتجرِ** فلم يُوسَّع (ADR-025 §6.7 D4). (8) اكتشافانِ: G-S9.19 (منفذُ المنتجِ كانَ بلا هويّةٍ وغيرَ مرئيٍّ للبابِ 7 — أُصلِحَ شقُّه الأوّلُ؛ الباقي مفتوحٌ) · G-S9.20 (تذبذبٌ سابقٌ في اختبارِ الناقلينِ المتزامنينِ: main 1/30).
+- **Risk(s):** RISK-0027 → open (أُعيد فتحُه بالقياسِ: البابُ 7 لا يرى `this.fetchImpl(` — عميلُ منتجِ search كانَ بلا توقيعٍ وأُصلِحَ، والعمى باقٍ · G-S9.19) · RISK-0042 → open (لا يتغيّر: +1 صفِّ ربطٍ `none` مسبَّبٍ — `GET /search/stores` أسماءٌ عامّةٌ لمتاجرَ معتمَدةٍ بلا مالكٍ في الإسقاطِ).
+- **Evidence:** [دليلُ CLM-0649](../12-testing/ci-evidence/2026-10-20T150000Z-clm-0649-gs9-7-store-search/README.md) · `raw/mutation-checks.txt` (9/9 مقتولةٌ) · `raw/relay-concurrent-flake.txt` · `raw/main-ci-92064ac.json` · مخرجاتُ الفحوصِ المحلّيّةِ.
+- **Deployment:** لا شيء (`frozen` — ADR-073 · `deploy-target.json` لم يُمَسَّ · لا مدخلَ مفتوحٌ · لا Telegram ولا T1 حيٌّ ولا Render).
+- **Next:** حكمُ CI على main لـCLM-0649 ثم Roadmap freshness · فتحُ مدخلِ P قرارُ مالكٍ ويسبقُه برهانُ E-20 للمتاجرِ (ADR-025 §6.7 D4) وT1 · G-S9.19 (باقيه) وG-S9.20 بحجزٍ مستقلٍّ.
+
+# 2026-10-20 — CLM-0648 — G-S9.7: قياسُ عقدِ بحثِ المتاجرِ بالاسمِ — اكتشافٌ مَقيسٌ يستلزمُ قرارًا معماريًّا
+
+- **Work Item(s):** M0-53 (G-S9.7 — على RQ-CMA-29).
+- **Units:** `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/TASK_LOG.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-20T090000Z-clm-0648-gs9-7-store-search-measure/`.
+- **Status:** Released (قياسٌ فقط؛ G-S9.7 يبقى مفتوحًا).
+- **Change:** (0) تثبيتُ حكمِ الجولةِ السابقةِ: WASLA CI على `7166987` (39387049047) **اكتمل نجاحًا 41/41** وRoadmap freshness (39387049078) ناجحٌ — سُجِّلَ بعدَ الاكتمالِ. (1) القياسُ: `GET /stores` يرفضُ `?q=`/`?name=` (`MARKETPLACE_VALIDATION_FAILED`) وحارسُه `assertedStaff` ومدخلُه W محجوبٌ؛ ADR-016 §9 يمنعُ `?q=` في marketplace نصًّا؛ search بلا فهرسِ متاجرَ ولا عناوينِها (`search_marketplace_store_state` بلا عنوانٍ، ومنفذُ القراءةِ للمنتجاتِ فقط)؛ قاعدةُ إتاحةِ المتجرِ نفسِه غيرُ معرَّفةٍ (المعرَّفُ `isProductVisible` وحدَه). (2) الحكمُ: لا عقدَ يُعادُ استعمالُه، ولا عقدَ جديدَ دونَ قرارٍ ← توقّفٌ عندَ القياسِ بحسبِ تعليمةِ المالكِ؛ القرارُ المطلوبُ (ق1 مالكُ البحثِ · ق2 قاعدةُ الإتاحةِ · ق3 الإسقاطُ العامُّ · ق4 اللغةُ) وشروطُ E-20 لأيِّ فتحٍ مستقبليٍّ مكتوبةٌ. (3) الجاهزيّةُ: جدولُ مدموجٍ/مُثبَتٍ بالتكاملِ/منشورٍ؛ G-S9.3 مدموجٌ وغيرُ مُثبَتٍ عبرَ Channel Edge وغيرُ منشورٍ؛ T1 عائقٌ قائمٌ. لا شيفرةَ ولا عقدَ ولا مدخلَ حدٍّ.
+- **Risk(s):** لا شيءَ جديدًا.
+- **Evidence:** [دليلُ CLM-0648](../12-testing/ci-evidence/2026-10-20T090000Z-clm-0648-gs9-7-store-search-measure/README.md) · `raw/measurement.txt` · `raw/store-query-q-rejected.txt` · `raw/main-ci-7166987.json`.
+- **Deployment:** لا شيء (`frozen` — ADR-073 · `deploy-target.json` لم يُمَسَّ).
+- **Next:** قرارُ المالكِ المعماريُّ (ق1–ق4) لـG-S9.7، وهو يحكمُ G-S9.6 وG-S9.8 أيضًا.
+
+# 2026-10-20 — CLM-0646 — دليلُ ما بعدَ دمجِ CLM-0645 وCLM-0647: حكمُ CI الفعليُّ على main (G-S9.3)
+
+- **Work Item(s):** M0-53 (G-S9.3 — توثيقُ الحكمِ فقط).
+- **Units:** `docs/16-progress/TASK_LOG.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · دليلا CLM-0645 وCLM-0647 (README §حكم + خامٌ).
+- **Status:** Released.
+- **Change:** حكمُ CI بعدَ الدمجِ: #791 ← `16c1ec3` — **WASLA CI** 39377275818 **نجاحٌ 41/41**؛ #792 ← `f1f35c7` — **WASLA CI** 39383688618 **نجاحٌ 41/41**. وسيرا الفرعينِ الفاشلانِ (39374488496 أساسٌ يشيرُ إلى التزامٍ غيرِ مدفوعٍ بعدَ إعادةِ البناءِ؛ 39381064568 التزامٌ وسيطٌ قبلَ إعادةِ توليدِ الأساسِ) مُسجَّلانِ بأسبابِهما ومُصلَحانِ بجذرِهما. G-S9.3 مُغلَقٌ؛ فتحُ مدخلِ P قرارُ مالكٍ. تحديثٌ بالإضافةِ لا بالمحوِ. لا كودَ ولا نشرَ (`frozen` — ADR-073).
+- **Risk(s):** لا شيءَ جديدًا.
+- **Evidence:** [دليلُ CLM-0645 §6](../12-testing/ci-evidence/2026-10-20T050000Z-clm-0645-gs9-3-zone-search-contract/README.md) · [دليلُ CLM-0647 §5](../12-testing/ci-evidence/2026-10-20T070000Z-clm-0647-gs9-3-zone-search-wiring/README.md).
+- **Deployment:** لا شيء.
+- **Next:** البندُ التالي القابلُ للتنفيذِ في G-S9 — «عقدٌ أوّلًا» (G-S9.7 · G-S9.6 · G-S9.8)؛ G-S9.9 يعتمدُ G-S9.2.
+
+# 2026-10-20 — CLM-0647 — G-S9.3 (ب): مدخلُ حدٍّ P مغلقٌ (ADR-075) + وصلُ نموذجِ الطلبِ بالبحثِ عن المنطقةِ
+
+- **Work Item(s):** M0-53 (G-S9.3 — على RQ-CMA-15).
+- **Units:** `apps/customer-mini-app/src/components/ZoneSearch.tsx` · `src/screens/RideOrder.tsx` · `src/i18n/index.ts` · `src/__tests__/ZoneSearch.test.tsx` · `packages/channel-edge/allowlist/customer-mini-app.json` · `docs/12-testing/ci-evidence/2026-10-09T140000Z-clm-0518-human-auth-adr/route-enforcement.json` · `docs/15-decisions/ADR-075-edge-snapshot-gs9-3-zone-search.md` · `docs/12-testing/EDGE_ALLOWLIST.md` · `docs/12-testing/APP_API_ROUTES.md` · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-20T070000Z-clm-0647-gs9-3-zone-search-wiring/`.
+- **Status:** Released (الحكمُ بعدَ CI على main).
+- **Change:** تعليمةُ المالكِ (2026-10-20): «ويصل نموذج الطلب بالنتيجة» ← ADR-075: `GET /geo/zones/search` يُضافُ إلى اللقطةِ (68 → 69) بإضافةٍ مؤرَّخةٍ، ومدخلُ حدٍّ **P** للعميلِ `production_open=false` بـ`blocked_until` مكتوبٍ (الجوابُ مقصورٌ على النشطِ في الخدمةِ). `ZoneSearch` في نموذجِ المشوارِ للالتقاطِ والوصولِ: النتيجةُ تملأُ `zone_id` والتسميةَ و`source=text_search`؛ جوابٌ متأخّرٌ لا يستبدلُ الأحدثَ (درسُ G-S9.18). +10 اختباراتٍ؛ طفرةُ نزعِ حارسِ التسلسلِ مكشوفةٌ. **الأساسُ (M0-08):** ملفُّ اختبارٍ جديدٌ ← `test_files_tracked` 579 → 580، أُعيدَ توليدُه من سجلِّ `verify.sh` الملتزَمِ (أخفقَ فقط على الأساسِ القديمِ).
+- **Risk(s):** لا شيءَ جديدًا.
+- **Evidence:** [دليلُ CLM-0647](../12-testing/ci-evidence/2026-10-20T070000Z-clm-0647-gs9-3-zone-search-wiring/README.md) · التطبيقُ 124/124 · الحارسانِ 28 و24 ✓.
+- **Deployment:** لا شيء (`frozen` — ADR-073 · لا فتحَ إنتاجيٌّ).
+- **Next:** حكمُ CI على main لـCLM-0645 و0647؛ ثم البندُ التالي القابلُ للتنفيذِ في G-S9.
+
+# 2026-10-20 — CLM-0645 — G-S9.3 (أ): عقدُ البحثِ عن منطقةٍ صالحةٍ في geography (العقدُ أوّلًا)
+
+- **Work Item(s):** M0-53 (G-S9.3 — على RQ-CMA-15).
+- **Units:** `services/geography/` (العقد · errors.md · ports · in-memory · drizzle · use-case · http · اختبارات) · `packages/contracts/geography/src/api-types.ts` (مولَّد) · `packages/authz-policy/` · `docs/04-api/GEOGRAPHY_HTTP.md` · `docs/07-security/SERVICE_AUTH_ENFORCEMENT.md` · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-20T050000Z-clm-0645-gs9-3-zone-search-contract/`.
+- **Status:** Released (الحكمُ بعدَ CI على main).
+- **Change:** قياسٌ: لا مسارَ بحثٍ في geography ولا search، وgeography المالكُ الوحيدُ لأسماءِ المناطقِ (ADR-006) ← عقدٌ جديدٌ `GET /geo/zones/search?q=&limit=&locale=`: المناطقُ النشطةُ فقط (معيارُ `requireActiveZone` في خدمةِ العملاءِ نفسُه) بمطابقةٍ جزئيّةٍ حرفيّةٍ لأيِّ اسمٍ مترجَمٍ، مرتّبةً بـ`code`/`id`، بشكلِ `ZoneDetail[]` القائمِ؛ `GEO_INVALID_SEARCH_QUERY` (400) رمزٌ مُضافٌ؛ صلاحيّةُ `geography:zone:read` القائمةُ؛ سجلُّ التفويضِ 169 → 170. لا مصدرَ بياناتٍ جديدٌ ولا مساسَ بقرارِ G-S9.2. البحثُ غيرُ مكشوفٍ للتطبيقِ بعدُ (لا مدخلَ حدٍّ) — ذلك (ب). **الأساسُ (M0-08):** ملفُّ اختبارٍ جديدٌ واحدٌ (`zone-search.test.ts`) ← `test_files_tracked` 578 → 579؛ أُعيدَ توليدُ `BASELINE.json/.txt` بـ`scripts/baseline.sh --log` من سجلِّ `verify.sh` الملتزَمِ في الدليلِ (أخفقَ فقط على الأساسِ القديمِ وعلى STATE-SYNC الذي صُحِّحَ بعدَ بدئِه) · `tests_passed` 6158 → 6194 · `test_files_executed` 437 → 438.
+- **Risk(s):** RISK-0042 → open (لا يُغلَق ولا يتغيّر: +1 صفِّ ربطٍ `none` مسبَّبٍ بدليلٍ — `GET /geo/zones/search` بياناتٌ مرجعيّةٌ عامّةٌ لا مالكَ لها، كـ`GET /geo/zones/:zoneId`؛ الموجةُ 1: 18 → 19).
+- **Evidence:** [دليلُ CLM-0645](../12-testing/ci-evidence/2026-10-20T050000Z-clm-0645-gs9-3-zone-search-contract/README.md) · geography 85/85 · تكاملُ Postgres 26/26 · طفرتانِ مكشوفتانِ · authz-policy 52/52.
+- **Deployment:** لا شيء (`frozen` — ADR-073).
+- **Next:** G-S9.3 (ب) — مدخلُ حدٍّ P بقرارٍ موثَّقٍ + لقطةٌ + ربطُ نموذجِ الطلبِ (`source=text_search`).
+# 2026-10-20 — CLM-0644 — دليلُ ما بعدَ دمجِ CLM-0643: حكمُ CI الفعليُّ على main
+
+- **Work Item(s):** M0-53 (G-S9.18 — توثيقُ الحكمِ فقط).
+- **Units:** `docs/16-progress/TASK_LOG.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-20T043000Z-clm-0643-myorders-stale-detail-race/` (README §حكم + خامٌ).
+- **Status:** Released.
+- **Change:** توثيقُ حكمِ CI بعدَ دمجِ PR #789 (التزامُ الدمجِ `2ed2c77`): **WASLA CI** (السيرُ 39370992513) **نجاحٌ 41/41** · **Roadmap freshness** (39370992775) **نجاحٌ** — خامٌ في دليلِ CLM-0643. G-S9.18 مُغلَقٌ. تحديثٌ بالإضافةِ لا بالمحوِ. لا كودَ ولا نشرَ (`frozen` — ADR-073).
+- **Risk(s):** لا شيءَ جديدًا.
+- **Evidence:** [دليلُ CLM-0643 §حكمُ CI على main](../12-testing/ci-evidence/2026-10-20T043000Z-clm-0643-myorders-stale-detail-race/README.md).
+- **Deployment:** لا شيء.
+- **Next:** G-S9.3 (أ) — CLM-0645.
+
+# 2026-10-20 — CLM-0643 — MyOrders: استجاباتُ التفاصيلِ المتأخّرةُ (متابعةُ مراجعةٍ · G-S9.18)
+
+- **Work Item(s):** M0-53 (G-S9.18 — على RQ-CMA-41/42).
+- **Units:** `apps/customer-mini-app/src/screens/MyOrders.tsx` · `src/__tests__/MyOrders.test.tsx` · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-20T043000Z-clm-0643-myorders-stale-detail-race/`.
+- **Status:** Released (الحكمُ بعدَ CI على main).
+- **Change:** ملاحظةُ مراجعةٍ: `openDetail`/`refreshDetail` يكتبانِ نتيجةَ طلبٍ لم يعدْ محدَّدًا (A→B · إغلاقٌ قبلَ الاستجابةِ · تحديثٌ دوريٌّ بعدَ تغييرِ الاختيارِ). الإصلاحُ: `selectedIdRef` تزامنيٌّ (كان يتأخّرُ عرضًا) + `selectionGenRef` يرتفعُ بكلِّ فتحٍ/إغلاقٍ، ولا تُطبَّقُ نتيجةٌ أو خطأٌ أو إنهاءُ تحميلٍ إلا إن بقيَ الجيلُ والمعرّفُ هما الاختيارَ. +6 اختباراتٍ بوعودٍ مؤجَّلةٍ: 5 منها تفشلُ على شاشةِ main `a04b9ca` وتنجحُ بعدَ الإصلاحِ، والسادسةُ حارسُ انحدارٍ.
+- **Risk(s):** لا جديد. لا عقدَ ولا خدمةَ ولا حدَّ.
+- **Evidence:** [دليلُ CLM-0643](../12-testing/ci-evidence/2026-10-20T043000Z-clm-0643-myorders-stale-detail-race/README.md) · قبلَ 5✗/14✓ · بعدَ 19/19 · التطبيقُ 114/114 · typecheck ✓.
+- **Deployment:** لا شيء (`frozen` — ADR-073).
+- **Next:** G-S9.3 — عقدُ البحثِ أوّلًا (قياسُ geography).
+
+# 2026-10-20 — CLM-0642 — G-S9.2: اكتشافٌ مَقيسٌ — لا هندسةَ للمناطقِ وتوسيعُ البياناتِ مؤجَّلٌ بنصِّ ADR-006
+
+- **Work Item(s):** M0-53 (G-S9.2 · RQ-CMA-15 — تسجيلُ اكتشافٍ، لا تنفيذٌ).
+- **Units:** `docs/01-product/REQUIREMENTS_REGISTRY.md` (صفُّ G-S9.2) · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md` · `ROADMAP.md` · `docs/16-progress/TASK_LOG.md`.
+- **Status:** Released.
+- **Change:** قياسٌ موثَّقٌ قبلَ أيِّ تعديلِ شيفرةٍ لـG-S9.2 (حلُّ نقطةٍ ← منطقةٍ): مخططُ الجغرافيا (`geo_zones` في `services/geography/contracts/schema.sql` · البذرةُ `saudi-arabia.sql` · المستودعُ الكاملُ) **لا يحملُ أيَّ هندسةٍ** — لا مضلعاتِ ولا إحداثيّاتٍ ولا مراكزَ مناطقَ. نموذجُ بياناتِ ADR-006 هرميٌّ قائمٌ على المعرّفاتِ بالتصميمِ، و§5 منه يؤجِّلُ توسيعَ البياناتِ «بعدَ التحققِ من مصدرٍ رسميٍّ». تنفيذُ العقدِ إذن يستلزمُ قرارًا معماريًّا موثَّقًا (تمديدُ ADR-006: عمودُ هندسةٍ + مصدرُ بياناتِ الحدودِ + محرّكُ الحلِّ) لا ارتجالَه. سُجِّلَتِ الملاحظةُ في صفِّ G-S9.2 نفسِهِ بالإضافةِ المؤرَّخةِ (لا مصدرَ حقيقةٍ مكررًا) دونَ إغلاقِ البندِ أو إعادةِ تصنيفِهِ.
+- **Risk(s):** لا شيءَ — وثائقُ فقط.
+- **Evidence:** هذا السجلُّ (قياسُ المخططِ والبذرةِ في `main` `1de257f`).
+- **Deployment:** لا شيء.
+- **Next:** G-S9.3 (بحثٌ نصّيٌّ يُنتجُ منطقةً صالحةً — عقدٌ أوّلًا: بحثُ أسماءِ المناطقِ في geography) ثمّ G-S9.6/G-S9.7.
+
+# 2026-10-20 — CLM-0641 — دليلُ ما بعدَ دمجِ CLM-0640: حكمُ CI الفعليُّ على main
+
+- **Work Item(s):** M0-53 (G-S9.12 · RQ-CMA-42 — توثيقُ الحكمِ فقط).
+- **Units:** `docs/16-progress/TASK_LOG.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-20T020000Z-clm-0640-gs9-12-orders-polling/` (README §حكم + خامٌ).
+- **Status:** Released.
+- **Change:** توثيقُ حكمِ CI بعدَ دمجِ PR #786 (التزامُ الدمجِ `865f653`): **WASLA CI** (السيرُ 39359559810) **نجاحٌ** · **Roadmap freshness** (39359559752) **نجاحٌ** — خامٌ في دليلِ CLM-0640. تحديثُ الدليلِ والسجلاتِ من «الحكمُ بعدَ CI» إلى الحكمِ الفعليِّ (بالإضافةِ لا بالمحوِ). لا كودَ ولا نشرَ (`frozen` — ADR-073).
+- **Risk(s):** لا شيءَ جديدًا.
+- **Evidence:** [دليلُ CLM-0640 §حكمُ CI على main](../12-testing/ci-evidence/2026-10-20T020000Z-clm-0640-gs9-12-orders-polling/README.md).
+- **Deployment:** لا شيء.
+- **Next:** بنودُ «عقدٌ أوّلًا» (G-S9.2 · G-S9.3 · G-S9.6–9.9 · G-S9.13) — قراراتُ المالكِ محفوظةٌ.
+
+# 2026-10-20 — CLM-0640 — G-S9.12: التحديثُ المباشرُ للحالةِ (Polling) في MyOrders
+
+- **Work Item(s):** M0-53 (G-S9.12 · RQ-CMA-42).
+- **Units:** `apps/customer-mini-app/src/screens/MyOrders.tsx` · `src/__tests__/MyOrders.test.tsx` · `docs/12-testing/APP_API_ROUTES.md` (78→80 نداءً) · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-20T020000Z-clm-0640-gs9-12-orders-polling/`.
+- **Status:** Released · **الحكمُ بعدَ الدمجِ:** WASLA CI على main `865f653` (السيرُ 39359559810) **نجاحٌ** · Roadmap freshness نجاحٌ — [دليلُ ما بعدَ الدمجِ](../12-testing/ci-evidence/2026-10-20T020000Z-clm-0640-gs9-12-orders-polling/README.md)§حكم.
+- **Change:** تحديثٌ دوريٌّ صامتٌ كلَّ 30 ثانيةٍ (`STATUS_POLL_INTERVAL_MS`) لقائمةِ الطلباتِ (بمرشّحِ الحالةِ الحاليِّ) وللتفاصيلِ المفتوحةِ — إعادةُ قراءةٍ للمسارَينِ القائمَينِ (G-S9.10/G-S9.11) بلا عقدٍ جديدٍ، لا وميضَ تحميلٍ ولا مسحٍ للعرضِ عندَ الفشلِ، وتوقّفٌ في الخلفيّةِ (`document.hidden`). WebSocket مؤجَّلٌ صراحةً بالمواصفةِ (L88).
+- **Risk(s):** لا جديد. لا عقدَ جديدَ ولا فتحَ إنتاجيّ.
+- **Evidence:** [دليلُ CLM-0640](../12-testing/ci-evidence/2026-10-20T020000Z-clm-0640-gs9-12-orders-polling/README.md) · unit 108/108 · typecheck ✓ · عقدُ المسارِ 80/80 ✓.
+- **Deployment:** لا شيء (الهدفُ `frozen` — ADR-073).
+- **Next:** بنودُ «عقدٌ أوّلًا» (G-S9.2 · G-S9.3 · G-S9.6–9.9 · G-S9.13) — قراراتُ المالكِ محفوظةٌ.
+
+# 2026-10-20 — CLM-0639 — دليلُ ما بعدَ دمجِ CLM-0638: حكمُ CI الفعليُّ على main
+
+- **Work Item(s):** M0-53 (G-S9.11 · RQ-CMA-41 — توثيقُ الحكمِ فقط).
+- **Units:** `docs/16-progress/TASK_LOG.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `docs/12-testing/ci-evidence/2026-10-20T003000Z-clm-0638-gs9-11-order-request-detail/` (README §حكم + خامٌ).
+- **Status:** Released (فرعُ الأدلةِ — CI يجري على هذا الطلبِ نفسِهِ).
+- **Change:** توثيقُ حكمِ CI بعدَ دمجِ PR #784 (التزامُ الدمجِ `b65b280`): **WASLA CI** (السيرُ 39348695447) **نجاحٌ 41/41 وظيفةً** · **Roadmap freshness** (39348695716) **نجاحٌ** — خامٌ في دليلِ CLM-0638. تحديثُ الدليلِ والسجلاتِ من «الحكمُ بعدَ CI» إلى الحكمِ الفعليِّ (بالإضافةِ لا بالمحوِ). لا كودَ ولا نشرَ (الهدفُ `frozen` — ADR-073).
+- **Risk(s):** لا شيءَ جديدًا.
+- **Evidence:** [دليلُ CLM-0638 §حكمُ CI على main](../12-testing/ci-evidence/2026-10-20T003000Z-clm-0638-gs9-11-order-request-detail/README.md).
+- **Deployment:** لا شيء.
+- **Next:** G-S9.12 (Polling) ثم بنودُ «عقدٌ أوّلًا» — قراراتُ المالكِ محفوظةٌ كما هي.
+
+# 2026-10-20 — CLM-0638 — G-S9.11: تفاصيلُ الحالةِ والمسارِ في MyOrders + مدخلُ الحدّ + قرارُ ADR-074
+
+- **Work Item(s):** M0-53 (G-S9.11 · RQ-CMA-41).
+- **Units:** `apps/customer-mini-app/src/screens/MyOrders.tsx` · `src/store/order-form.ts` · `src/screens/RideOrder.tsx` · `src/screens/DeliveryOrder.tsx` · `src/i18n/index.ts` · `src/__tests__/MyOrders.test.tsx` · `src/__tests__/RideOrder.test.tsx` · `src/__tests__/DeliveryOrder.test.tsx` · `packages/channel-edge/allowlist/customer-mini-app.json` · `docs/12-testing/ci-evidence/2026-10-09T140000Z-clm-0518-human-auth-adr/route-enforcement.json` (إضافةٌ مؤرّخةٌ) · `docs/15-decisions/ADR-074-edge-snapshot-gs9-11-addition.md` · `docs/12-testing/EDGE_ALLOWLIST.md` · `docs/01-product/REQUIREMENTS_REGISTRY.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md`.
+- **Status:** Released · **الحكمُ بعدَ الدمجِ:** WASLA CI على main ‏`b65b280` (السيرُ 39348695447) **نجاحٌ 41/41** · Roadmap freshness نجاحٌ — [دليلُ ما بعدَ الدمجِ](../12-testing/ci-evidence/2026-10-20T003000Z-clm-0638-gs9-11-order-request-detail/README.md)§حكم.
+- **Change:**
+  - النقرُ على طلبٍ يفتحُ «تفاصيلَ الحالةِ والمسارِ» (CMS §3.6 L87) عبرَ `GET /customers/{id}/order-requests/{orderRequestId}` — الحالةُ · المركبةُ · السعرُ · المسارُ (الالتقاط/التسليم) · زرُّ رجوعٍ · 404 ← «الطلبُ غيرُ موجود».
+  - مدخلُ حدٍّ (O · `production_open=false`) بدليلِ ملكيةٍ حقيقيٍّ، وإضافةٌ مؤرّخةٌ إلى لقطةِ CLM-0518 بقرارٍ موثّقٍ في ADR-074 استنادًا إلى التفويضِ التنفيذيّ المكتوبِ (مقتبسٌ فيه).
+  - اكتشافٌ مُصلَحٌ: التطبيقُ كان يقرأُ `order_request_id` والخدمةُ تُرجعُ `id` (العقدُ المنشورُ) — صُحّح في القائمةِ ونتيجةِ الإرسالِ (سُجّلَ G-S9.17).
+- **Risk(s):** لا جديد. لا فتحَ إنتاجيّ (G-ENF وفتحُ المداخلِ قراراتُ مالكٍ كما هي).
+- **Evidence:** [دليلُ CLM-0638](../12-testing/ci-evidence/2026-10-20T003000Z-clm-0638-gs9-11-order-request-detail/README.md) · unit 104/104 · service http 35/35 · حارسُ 28: 30 مدخلًا ✓.
+- **Deployment:** لا شيء (الهدفُ `frozen` — ADR-073).
+- **Next:** G-S9.12 (Polling) ثمّ بنودُ «عقدٌ أوّلًا» — قراراتُ المالكِ (G-S9.4/9.5 · G-S12.1 · T2/E1–E4) محفوظةٌ.
+
+# 2026-10-19 — CLM-0637 — دليلُ ما بعدَ دمجِ CLM-0635
+
+- **Work Item(s):** M6-18B (CLM-0637).
+- **Status:** Released · توثيقٌ فقط.
+- **Risk(s):** RISK-0069 → open.
+- **Evidence:** artifact `docs/12-testing/ci-evidence/2026-10-19T210000Z-clm-0637-deploy-purpose-gate-merge-run/raw/runs-on-569785d8.json` · `docs/12-testing/ci-evidence/2026-10-19T210000Z-clm-0637-deploy-purpose-gate-merge-run/raw/render-deploy-latest-runs.json` · `docs/12-testing/ci-evidence/2026-10-19T210000Z-clm-0637-deploy-purpose-gate-merge-run/raw/render-latest-deploy-per-service.json` · CI 39238277986 success.
+- **Deployment:** لا تشغيلَ Render على الدمج؛ الهدفُ `frozen`.
+- **Next:** قرارُ المالكِ في T2 وفي شروطِ E1–E4. [الدليل](../12-testing/ci-evidence/2026-10-19T210000Z-clm-0637-deploy-purpose-gate-merge-run/README.md)
+
+# 2026-10-19 — CLM-0635 — بوّابةُ غرضِ النشرِ المعتمَد + شرطُ أدلّةِ العزل + إجراءُ T2 المحلّيّ (بلا نشر)
+
+- **Work Item(s):** M6-18B (CLM-0635 · CLM-0636 — حجزٌ ثانٍ لـ`infra/render/host-sources.json`: تصنيفُ `scripts/test-env/t2_local.py` حارسًا، بعدَ إخفاقِ فحصِ مصادرِ مضيفاتِ Render في CI ‏39233914743).
+- **Units:** `.github/workflows/render-deploy.yml` · `infra/render/deploy-target.json` · `scripts/deploy/render-sync.py` · `scripts/checks/validate-render-deploy-target.sh` · `scripts/test-env/t2_local.py` · `docs/12-testing/T2_LOCAL_WEBHOOK_PROCEDURE.md` · `docs/15-decisions/ADR-073-render-test-environment-only.md` · `docs/08-infrastructure/RENDER_TEST_ENVIRONMENT_PLAN.md` · `docs/07-security/RISK_REGISTER.md` · `docs/16-progress/PRODUCT_STATUS_2026-10-19.md` · `docs/00-rules/VERIFY_COMMAND.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `ROADMAP.md` · `infra/render/host-sources.json`.
+- **Status:** Released. والهدفُ يبقى `frozen`.
+- **Change:**
+  - `purpose` قائمةٌ مغلقةٌ (`T1`، `T2`، `FLEET`). ويُعادُ التحقّقُ من اعتمادِ البندِ في `test_plan_items`، ولا يُنشَرُ إلا خدماتُ البند.
+  - `full=true` لا يوسّعُ بندًا، والأسطولُ مسارُ `FLEET` باعتمادٍ مستقلّ.
+  - `mode=deploy` يحتاجُ `isolation_evidence`.
+  - أداةُ T2 المحلّيّة.
+  - تصحيحُ مصدرِ تقريرِ المنتج، وتوضيحٌ مؤرَّخٌ في RISK-0068.
+- **Risk(s):** RISK-0068 → open (توضيح) · RISK-0069 → open (E1–E4 غيرُ متحقّقة).
+- **Evidence:** artifact `docs/12-testing/ci-evidence/2026-10-19T200000Z-clm-0635-deploy-purpose-gate/raw/validate-render-deploy-target.txt` (38/38) · `docs/12-testing/ci-evidence/2026-10-19T200000Z-clm-0635-deploy-purpose-gate/raw/t2-self-test.txt` (16/16) · `docs/12-testing/ci-evidence/2026-10-19T200000Z-clm-0635-deploy-purpose-gate/raw/t2-local-dry-run.txt` · `docs/12-testing/ci-evidence/2026-10-19T200000Z-clm-0635-deploy-purpose-gate/raw/product-status-remeasure-main.txt`.
+- **Deployment:** لا شيء. لا تشغيلَ لـ`render-deploy.yml`، ولا طلبَ نشر.
+- **Next:** قرارُ المالكِ في T2 وفي شروطِ E1–E4. [الدليل](../12-testing/ci-evidence/2026-10-19T200000Z-clm-0635-deploy-purpose-gate/README.md)
+
+# 2026-10-19 — CLM-0634 — دليلُ ما بعدَ دمجِ CLM-0632
+
+- **Work Item(s):** M6-18B (CLM-0634).
+- **Status:** Released · توثيقٌ فقط.
+- **Risk(s):** RISK-0069 → open.
+- **Evidence:** artifact `docs/12-testing/ci-evidence/2026-10-19T190000Z-clm-0634-render-test-only-merge-run/raw/runs-on-46058120.json` · `docs/12-testing/ci-evidence/2026-10-19T190000Z-clm-0634-render-test-only-merge-run/raw/render-latest-deploy-per-service.json` · CI 39225527915 success.
+- **Deployment:** لا تشغيلَ Render على الدمجِ؛ آخرُ نشرٍ 07:25:22Z قبلَ التغيير؛ 24/24 على `811341de`.
+- **Next:** قرارُ المالكِ في شروطِ العزلِ (ADR-073 D4) وبنودِ T1/T2. [الدليل](../12-testing/ci-evidence/2026-10-19T190000Z-clm-0634-render-test-only-merge-run/README.md)
+
+# 2026-10-19 — CLM-0632 — Render للاختباراتِ فقط (قرارُ المالك): إيقافُ النشرِ التلقائيِّ وتجميدُ هدفٍ غيرِ معزولٍ
+
+- **Work Item(s):** M6-18B (CLM-0632 · CLM-0633 — حجزٌ ثانٍ لـ`scripts/checks/validate-workflow-supply-chain.sh`: وصفُ `render-deploy.yml` في الجرد).
+- **Status:** Released · ADR-073 Accepted.
+- **Risk(s):** RISK-0069 → open · RISK-0068 → open · RISK-0066 → open.
+- **Evidence:** `docs/12-testing/ci-evidence/2026-10-19T180000Z-clm-0632-render-test-only/README.md` · `docs/12-testing/ci-evidence/2026-10-19T180000Z-clm-0632-render-test-only/raw/isolation-render-2026-10-19.json` · `docs/12-testing/ci-evidence/2026-10-19T180000Z-clm-0632-render-test-only/raw/validate-render-deploy-target.txt` · `docs/12-testing/ci-evidence/2026-10-19T180000Z-clm-0632-render-test-only/raw/validate-render-deploy-plan.txt`.
+- **Change:** `render-deploy.yml` بلا `push` (يدويٌّ بـ`sha`/`purpose`/`confirm=test-only`) · `deploy-target.json` `frozen` + `environment=test` + `production_database_refs` · `render-sync.py` نيّةُ نشرٍ إلزاميّةٌ + فحصُ عزلٍ قبلَ أيِّ نشرٍ · 21/21 طفرةً.
+- **Finding:** `wasla-prod-db` يربطُ 17 خدمةً بمشروعِ Supabase المسمّى إنتاجًا بالدورِ `postgres` — البيئةُ غيرُ معزولةٍ (41 صفًّا، بلا بياناتِ مستخدمين).
+- **Deployment:** لا نشرَ · لا إنفاقَ · لا تغييرَ خطّةٍ أو حساب. CLM-0622 غيرُ منشورٍ.
+- **Docs:** [ADR-073](../15-decisions/ADR-073-render-test-environment-only.md) · [خطّةُ موارد الاختبار](../08-infrastructure/RENDER_TEST_ENVIRONMENT_PLAN.md) · [حالةُ المنتج](PRODUCT_STATUS_2026-10-19.md).
+- **Next:** قرارُ المالكِ في شروطِ العزلِ (ADR-073 D4) وبنودِ T1/T2؛ G-S9 مفتوحةٌ · M0-53 In Progress · M6-18B Blocked.
+
+# 2026-10-19 — CLM-0631 — دليلُ ما بعدَ دمجِ CLM-0630
+
+- **Work Item(s):** M6-18B (CLM-0631).
+- **Status:** Released · توثيقٌ فقط.
+- **Risk(s):** RISK-0068 → open.
+- **Evidence:** artifact `docs/12-testing/ci-evidence/2026-10-19T170000Z-clm-0631-runtime-reads-merge-run/raw/render-sync-96560124.json` · `raw/render-deploy-39212686384.log` · CI 39212686359 success.
+- **Deployment:** Render 39212686384 FAIL — 1/24 مخطَّطٌ، `pipeline_minutes_exhausted`؛ الإنتاجُ على `811341de`.
+- **Next:** انتظارُ تأكيدِ المالكِ لاستعادةِ الدقائقِ ثمَّ فحصُ ما قبلَ التشغيلِ و`workflow_dispatch` بـ`cd5a8648…` و`full=false`. [الدليل](../12-testing/ci-evidence/2026-10-19T170000Z-clm-0631-runtime-reads-merge-run/README.md)
+
+# 2026-10-19 — CLM-0630 — إحكامُ حارسِ runtime-equivalent: ربطُ قراءةِ الملفِّ بوسيطِها
+
+- **Work Item(s):** M6-18B (CLM-0630).
+- **Status:** Released عندَ تحويلِ PR من مسوّدةٍ · الحجزُ دُفعَ `Active` قبلَ أيِّ تعديلٍ · مراجعةُ إحكامٍ لا إعادةُ تنفيذِ CLM-0628 ولا ادّعاءُ نشرٍ خاطئٍ.
+- **Risk(s):** RISK-0068 → open.
+- **الفجوةُ (مُعادٌ إنتاجُها على `8958621e`):** مسارٌ مطلقٌ ومركّبٌ وثابتٌ أُعيدَ توجيهُه إلى مطلقٍ — كلُّها `runtime-equivalent` صامتًا ببصمةِ الاسمِ×العددِ.
+- **التغييرُ:** `runtime_reads.py` (ماسحٌ ومُقيِّمٌ محافظٌ · بصمةُ `fn(arg) → target` · تغطيةٌ وتقادمٌ · `unresolved`/`delegated` · ربطٌ/استيرادٌ ديناميكيٌّ/إعادةُ تصديرٍ/`getBuiltinModule`/`start`) · `runtime-reads.json` (30 ملفًّا بالبصمةِ الجديدةِ) · `render_plan.py` (`unresolved_in` محافظٌ · `why`) · `render-sync.py` (`policy` في الخطّةِ أيضًا) · `validate-render-deploy-plan.sh` (35 حالةً · 36/36).
+- **Evidence:** artifact `docs/12-testing/ci-evidence/2026-10-19T160000Z-clm-0630-runtime-reads-hardening/raw/validate-render-deploy-plan.txt` · `raw/repro-before-main-8958621e.txt` · `raw/audit-real-repo.txt` · `raw/plan-only-cd5a8648.json` · `raw/preflight-cd5a8648.json` · حكمُ CI على رأسِ PR.
+- **Deployment:** لا تغييرَ صورةٍ ولا نشرَ؛ خطّةُ `cd5a8648` = 1/24 (customer-app). دمجُه يشغّلُ الخطّةَ وتفشلُ حتى استعادةِ الدقائقِ.
+- **Next:** عندَ تأكيدِ المالكِ: إعادةُ فحصِ ما قبلَ التشغيلِ ثمَّ `workflow_dispatch` بـ`cd5a8648…` و`full=false`. [الدليل](../12-testing/ci-evidence/2026-10-19T160000Z-clm-0630-runtime-reads-hardening/README.md)
+
+# 2026-10-19 — CLM-0629 — دليلُ ما بعدَ دمجِ CLM-0628
+
+- **Work Item(s):** M6-18B (CLM-0629).
+- **Status:** Released · توثيقٌ فقط.
+- **Risk(s):** RISK-0068 → open.
+- **Evidence:** artifact `docs/12-testing/ci-evidence/2026-10-19T150000Z-clm-0629-runtime-closure-merge-run/raw/render-sync-0cc96428.json` · `raw/render-deploy-39203999638.log` · CI 39203999652 success.
+- **Deployment:** Render 39203999638 FAIL — 1/24 مخطَّطٌ، `pipeline_minutes_exhausted`؛ الإنتاجُ على `811341de`.
+- **Next:** انتظارُ تأكيدِ المالكِ لاستعادةِ الدقائقِ ثمَّ `workflow_dispatch` بـ`cd5a8648…` و`full=false`. [الدليل](../12-testing/ci-evidence/2026-10-19T150000Z-clm-0629-runtime-closure-merge-run/README.md)
+
+# 2026-10-19 — CLM-0628 — إغلاقُ مدخلاتِ Docker: تكافؤٌ سلوكيٌّ مُعلَنٌ + سجلُّ قراءاتِ التشغيلِ
+
+- **Work Item(s):** M6-18B (CLM-0628).
+- **Status:** Released عندَ تحويلِ PR من مسوّدةٍ · الحجزُ دُفعَ `Active` قبلَ أيِّ تعديلٍ.
+- **Risk(s):** RISK-0068 → open (السياسةُ صُحِّحتْ؛ الاستعادةُ غيرُ مُثبَتةٍ).
+- **التغييرُ:** `scripts/deploy/runtime_reads.py` + `runtime-reads.json` (30 ملفًّا) · `render_plan.py` (`runtime-equivalent` · كلُّ البياناتِ · القراءاتُ المُعلَنةُ · `registry_for_target` مُدقَّقٌ على الهدفِ) · `render-sync.py` · `validate-render-deploy-plan.sh` (انحدارٌ خارجَ الإغلاقِ داخلَ السياقِ · 19/19) · تصحيحٌ بالإضافةِ في دليلِ CLM-0626 §7.
+- **القياسُ:** مثالٌ مضادٌّ `observability/config.ts` ← `infra/observability/targets/` غائبٌ عن مدخلاتِ CLM-0626 · لا قرارَ خاطئٌ وقعَ (الفارقُ فارغٌ) · خطّةُ `cd5a8648` تحتَ السياسةِ النهائيّةِ 1/24.
+- **Evidence:** artifact `docs/12-testing/ci-evidence/2026-10-19T140000Z-clm-0628-deploy-runtime-closure/raw/plan-only-cd5a8648.json` · `raw/validate-render-deploy-plan.txt` · `raw/audit-without-registry.txt` · حكمُ CI على رأسِ PR.
+- **Deployment:** لا تغييرَ صورةٍ؛ دمجُه يشغّلُ الخطّةَ (1/24) وتفشلُ حتى استعادةِ الدقائقِ.
+- **Next:** عندَ تأكيدِ المالكِ: `workflow_dispatch` بـ`cd5a8648…` و`full=false` ثمَّ القياسُ الحيُّ لكلِّ خدمةٍ. [الدليل](../12-testing/ci-evidence/2026-10-19T140000Z-clm-0628-deploy-runtime-closure/README.md)
+
+# 2026-10-19 — CLM-0627 — أوّلُ تشغيلٍ انتقائيٍّ على main: 1/24
+
+- **Work Item(s):** M6-18B (CLM-0627).
+- **Status:** Released عندَ فتحِ PR.
+- **Risk(s):** RISK-0068 → open (الاستعادةُ غيرُ مُثبَتةٍ).
+- **التغييرُ:** دليلُ أوّلِ تشغيلٍ · تحديثُ RISK-0068 بالإضافةِ.
+- **القياسُ:** main `787c2b9b`: WASLA CI [39197470531](https://github.com/skyosv10-art/wasla/actions/runs/39197470531) success · Render [39197470468](https://github.com/skyosv10-art/wasla/actions/runs/39197470468) خطّةُ 1/24 · نشرٌ واحدٌ `build_failed` (نفادُ الدقائقِ) · 23 equivalent · FAIL.
+- **Evidence:** run 39197470468 · artifact `docs/12-testing/ci-evidence/2026-10-19T130000Z-clm-0627-selective-deploy-first-run/raw/render-build-log-wasla-customer-app.txt`.
+- **Deployment:** وثائقُ ← خطّةٌ تعيدُ `wasla-customer-app` وحدَه وتفشلُ حتى الاستعادةِ.
+- **Next:** قرارُ المالكِ ثمَّ تشغيلٌ PASS على main لإغلاقِ نشرِ CLM-0622 وRISK-0068. [الدليل](../12-testing/ci-evidence/2026-10-19T130000Z-clm-0627-selective-deploy-first-run/README.md)
+
+# 2026-10-19 — CLM-0626 — نشرُ Render الانتقائيُّ: الحيُّ ← المستهدَفُ (سببُ تكرارِ RISK-0068)
+
+- **Work Item(s):** M6-18B (CLM-0626).
+- **Status:** Released عندَ فتحِ PR · الحجزُ دُفعَ `Active` قبلَ أيِّ تعديلٍ.
+- **Risk(s):** RISK-0068 → open (السببُ عولِجَ في الشفرةِ؛ الاستعادةُ بقرارِ المالكِ ثمَّ قياسٌ على main).
+- **التغييرُ:** `scripts/deploy/render_plan.py` (جديدٌ) · `render-sync.py` (يخطّطُ لكلِّ خدمةٍ ويُنشرُ `deploy` وحدَه · `--plan-only` · `--all` · `WASLA_SERVICE` بمفتاحِه) · `render-deploy.yml` (`fetch-depth: 0` · بلا `paths-ignore` · مدخلُ `full`) · `validate-render-deploy-plan.sh` (جديدٌ، إلزاميٌّ في `verify.sh`) · VERIFY_COMMAND.
+- **القياسُ:** خطّةٌ حيّةٌ للقراءةِ فقط على `c5ea8a34`: نشرُ 1/24 (`wasla-customer-app` ← #772) · الفحصُ ✓ · 11/11 طفرةً.
+- **Evidence:** artifact `docs/12-testing/ci-evidence/2026-10-19T120000Z-clm-0626-render-selective-deploy/raw/plan-only-c5ea8a34.json` (خطّةٌ حيّةٌ للقراءةِ فقط) · `raw/validate-render-deploy-plan.txt` · run سابقٌ [39186018063](https://github.com/skyosv10-art/wasla/actions/runs/39186018063) (FAIL 24/24 — السببُ) · حكمُ CI على رأسِ PR بعدَ الدفعِ.
+- **Deployment:** أوّلُ تشغيلٍ بعدَ الدمجِ ينشرُ `wasla-customer-app` وحدَه — وسيفشلُ بنفادِ الدقائقِ حتى قرارِ المالكِ.
+- **Next:** قرارُ المالكِ ثمَّ قياسُ `render-deploy.yml` على main (`live=`) لإغلاقِ نشرِ CLM-0622 وRISK-0068. [الدليل](../12-testing/ci-evidence/2026-10-19T120000Z-clm-0626-render-selective-deploy/README.md)
+
+# 2026-10-19 — CLM-0625 — إعادةُ توليدِ BASELINE (risks_not_closed 23→24)
+
+- **Work Item(s):** M0-53 (CLM-0625) — حجزٌ ثانٍ على فرعِ CLM-0624 (WORK_CLAIM_RULE §6).
+- **Status:** Released عندَ فتحِ PR.
+- **Risk(s):** RISK-0068 → open (سببُ الزيادةِ؛ لا انحدارَ).
+- **التغييرُ:** `docs/12-testing/BASELINE.json` و`docs/12-testing/BASELINE.txt` عبرَ `verify.sh` ← `baseline.sh --log` (سجلٌّ داخلَ الشجرةِ) ← `validate-baseline.sh` ✓ · شجرةٌ نظيفةٌ.
+- **Deployment:** وثائقُ فقط ← لا نشرَ.
+- **Next:** —. [القرارُ](../12-testing/ci-evidence/2026-10-19T100000Z-clm-0624-render-minutes-exhausted/README.md) §5
+
+# 2026-10-19 — CLM-0624 — Render: نفادُ دقائقِ البناءِ (RISK-0068) · CLM-0622 غيرُ منشورٍ
+
+- **Work Item(s):** M0-53 (CLM-0624).
+- **Status:** Released عندَ فتحِ PR · **حاجزٌ فعليٌّ بيدِ المالكِ (فوترةٌ)**.
+- **Risk(s):** RISK-0068 → open (جديدٌ — تكرارٌ لـRISK-0063 على المساحةِ الجديدةِ؛ RISK-0063 يبقى closed).
+- **القياسُ:** main `c386a98e`: WASLA CI [39186018083](https://github.com/skyosv10-art/wasla/actions/runs/39186018083) success · freshness success · Render [39186018063](https://github.com/skyosv10-art/wasla/actions/runs/39186018063) FAIL 24/24 `build_failed` `live=811341d` · سجلُّ البناءِ «run out of build pipeline minutes» · 897 نشرًا منذ 2026-10-01.
+- **التغييرُ:** RISK-0068 · ملاحظةُ G-S9.1 (CI ✓ · غيرُ منشورٍ) · الدليلُ مع raw (بلا أسرارٍ).
+- **Deployment:** وثائقُ فقط ← لا نشرَ (ولا يمكنُ).
+- **Next:** قرارُ المالكِ (حدُّ الإنفاقِ · الخطّةُ · انتظارُ التجدّدِ) ثمَّ إعادةُ `render-deploy.yml` وتسجيلُ `live=` · G-S9 الأمُّ مفتوحةٌ. [الدليل](../12-testing/ci-evidence/2026-10-19T100000Z-clm-0624-render-minutes-exhausted/README.md)
+
+# 2026-10-19 — CLM-0623 — إغلاقُ G-S9.14 بدليلِ main
+
+- **Work Item(s):** M0-53 (CLM-0623) — إغلاقُ G-S9.14 وحدَه (RQ-CMA-27 — اسمُ المسارِ).
+- **Status:** Released عندَ فتحِ PR (فرعُ CLM-0622 نفسُه — حجزٌ ثانٍ منفصلٌ) · G-S9 الأمُّ مفتوحةٌ · لا نسبةَ اكتمالٍ.
+- **Risk(s):** none — (سببُ none:) وثائقُ فقط؛ الحكمُ يُحيلُ إلى #771 وCI ناجحٍ على `56e5d733`؛ نصُّ «الحكمُ بعدَ CI» حُوِّلَ بالإضافةِ.
+- **التغييرُ:** `REQUIREMENTS_REGISTRY.md` — G-S9.14 مُغلقٌ مع إبقاءِ حجبِ الحدِّ صريحًا · سجلُّ الإغلاقِ.
+- **القياسُ:** WASLA CI [39184072763](https://github.com/skyosv10-art/wasla/actions/runs/39184072763) success · freshness [39184072751](https://github.com/skyosv10-art/wasla/actions/runs/39184072751) success · لا نشرَ (وثائقُ).
+- **Deployment:** وثائقُ فقط ← لا نشرَ.
+- **Next:** G-S9.2/G-S9.3 عقدٌ أوّلًا · G-S9.15 قرارُ نطاقٍ. [الدليل](../12-testing/ci-evidence/2026-10-19T090000Z-clm-0623-gs9-14-closure/README.md)
+
+# 2026-10-19 — CLM-0622 — تصحيحُ G-S9.1: طلبٌ واحدٌ · خطأٌ مرئيٌّ · label بعدَ التحريرِ
+
+- **Work Item(s):** M0-53 (CLM-0622) — تصحيحُ G-S9.1 (RQ-CMA-15) بالإضافةِ.
+- **Status:** Released عندَ فتحِ PR · **ملاحظةٌ تدقيقيّةٌ:** الشفرةُ أُعِدَّت محليًّا قبلَ كتابةِ سطرِ الحجزِ (قبلَ الدفعِ) — مسجَّلةٌ في الدليلِ §4.
+- **Risk(s):** none — (سببُ none:) سلوكُ شاشةٍ خلفَ حدٍّ مغلقٍ؛ لا عقدَ ولا حدَّ؛ أربعُ طفراتٍ مُلتقَطةٌ منها عكسيّةٌ.
+- **التغييرُ:** `SavedPlacePicker.tsx` (حارسُ المتجرِ الحيِّ · `role=alert` + إعادةُ محاولةٍ) · `RideOrder.tsx`/`DeliveryOrder.tsx` (مسحُ label المكانِ عندَ التحريرِ اليدويِّ فقط) · i18n `saved_places_load_error` ×3.
+- **القياسُ:** قبلَ: GET×2 · label باقٍ · خطأٌ صامتٌ ← بعدَ: vitest 101/101 · tsc 0 · 4/4 طفراتٍ.
+- **Deployment:** `apps/**` ← render-deploy بعدَ الدمجِ (حدٌّ مغلقٌ).
+- **Next:** الحكمُ بعدَ CI ونشرِ main · G-S9 الأمُّ مفتوحةٌ. [الدليل](../12-testing/ci-evidence/2026-10-19T080000Z-clm-0622-gs9-1-picker-corrections/README.md)
+
+# 2026-10-19 — CLM-0621 — G-S9.14: تصحيحُ تقادمِ CMS §8 (مسارُ marketplace)
+
+- **Work Item(s):** M0-53 (CLM-0621) — G-S9.14 وحدَه (RQ-CMA-27).
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ.
+- **Risk(s):** none — (سببُ none:) وثائقُ فقط؛ خمسةُ مصادرَ منفَّذةٍ (العقدُ · الخدمةُ · التوجيهُ · التطبيقُ · الحدُّ) متّفقةٌ على `/stores` و§8 وحدَها متقادمةٌ؛ النصُّ السابقُ مقتبسٌ لا ممحوٌّ؛ لا تغييرَ لقائمةِ السماحِ ولا `production_open`.
+- **التغييرُ:** `CUSTOMER_MINI_APP_SPEC.md` §8 ← `GET /stores` · `GET /stores/{storeSlug}/products` مع حجبِ الحدِّ (G-ENF(marketplace) · E-20) · السجلُّ: ملاحظتا G-S9.14/RQ-CMA-27.
+- **القياسُ:** جدولُ المصادرِ الستّةِ في الدليلِ §1 · فحوصُ الحوكمةِ على الأساسِ.
+- **Deployment:** وثائقُ فقط ← لا نشرَ.
+- **Next:** إغلاقُ G-S9.14 بعدَ CI على main · اكتشافٌ مقيسٌ في G-S9.1 (طلبا تحميلٍ · label بعدَ التحريرِ اليدويِّ · لا حالةَ خطأٍ مرئيّةً) يُحجَزُ مستقلًّا (CLM-0622). [الدليل](../12-testing/ci-evidence/2026-10-19T060000Z-clm-0621-gs9-14-spec-stores-path/README.md)
+
+# 2026-10-18 — CLM-0620 — إغلاقُ G-S9.1 بدليلِ main
+
+- **Work Item(s):** M0-53 (CLM-0620) — إغلاقُ G-S9.1 وحدَه (RQ-CMA-15).
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · G-S9 الأمُّ وG-S9.15 مفتوحتانِ · لا نسبةَ اكتمالٍ.
+- **Risk(s):** none — (سببُ none:) وثائقُ فقط؛ الحكمُ يُحيلُ إلى #769 المدموجِ بالغلافِ وCI ناجحٍ ونشرٍ PASS على `811341de`؛ النصُّ السابقُ (حكمُ CLM-0618) مُشطَبٌ بالإضافةِ لا ممحوٌّ.
+- **التغييرُ:** `docs/01-product/REQUIREMENTS_REGISTRY.md` — G-S9.1 مُغلقٌ · RQ-CMA-15 (فرعُ «اسمِ مكانٍ») مُغلقٌ · ملاحظتا G-S9 الأمِّ بلا تغييرٍ · سجلُّ الإغلاقِ في `docs/12-testing/ci-evidence/`.
+- **القياسُ:** WASLA CI على main [39159736345](https://github.com/skyosv10-art/wasla/actions/runs/39159736345) success (42/42 — db-integration customer ✓) · Roadmap freshness [39159736277](https://github.com/skyosv10-art/wasla/actions/runs/39159736277) ✓ · Render deploy [39159736279](https://github.com/skyosv10-art/wasla/actions/runs/39159736279) PASS.
+- **Deployment:** وثائقُ فقط ← لا نشرَ.
+- **Next:** G-S9.2/G-S9.3 عقدٌ أولًا (geography)؛ G-S9.15 قرارُ نطاقٍ. [الدليل](../12-testing/ci-evidence/2026-10-18T203000Z-clm-0620-gs9-1-closure/README.md)
+
+# 2026-10-18 — CLM-0619 — M3-08: مزامنةُ أرقامِ عقدِ المسارِ (76→77)
+
+- **Work Item(s):** M3-08 (CLM-0619) — تحديثُ الأرقامِ المنشورةِ في وثيقةِ عقدِ المسارِ.
+- **Status:** Released عندَ فتحِ PR (نفسُ فرعِ CLM-0618) · الحجزُ `Active` قبلَ أيِّ تعديلٍ.
+- **Risk(s):** none — (سببُ none:) وثيقةُ قياسٍ فقط؛ البابُ الخامسُ من `validate-app-api-routes.sh` يُلزمُ تطابقَ المنشورِ مع المقيسِ؛ نداءُ `GET /customers/:id/places` الجديدُ في `SavedPlacePicker` (CLM-0618) رفعَ القياسَ 76→77.
+- **التغييرُ:** `docs/12-testing/APP_API_ROUTES.md` — `APP_CALL_SITES`/`MATCHED_CALL_SITES` 76→77 · `DISTINCT_APP_CALLS` = 69 (المسارُ نفسُه مُسجَّلٌ سابقًا) · `Last Updated` ← CLM-0618/0619.
+- **القياسُ:** `validate-app-api-routes.sh` ✓ (نداءاتٌ 77 · مطابِقةٌ 77 · فجواتٌ 0) — محليًّا وفي CI.
+- **Deployment:** وثائقُ فقط ← لا نشرَ.
+- **Next:** لا شيءَ مستقلًّا — حكمُ CLM-0618 بعدَ CI على main.
+
+# 2026-10-18 — CLM-0618 — G-S9.1: منتقي «اسمِ مكانٍ» محفوظٍ للالتقاطِ/الوصولِ
+
+- **Work Item(s):** M0-53 (CLM-0618) — G-S9.1 وحدَه (RQ-CMA-15).
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ.
+- **Risk(s):** none — (سببُ none:) شاشةٌ تقرأُ عقدًا قائمًا (`GET /customers/:id/places` — G-S7) وتملأُ حقولَ نموذجٍ قائمةً؛ `source=saved_place` معلَنٌ في عقدِ التوقفِ أصلًا؛ لا تغييرَ عقدٍ ولا حدٍّ ولا `production_open`؛ مغطًّى بثلاثِ طفراتٍ مُلتقَطةٍ.
+- **التغييرُ:** `apps/customer-mini-app` — مكوّنُ `SavedPlacePicker` جديدٌ (متجرُ الأماكنِ المشتركُ · إعادةُ المحاولةِ بعدَ فشلٍ) · `RideOrder.tsx`/`DeliveryOrder.tsx`: منتقيانِ (التقاط/وصول) يملآنِ zone_id وlabel ويضبطانِ `source=saved_place`؛ التحريرُ اليدويُّ للمنطقةِ يعيدُ `manual_zone` · `store/order-form.ts`: `pickupSource`/`dropoffSource` (افتراضيٌّ `manual_zone`) يمرّانِ إلى `buildOrderRequest` · i18n بثلاثِ لغاتٍ · السجلُّ: ملاحظتا G-S9.1/RQ-CMA-15.
+- **القياسُ:** customer vitest 96/96 (90→96: 6 اختباراتٍ جديدةً) · tsc 0 · 3 طفراتٍ مُلتقَطةٍ (حذفُ `source=saved_place` · تثبيتُ `manual_zone` · حذفُ تعبئةِ label) · لا ملفَّ اختبارٍ جديدًا (الاختباراتُ داخلَ ملفَّينِ قائمَينِ) · Playwright حكمُهُ من CI.
+- **Deployment:** `apps/**` ← render-deploy بعدَ الدمجِ (التطبيقُ خلفَ حدٍّ مغلقٍ `production_open=false`).
+- **Next:** إغلاقُ G-S9.1 وRQ-CMA-15 بعدَ CI على main · G-S9 الأمُّ مفتوحةٌ. [الدليل](../12-testing/ci-evidence/2026-10-18T193000Z-clm-0618-gs9-1-saved-place-picker/README.md)
+
+# 2026-10-18 — CLM-0617 — إغلاقُ G-S9.10 بدليلِ main
+
+- **Work Item(s):** M0-53 (CLM-0617) — إغلاقُ G-S9.10 وحدَه (RQ-CMA-39).
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · G-S9 الأمُّ وG-S9.15 مفتوحتانِ · لا نسبةَ اكتمالٍ.
+- **Risk(s):** none — (سببُ none:) وثائقُ فقط؛ الحكمُ يُحيلُ إلى #767 المدموجِ بالغلافِ وCI ناجحٍ ونشرٍ PASS على `22bbaa98`؛ النصُّ السابقُ مشطوبٌ لا ممحوٌّ.
+- **التغييرُ:** `docs/01-product/REQUIREMENTS_REGISTRY.md` — G-S9.10 مُغلقٌ · RQ-CMA-39 TRACE-MAPPED · ملاحظةُ G-S9 الأمِّ · سجلُّ الإغلاقِ في `docs/12-testing/ci-evidence/`.
+- **القياسُ:** WASLA CI 39141579846 success 41/41 (db-integration customer ✓) · Roadmap freshness 39141579835 · Render 39141579777 PASS 24 `live=22bbaa9`.
+- **Deployment:** وثائقُ فقط ← لا نشرَ.
+- **Next:** G-S9.15 قرارُ نطاقٍ؛ بقيّةُ فروعِ G-S9 بدليلِها. [الدليل](../12-testing/ci-evidence/2026-10-18T150000Z-clm-0617-gs9-10-closure/README.md)
+
+# 2026-10-18 — CLM-0616 — G-S9.10: MyOrders تطلبُ آخرَ خمسةِ طلباتٍ (limit=5)
+
+- **Work Item(s):** M0-53 (CLM-0616) — G-S9.10 وحدَه (RQ-CMA-39).
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ.
+- **Risk(s):** none — (سببُ none:) الشاشةُ ترسلُ معاملًا يعلنُه العقدُ ضمنَ حدودِه (5 ∈ 1..50)؛ لا تغييرَ عقدٍ ولا حدٍّ ولا `production_open`؛ مغطًّى بأربعِ طفراتٍ.
+- **التغييرُ:** `apps/customer-mini-app` — `MyOrders.tsx` يرسلُ `limit=5` في التحميلِ الأوّليِّ وعندَ تغييرِ المرشّحِ وإعادتِه، والمرشّحُ محفوظٌ · `services/customers` — اختبارُ HTTP حقيقيٌّ (7 طلباتٍ ← 5 أحدثُها) · السجلُّ: ملاحظتا G-S9.10/RQ-CMA-39 وصفُّ G-S9.15 (اختلافُ `status` — مفتوحٌ).
+- **القياسُ:** customer vitest 90/90 · Playwright 37/37 · customers 152/152 · tsc 0 · 4 طفراتٍ مُلتقَطةٍ · test_files_tracked 578 بلا تغييرٍ.
+- **Deployment:** `apps/**` ← render-deploy بعدَ الدمجِ (خلفَ حدٍّ مغلقٍ).
+- **Next:** إغلاقُ G-S9.10 وRQ-CMA-39 بعدَ CI على main · G-S9 الأمُّ مفتوحةٌ. [الدليل](../12-testing/ci-evidence/2026-10-18T140000Z-clm-0616-gs9-10-myorders-last-five/README.md)
+
+# 2026-10-18 — CLM-0615 — سجلُّ الإغلاقِ — أحكامُ M0-53 للشرائحِ المدموجةِ
+
+- **Work Item(s):** M0-53 (CLM-0615) — أحكامُ السجلِّ المؤرَّخةُ لـG-T1 · G-S6 · G-S7 · G-S8 · G-S11 · G-S12.7/UAT-08 · G-S10.1/2 · G-S13.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · **M0-53 لا يُنقَلُ إلى Completed ولا تُحسَبُ نسبةُ اكتمالٍ.**
+- **Risk(s):** none — (سببُ none:) وثائقُ فقط؛ كلُّ حكمٍ يُحيلُ إلى PR مدموجٍ بالغلافِ بلا `--admin` وWASLA CI ناجحٍ على SHA الدمجِ في main؛ النصُّ السابقُ مشطوبٌ لا ممحوٌّ.
+- **التغييرُ:** `docs/01-product/REQUIREMENTS_REGISTRY.md` — 9 صفوفِ فجواتٍ و11 صفَّ متطلّباتٍ بحكمٍ مؤرَّخٍ (الحالةُ السابقةُ مشطوبةٌ) + ملاحظةُ G-S10 الأمِّ · سجلُّ الإغلاقِ في `docs/12-testing/ci-evidence/`.
+- **القياسُ:** 8 SHAs دمجٍ · 8 تشغيلاتِ WASLA CI ناجحةٍ على main · النشرُ PASS لكلِّ SHA يمسُّ `apps/**`/`services/**`؛ G-S7 وG-S11 وUAT-08 كلٌّ بقرارٍ موثَّقٍ (ADR-072 D1/D2 · تفويضُ CLM-0608).
+- **Deployment:** وثائقُ فقط ← لا نشرَ.
+- **Next:** G-S9.x وG-S12.x وG-S10.3/4 شرائحُ مستقلّةٌ أو قراراتُ مالكٍ؛ G4 · G-S2 · G7 قراراتُ مالكٍ؛ G6 عائقُ بيئةٍ؛ #730 HOLD. [الدليل](../12-testing/ci-evidence/2026-10-18T130000Z-clm-0615-m0-53-closure-verdicts/README.md)
+
+# 2026-10-18 — CLM-0614 — G-S13: «أرباحي» للمكتملةِ فقط · period وفقَ العقدِ
+
+- **Work Item(s):** M0-53 (CLM-0614) — G-S13.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · مكدَّسٌ على CLM-0613.
+- **Risk(s):** none — (سببُ none:) الخدمةُ صارتْ تطابقُ عقدَها المنشورَ (400 معلَنٌ)، والمستهلكُ الوحيدُ (تطبيقُ السائقِ) يرسلُ دائمًا قيمةً صالحةً؛ مغطًّى بطفراتٍ.
+- **التغييرُ:** `services/orders` — رفضُ `period` الغائبِ/الخارجِ عن التعدادِ (400) بعدَ الملكيّةِ + 4 اختباراتٍ (التعدادُ · الترتيبُ · نوافذُ الفترةِ · الملغى) · `apps/driver-mini-app` — المكتملةُ فقط للقائمةِ والعدِّ والمجموعِ · النداءُ `?period=` وحدَه · اختبارُ وحدةٍ وE2E.
+- **القياسُ:** orders 664/664 · driver vitest 159/159 · Playwright 38/38 · tsc 0 · 3 طفراتٍ مُلتقَطةٍ.
+- **الأساسُ (BASELINE):** `test_files_tracked` 577 → **578** — ملفُّ اختبارٍ جديدٌ (`apps/driver-mini-app/e2e/earnings-filter.spec.ts`)؛ أُعيدَ التوليدُ بـ`scripts/baseline.sh` من سجلِّ `verify.sh` (أخفقَ على الأساسِ المتقادمِ وحدَه) — BASELINE_FORMAT §5.
+- **Deployment:** `apps/**` و`services/**` ← render-deploy بعدَ الدمجِ.
+- **Next:** إغلاقُ G-S13 وRQ-DMA-33 بعدَ CI على main. [الدليل](../12-testing/ci-evidence/2026-10-18T110000Z-clm-0614-gs13-earnings-filter/README.md)
+
+# 2026-10-18 — CLM-0613 — G-S10: توفّرُ السائقِ وأهليّتُه ومسارُ غيرِ المؤهَّلِ
+
+- **Work Item(s):** M0-53 (CLM-0613) — G-S10.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · مكدَّسٌ على CLM-0612.
+- **Risk(s):** none — (سببُ none:) واجهةٌ تنادي مساراتٍ قائمةً مختبَرةً، واختباراتٌ جديدةٌ للخدمةِ بلا تغييرِ شفرتِها؛ الحدُّ لم يُوسَّعْ.
+- **التغييرُ:** `apps/driver-mini-app` — Home (تبديلُ التوفّرِ available↔offline وفقَ العقدِ · حكمُ الأهليّةِ · غيرُ المؤهَّلِ/الموقوفُ بكلِّ الأسبابِ ورابطِ الوثائقِ) · Profile (صفُّ الأهليّةِ) · store/types/i18n · `services/drivers` — اختبارُ حدودِ الصلاحيّةِ (403/404/400 بلا تغييرِ بياناتٍ) · ملاحظةٌ مؤرَّخةٌ تحتَ DMS L77.
+- **القياسُ:** driver vitest 158/158 · Playwright 37/37 · drivers 224/224 · tsc 0 · 4 طفراتٍ مُلتقَطةٍ. حاجزانِ: مدخلا الحدِّ رفضَهما الحارسُ 28 (EA-SNAPSHOT-NEW — قرارٌ موثَّقٌ) فأُعيدَ الملفُّ · المهامُ النشطةُ بلا عقدٍ.
+- **الأساسُ (BASELINE):** `test_files_tracked` 575 → **577** — ملفّا اختبارٍ جديدانِ (`services/drivers/src/__tests__/availability-eligibility-boundaries.test.ts` و`apps/driver-mini-app/e2e/home-availability.spec.ts`)؛ أُعيدَ التوليدُ بـ`scripts/baseline.sh` من سجلِّ `verify.sh` (أخفقَ على الأساسِ المتقادمِ وحدَه) — BASELINE_FORMAT §5.
+- **Deployment:** `apps/**` و`services/**` ← render-deploy بعدَ الدمجِ.
+- **Next:** G-S10.3 شريحةُ عقدٍ · G-S10.4 قرارٌ موثَّقٌ. [الدليل](../12-testing/ci-evidence/2026-10-18T103000Z-clm-0613-gs10-driver-availability-eligibility/README.md)
+
+# 2026-10-18 — CLM-0612 — G-S12: تفكيكُ فجوةِ الإدارةِ إلى نطاقاتٍ قابلةٍ للتحقّقِ
+
+- **Work Item(s):** M0-53 (CLM-0612) — G-S12 تفكيكٌ بلا تنفيذٍ.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · مكدَّسٌ على CLM-0611.
+- **Risk(s):** none — (سببُ none:) وثائقُ تصنيفٍ فقط؛ لا كودَ ولا مواصفةَ ولا سرَّ.
+- **التغييرُ:** `docs/01-product/REQUIREMENTS_REGISTRY.md` — G-S12 ← G-S12.1–G-S12.7 (الدخولُ والصلاحيّاتُ · Dashboard · قائمةُ الطلباتِ · تفاصيلُ السائقِ · التصديرُ · الفريقُ · 405) + إحالاتٌ مؤرَّخةٌ على 9 صفوفٍ.
+- **القياسُ:** لا إصدارَ جلسةِ إدارةٍ (identity: customer-bot/driver-bot فقط) · لا حدَّ إدارةٍ · مساراتُ تفاصيلِ السائقِ `ownerScoped` · لا `GET /orders` ولا `/auth/token` ولا `/me` رغمَ ادّعاءِ AMS §7 · لا تصديرَ · لا مصدرَ أدوارٍ.
+- **Deployment:** وثائقُ ← لا نشرَ.
+- **Next:** G-S12.1 وG-S12.6 قرارُ مالكٍ (ADR-069 المرحلةُ 4) · أعمالُ العقدِ ممكنةٌ قبلَه · تصحيحُ AMS §7 شريحةٌ مستقلّةٌ. [الدليل](../12-testing/ci-evidence/2026-10-18T100000Z-clm-0612-gs12-admin-decomposition/README.md)
+
+# 2026-10-18 — CLM-0611 — G-S9: تفكيكُ فجوةِ العميلِ إلى متطلّباتٍ مستقلّةٍ (شاشةٌ/عقدٌ · الآنَ/مؤجَّلٌ)
+
+- **Work Item(s):** M0-53 (CLM-0611) — G-S9 تفكيكٌ بلا تنفيذٍ.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · مكدَّسٌ على CLM-0610.
+- **Risk(s):** none — (سببُ none:) وثائقُ تصنيفٍ فقط؛ لا كودَ ولا مواصفةَ تتغيّرُ.
+- **التغييرُ:** `docs/01-product/REQUIREMENTS_REGISTRY.md` — G-S9 ← 14 فرعًا G-S9.1–G-S9.14 (4 الآنَ-شاشةٌ · 8 الآنَ-عقدٌ أوّلًا · مؤجَّلٌ صراحةً: WebSocket والخريطةُ المتقدّمةُ · قرارا مصدرٍ: الخريطةُ الأساسيّةُ وقيمُ نوعِ الطردِ · تقادمُ §8) + إحالاتٌ مؤرَّخةٌ على 11 صفًّا.
+- **القياسُ:** نصُّ CMS بالسطرِ · مساراتُ الخدماتِ ومعاملاتُها · قائمةُ سماحِ الحدِّ (كلُّها `production_open=false`) · اكتشافٌ: `GET …/order-requests/:id` غيرُ مُدرَجٍ في الحدِّ.
+- **Deployment:** وثائقُ ← لا نشرَ.
+- **Next:** شرائحُ «الآنَ-شاشةٌ» مستقلّةً · قرارا المصدرِ للمالكِ. [الدليل](../12-testing/ci-evidence/2026-10-18T093000Z-clm-0611-gs9-customer-decomposition/README.md)
+
+# 2026-10-18 — CLM-0610 — G-S8: دورةُ حياةِ الجلسةِ في العميلِ والسائقِ
+
+- **Work Item(s):** M0-53 (CLM-0610) — G-S8 (اختباراتٌ مباشرةٌ لتهيئةِ الجلسةِ، الانتهاءُ، الفشلُ، الإعادةُ، منعُ الحلقاتِ والتحميلِ الدائمِ).
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · مكدَّسٌ على CLM-0609.
+- **Risk(s):** none — (سببُ none:) تغييرُ سلوكِ الواجهةِ عندَ غيابِ الجلسةِ فقط، مغطًّى باختباراتٍ مباشرةٍ وطفراتٍ؛ لا أسرارَ ولا تخزينَ محليًّا ولا عقدَ خادمٍ متغيّرٌ.
+- **التغييرُ:** `apps/customer-mini-app` و`apps/driver-mini-app` — store/session.ts (`initStatus`/`initError`) · session-init.ts (لا يرفعُ · طلبٌ واحدٌ · `startSessionLifecycle` بمؤقّتِ انتهاءٍ وإعادةٍ محدودةٍ 3/5د · لا إعادةَ بعدَ فشلٍ أو خروجٍ · `retrySession`) · App.tsx (شاشةُ فشلٍ بإعادةٍ) · main.tsx · i18n. اختباراتٌ: session-init.test.ts (12) + App-session.test.tsx (3) لكلٍّ + E2E فشل→إعادة→تعافٍ.
+- **القياسُ:** العميلُ vitest 89/89 · Playwright 37/37 — السائقُ 147/147 · 35/35 · tsc 0 · 4 طفراتٍ مقبوضةٍ.
+- **حدودٌ:** fetch وTelegram محاكيانِ — لا تكاملَ حيٌّ مع edge/identity.
+- **الأساسُ (BASELINE):** `test_files_tracked` 571 → **575** — أربعةُ ملفّاتِ اختبارٍ جديدةٌ (`session-init.test.ts` و`App-session.test.tsx` في التطبيقينِ)؛ أُعيدَ التوليدُ بـ`scripts/baseline.sh` من سجلِّ `verify.sh` (أخفقَ على الأساسِ المتقادمِ وحدَه) — BASELINE_FORMAT §5.
+- **Deployment:** `apps/**` ← render-deploy يعملُ بعدَ الدمجِ.
+- **Next:** إغلاقُ G-S8/RQ-CMA-13/RQ-DMA-9/RQ-DMA-12 بعدَ CI على main. [الدليل](../12-testing/ci-evidence/2026-10-18T090000Z-clm-0610-gs8-session-lifecycle/README.md)
+
+# 2026-10-18 — CLM-0609 — G-S7: Home العميلِ 7 عناصرَ · الأماكنُ من Profile (ADR-072 D1)
+
+- **Work Item(s):** M0-53 (CLM-0609) — تنفيذُ قرارِ المالكِ ADR-072 D1.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · مكدَّسٌ على CLM-0608.
+- **Risk(s):** none — (سببُ none:) تغييرُ تنقّلٍ في الواجهةِ بقرارِ مالكٍ؛ لا عقدَ ولا خدمةَ.
+- **التغييرُ:** `apps/customer-mini-app` — Home.tsx (7 عناصرَ بترتيبِ المصدرِ) · Profile.tsx (قسمُ الأماكنِ برابطِ `#/places`) · اختباراتٌ: Home.test.tsx · Profile.test.tsx · e2e/navigation.spec.ts · e2e/places-flow.spec.ts.
+- **القياسُ:** vitest 74/74 · Playwright 36/36 · tsc 0 · طفرتانِ مقبوضتانِ.
+- **حدودٌ:** Playwright محاكًى — لا تكاملَ حيٌّ.
+- **Deployment:** `apps/**` ← render-deploy يعملُ بعدَ الدمجِ.
+- **Next:** إغلاقُ G-S7/RQ-CMA-7/RQ-CMA-54 بعدَ CI على main. [الدليل](../12-testing/ci-evidence/2026-10-18T083000Z-clm-0609-gs7-home-seven-places-profile/README.md)
+
+# 2026-10-18 — CLM-0608 — G-S11: عقدُ أرباحِ السائقِ — قياسٌ ثمَّ تحديثُ المواصفةِ · G-S13 جديدةٌ
+
+- **Work Item(s):** M0-53 (CLM-0608) — G-S11.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · مكدَّسٌ على CLM-0607.
+- **Risk(s):** none — (سببُ none:) وثائقُ ومواصفةٌ فقط؛ لا كودَ.
+- **القياسُ:** `GET /orders/drivers/:driverPublicId/jobs` منشورٌ (`listDriverJobs`) · في مصفوفةِ التفويضِ · مقيَّدٌ بالمالكِ (404) · 5 اختباراتِ خدمةٍ · `/orders/lookup` لا يقبلُ إلا `order_public_id` → المسارُ المنفَّذُ هو المعتمدُ.
+- **التغييرُ:** DMS §4.5 و§5 بإضافةٍ مؤرَّخةٍ (النصُّ السابقُ محفوظٌ) · ملاحظاتٌ على RQ-DMA-33/G-S11.
+- **G-S13 (جديدةٌ):** مِسبارٌ على harness الخدمةِ: `status=completed` يُتجاهَلُ فتصلُ الملغاةُ و`computeSummary` يعدُّها · `period` خارجَ enum → 200.
+- **Deployment:** none — وثائقُ فقط (هذا الـPR).
+- **Next:** إغلاقُ G-S11 بعدَ CI على main · شريحةُ G-S13. [الدليل](../12-testing/ci-evidence/2026-10-18T080000Z-clm-0608-gs11-driver-earnings-contract/README.md)
+
+# 2026-10-18 — CLM-0607 — G-S6: README خدمةِ التفاوضِ يطابقُ HTTP الفعليَّ
+
+- **Work Item(s):** M0-53 (CLM-0607) — G-S6.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · مكدَّسٌ على CLM-0606.
+- **Risk(s):** none — (سببُ none:) وثائقُ فقط.
+- **التغييرُ:** `services/negotiations/README.md` — الحالةُ (HTTP على 8091 · 13 مسارًا) · جدولُ HTTP بالصلاحيّاتِ · عددُ الاختباراتِ المقيسُ 260/15 · إزالةُ عددِ تكاملٍ غيرِ مقيسٍ · «ما بقي» بإضافةٍ مؤرَّخةٍ.
+- **التحقّقُ:** تطابقُ 13/13 مسارًا و0 اختلافِ صلاحيّةٍ مع SERVICE_AUTH_ENFORCEMENT.
+- **Deployment:** none — `**/*.md` ← paths-ignore (هذا الـPR وحدَه؛ ما تحتَه في المكدّسِ يُدمَجُ أوّلًا).
+- **Next:** إغلاقُ G-S6 بعدَ CI على main. [الدليل](../12-testing/ci-evidence/2026-10-18T073000Z-clm-0607-gs6-negotiations-readme/README.md)
+
+# 2026-10-18 — CLM-0606 — G-T1: أسماءُ ثلاثةِ اختباراتٍ تطابقُ توكيداتِها
+
+- **Work Item(s):** M0-53 (CLM-0606) — G-T1.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ · مكدَّسٌ على CLM-0605.
+- **Risk(s):** none — (سببُ none:) أسماءُ اختباراتٍ فقط.
+- **التغييرُ:** 3 أسطرِ أسماءٍ — `apps/customer-mini-app` (Home.test.tsx) · `apps/driver-mini-app` (JobDetail.test.tsx) · `apps/admin-portal` (e2e/audit-rbac.spec.ts) — لا توكيدَ ولا محدِّدَ تغيّرَ.
+- **القياسُ:** vitest 72/132/101 مطابقٌ · Playwright audit-rbac 9/9.
+- **Deployment:** `apps/**` غيرُ مستثنًى ← render-deploy يعملُ بعدَ الدمجِ (اختباراتٌ فقط؛ لا تغييرَ تشغيليٌّ).
+- **Next:** إغلاقُ G-T1 بعدَ CI على main. [الدليل](../12-testing/ci-evidence/2026-10-18T070000Z-clm-0606-gt1-test-names/README.md)
+
+# 2026-10-18 — CLM-0605 — UAT-08: رفضُ تعديلِ سجلِّ التدقيقِ بـ405 + Allow (ADR-072 D2)
+
+- **Work Item(s):** M0-53 (CLM-0605) — تنفيذُ قرارِ المالكِ ADR-072 D2.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ (الأساسُ `343cf8a2` · CLM-0605 غيرُ مستعملٍ).
+- **Risk(s):** none — (سببُ none: لا خطرَ مسجَّلٌ يتأثّرُ؛) سلوكُ رفضٍ جديدٌ على طلباتٍ غيرِ مطابِقةٍ فقط؛ لا مسارَ يُسجَّلُ ولا صلاحيّةَ تُخترعُ؛ الهويّةُ تُفرَضُ قبلَه (401).
+- **القياسُ قبلَ:** PUT/PATCH/DELETE → 404 (موجِّهُ Fastify) بثلاثةِ توكيداتِ 404.
+- **التغييرُ:** خطّافُ `onRequest` على `request.is404` في `services/audit/src/http/app.ts` → 405 · `Allow: GET, HEAD, POST` للمجموعةِ · `Allow` فارغٌ للحدثِ المفردِ (PUT/PATCH/DELETE/POST) · العقدُ `api.openapi.yml` · صفٌّ في SERVICE_AUTH_ENFORCEMENT · إضافةٌ مؤرَّخةٌ في M3-04_GATE.
+- **الاختبارُ:** 26/26 محلًّا (كانت 18) · 3 طفراتٍ مقبوضةٌ (تعطيلُ الخطّافِ · Allow خاطئٌ · تعديلُ البياناتِ). حارسا M1-03/M1-05 يمرّانِ.
+- **حدودٌ:** مستودعٌ في الذاكرةِ (الخطّافُ لا يستدعي المستودعَ) · Playwright المحاكى ليس دليلًا حيًّا · لا staging.
+- **Deployment:** `services/**` يغيّرُ مسارًا غيرَ مستثنًى ← `render-deploy.yml` يعملُ على push إلى main؛ تفسيرُ النشرِ الفعليِّ يُسجَّلُ بعدَ الدمجِ.
+- **Next:** حكمُ RQ-ADM-28 بعدَ CI على main. [الدليل](../12-testing/ci-evidence/2026-10-18T063000Z-clm-0605-uat08-audit-405/README.md)
+
+# 2026-10-18 — CLM-0604 — قرارا المالكِ G-S7 وUAT-08 (ADR-072)
+
+- **Work Item(s):** M0-53 (CLM-0604) — تسجيلُ قرارَي مالكٍ فقط؛ لا تنفيذَ.
+- **Status:** Released عندَ فتحِ PR · الحجزُ `Active` قبلَ أيِّ تعديلٍ (CLM-0604 غيرُ مستعملٍ · main `d8bba7af` مُتحقَّقٌ).
+- **Risk(s):** none — وثائقُ.
+- **المصدرُ:** إجابتا المالكِ الصريحتانِ (2026-10-18 08:57 +03) على سؤالٍ مباشرٍ، بعدَ أن جاءَ التكليفُ بصيغةٍ شرطيةٍ — «أعتمد التوصية» (G-S7) · «أعتمد 405» (UAT-08). مقتبستانِ حرفيًّا في [ADR-072](../15-decisions/ADR-072-owner-decisions-gs7-uat08.md).
+- **D1 G-S7:** Home 7 عناصرَ مطابقةٌ لـCMS §3.1 · الأماكنُ من Profile §3.8 — المواصفةُ لا تتغيّرُ؛ التنفيذُ يُطابَقُ في شريحةٍ مستقلةٍ.
+- **D2 UAT-08:** 405 + `Allow` — ملاحظةٌ مؤرَّخةٌ في ADMIN_MVP_SPEC §8 (الأصلُ «405 أو 403» محفوظٌ) · التنفيذُ في `services/audit` بشريحةٍ مستقلةٍ.
+- **السجلُّ:** ملاحظاتٌ مؤرَّخةٌ على RQ-CMA-7 · RQ-CMA-54 · RQ-UF-C8 · RQ-ADM-28 · G-S7 · G-S12 — **لا إغلاقَ**.
+- **Deployment:** none (وثائقُ فقط).
+- **Next:** تنفيذُ D2 ثمَّ D1 في PRs منفصلةٍ؛ G-S9/G-S11 بلا قرارٍ في هذا الـADR.
+
+# 2026-10-18 — CLM-0603 — إغلاقٌ موثَّقٌ لـCLM-0602 (#753)
+
+- **Work Item(s):** M0-53 (CLM-0603) — إغلاقٌ موثَّقٌ بإضافةٍ مؤرَّخةٍ؛ لا محتوى قياسٍ جديدٌ.
+- **Status:** Released عندَ فتحِ PR. الحجزُ سُجِّلَ `Active` قبلَ أيِّ تعديلٍ (CLM-0603 غيرُ مستعملٍ — grep والفروعُ وPRs).
+- **Risk(s):** none — توثيقٌ فقط.
+- **السندُ:** رأسُ #753 `e1cd21ee` — WASLA CI [39097208972](https://github.com/skyosv10-art/wasla/actions/runs/39097208972) 41/41 · Roadmap freshness [39097205816](https://github.com/skyosv10-art/wasla/actions/runs/39097205816) success · دمجٌ عبرَ الغلافِ (success=42 · failed=0 · pending=0 · بلا `--admin`) ← `d29e4e0998d6f2a61571a159ce1c0f364a9efa5e` · main: WASLA CI [39098300595](https://github.com/skyosv10-art/wasla/actions/runs/39098300595) 41/41 · Roadmap freshness [39098300645](https://github.com/skyosv10-art/wasla/actions/runs/39098300645) success.
+- **Deployment:** none — `paths-ignore` (`docs/**`, `**/*.md`) ينطبقُ؛ لا تشغيلَ render-deploy لـ`d29e4e09`.
+- **لم يُمسَّ:** G4 · G-S2 · G7 · G6 (عائقٌ بيئيٌّ) · G-S6..G-S12/G-T1 مفتوحةٌ · #730 HOLD.
+- **Next:** G-S8/G-S10/G-S12 أعمالُ تنفيذٍ مستقلةٌ؛ G-S7/G-S9/G-S11 ورمزُ UAT-08 لمالكِ المصدرِ. [الدليل §11.1](../12-testing/ci-evidence/2026-10-18T041600Z-clm-0602-screen-state-traceability/README.md)
+
+# 2026-10-18 — CLM-0602 — M0-53 §24b: مصفوفةُ تتبّعِ الشاشةِ × الحالةِ × التوكيدِ المحددِ
+
+- **Work Item(s):** M0-53 (CLM-0602) — امتدادُ المرحلةِ صفر (§24b) · ليس إعادةَ بناءٍ للسجلِّ ولا إعلانَ اكتمالٍ.
+- **Status:** Released عندَ فتحِ PR (قاعدةُ الحالةِ: الدمجُ هو التحريرُ). الحجزُ سُجِّلَ `Active` قبلَ أيِّ تعديلِ محتوى (الرأسُ الأساسُ `9e1c622d` مُتحقَّقٌ قبلَ التفرّعِ · CLM-0602 غيرُ مستعملٍ — grep على المستودعِ والفروعِ وPRs).
+- **Risk(s):** none — توثيقٌ وقياسٌ فقط. (سببُ none: لا كودَ تطبيقاتٍ ولا مواصفةَ ولا سرَّ ولا نشرَ يُمسُّ.)
+- **(1) الجردُ:** 22 شاشةً (8 + 9 + 5) أُعيدَ قياسُها من CMS/DMS/AMS الحيةِ — **مطابقٌ**؛ فرقٌ مقيسٌ: العميلُ 9 ملفاتِ شاشاتٍ (الأماكنُ مستقلةٌ) · الإدارةُ 4 شاشاتٍ خارجَ MVP.
+- **(2) القياسُ:** vitest وPlaywright محلًّا على `9e1c622d` (72/132/101 وحدةً · 35/34/30 طرفيًّا · audit-routes 18) مطابقٌ لسجلاتِ وظائفِ CI run 39090494841 على الـSHA نفسِهِ. **عائقٌ بيئيٌّ عولجَ بجذرهِ:** نسخةُ المتصفحِ المخزَّنةُ لا تطابقُ Playwright 1.63 — ثُبِّتتِ المطابقةُ وأُعيدَ التشغيلُ (لا تخطٍّ).
+- **(3) المصفوفةُ:** 121 صفَّ حالةِ متطلبٍ + 19 حالةَ تنفيذٍ بلا نصٍّ (اتجاهٌ عكسيٌّ بلا معرّفاتٍ). العميلُ 53: TRACED 32 · EXISTS-NO-ASSERT 9 · UNTRACED 6 · CONFLICT 6 — السائقُ 40: 24 · 8 · 5 · 3 — الإدارةُ 28: 10 · 8 · 9 · 1. الحكمُ لكلِّ صفٍّ على التوكيدِ المحددِ لا على اسمِ الاختبارِ ولا على أعدادِ CLM-0587.
+- **(4) السجلُّ:** RQ-CMA-7..59 · RQ-DMA-7..46 · RQ-ADM-6..33 (185 معرّفًا فريدًا مطابقًا للنمطِ · تسلسلٌ متصلٌ) · الصفوفُ الإجماليةُ مراجعُ جردٍ · ملاحظةٌ مؤرَّخةٌ على RQ-UF-C8 (المصدرُ 7 لا 8).
+- **(5) فجواتٌ جديدةٌ مستقلةٌ:** G-S7 (Home 7/8) · G-S8 (انتهاءُ الجلسةِ/فشلُ التهيئةِ) · G-S9 (العميلُ أضيقُ من المواصفةِ) · G-S10 (التوفرُ/الأهليةُ في السائقِ) · G-S11 (مسارُ الأرباحِ) · G-S12 (الإدارةُ: دخولٌ · Dashboard · فلترةٌ · UAT-07/08) · G-T1 (أسماءُ اختباراتٍ) · وأُدرجتْ G-S6 (README التفاوضِ — CLM-0601) للظهورِ.
+- **(6) لم يُمسَّ:** G4 · G-S2 · G7 (قراراتُ مالكٍ) · G6 يبقى عائقًا بيئيًّا · #730 HOLD (يحتاجُ إعادةَ قياسِ التباعدِ وقابليةِ الدمجِ مقابلَ main بعدَ شرطِ المالكِ فقط) · لا كودَ · لا مواصفةَ.
+- **(7) الحوكمةُ المحليةُ:** نتائجُ الفحوصِ الأربعةِ في الدليلِ §10 وفي PR.
+- **Deployment:** none (وثائقُ فقط — `render-deploy.yml` `paths-ignore` يُعادُ فحصُهُ قبلَ الدمجِ).
+- **Next:** حكمُ CI على رأسِ PR · الدمجُ عبرَ الغلافِ · سندُ ما بعدَ الدمجِ · الفجواتُ G-S8/G-S10/G-S12 أعمالُ تنفيذٍ مستقلةٌ تُرفعُ للخارطةِ؛ G-S7/G-S9/G-S11 ورمزُ UAT-08 لمالكِ المصدرِ. [الدليل](../12-testing/ci-evidence/2026-10-18T041600Z-clm-0602-screen-state-traceability/README.md)
+
+# 2026-10-18 — CLM-0601 — M0-53: تصحيحُ محتوى شريحةِ CLM-0600 (مراجعةٌ مستقلةٌ رابعةٌ)
+
+- **Work Item(s):** M0-53 (CLM-0601)
+- **Status:** Released عندَ فتحِ PR (قاعدةُ الحالةِ). لا شفرةَ ولا نشرَ.
+- **Risk(s):** none — تصحيحاتُ توثيقٍ بقيودِ ادعاءٍ أدقَّ. (سببُ none: لا مساسَ تشغيليًّا.)
+- **(1) إصلاحُ السياجِ البرمجيِّ:** `~~DRAFT~~` وملاحظةُ `>` كانتا داخلَ كتلةِ `text` في دورةِ حياةِ الطلبِ (تظهرانِ حرفيًّا) — عُرضتِ الصيغةُ الحاليةُ بلا DRAFT داخلَ السياجِ ونُقلَ التصحيحُ والإحالةُ إلى خارجِهِ (النسخةُ الأصليةُ محفوظةٌ بالإحالةِ).
+- **(2) حصرُ شطبِ «أولُ شهرٍ مجانيًّا»:** الشطبُ اقتحمَ «التجديدُ شهريٌّ» و«لا حدَّ أقصى للأشهرِ المجانية» وهما غيرُ متعارضينِ مع ADR-015 — استُرجعا وحُصرَ الشطبُ في مدةِ التجربةِ.
+- **(3) تحققُ قياسٍ فعليٌّ قبلَ الأوصافِ:** (أ) negotiations «بلا HTTP بعدُ» **خطأٌ** — `POST /negotiations/tick` موجودٌ في `src/http/app.ts:249` من الشجرةِ الحيةِ (README الخدمةِ متقادمٌ من 2026-08-23 — فجوةٌ مسجَّلةٌ) · (ب) admin audit: التوكيداتُ قُرئت فعليًّا (`audit-routes.test.ts` 18 توكيدًا تشملُ POST/GET للخدمةِ + `audit-rbac.spec.ts` للواجهةِ) — حُدَّتِ العبارةُ إلى «التوكيداتُ المقروءةُ» لا «اختبارٌ سلوكيٌّ في CI» بلا ربطٍ.
+- **(4) مزامنةُ الفهرسِ الحيِّ:** صُفوفُ RQ-ADM-1 · RQ-SVC-1..4 وفهرسُ G-S1/G-S3/G-S4 في REQUIREMENTS_REGISTRY حُدِّثت بالإحالةِ إلى تصحيحِ CLM-0600 وحدودهِ (لا إعادةُ كتابةِ التاريخِ).
+- **(5) انحرافٌ مسجَّلٌ:** حجزُ CLM-0600 سُجِّلَ `Released` مباشرةً (خطأُ إجراءٍ — هذا الحجزُ `Active` قبلَ التعديلِ ثمَّ يُحرَّرُ عندَ فتحِ PR).
+- **(6) الحوكمةُ المحليةُ:** الفحوصُ الأربعةُ — نتائجُها في PR.
+- **Deployment:** none.
+- **Next:** قراءةُ حكمِ CI · بعدها اختيارُ الشريحةِ التاليةِ من شروطِ إكمالِ M0-53 و§24b (تفصيلُ متطلباتِ الشاشاتِ وحالاتِها وربطُها بالتوكيداتِ المحددةِ مرشَّحٌ).
+
+# 2026-10-18 — CLM-0600 — M0-53: تصحيحُ G-S1/G-S3/G-S4 بالشطبِ المؤرَّخِ
+
+- **Work Item(s):** M0-53 (CLM-0600)
+- **Status:** Released — تصحيحاتُ مواصفاتٍ مؤرَّخةٌ (نمطُ CLM-0590) · لا كودَ ولا سياسةَ ولا قرارَ منتجٍ جديدَ.
+- **Risk(s):** none — شطبٌ مؤرَّخٌ بلا محوٍ · كلُّ ادعاءٍ مُقيَّدٌ بدليلِهِ. (سببُ none: تصحيحُ توثيقِ مصادرَ بلا مساسٍ تشغيليٍّ.)
+- **(0) تصحيحُ تعميمِ CLM-0599:** استنتاجُ «تطبيقُ ADR» من ملكيةِ CODEOWNERS تعميمٌ — الأساسُ الصحيحُ هو القياسُ (أدناه) · سُجِّلَ كأمانةِ سجلٍّ.
+- **(1) G-S1:** SERVICES.md يعدُّ 24 والجردُ الآليُّ من الشجرةِ = 27 مجلدًا — صُحِّح العنوانُ والنظرةُ والجدولُ **معًا** (أُضيفت `customers` · `negotiations` · `observability` بأوصافٍ من الجردِ والـADRs) لا الرقمُ وحدهُ · حدُّ الادعاءِ مُصرَّحٌ (مجلداتٌ لا خدماتٌ مشغَّلةً).
+- **(2) G-S3:** ADMIN_MVP «scaffolded فقط» متقادمٌ — المُقاسُ (CLM-0591 A-4/A-7): منفذٌ (26 ملفًا) + اختبارٌ سلوكيٌّ في CI — صيغةُ التصحيحِ «مُنفَّذ» لا «مكتملٌ» (حدُّ الادعاءِ: التنفيذُ والسلوكُ لا التشغيلُ الإنتاجيُّ للواجهةِ).
+- **(3) G-S4:** نُفِّذ نفسُ تصحيحِ CLM-0590 على المواضعِ النظيرةِ في SERVICES.md (DRAFT · أولُ شهرٍ · 7 حالاتٍ) — شطبٌ + ملاحظةٌ مؤرَّخةٌ + إحالةٌ إلى ADR-010/015.
+- **(4) لم يُمسَّ:** G-S2 (تسعيرٌ — قرارُ مالكٍ) · G4 (مهلةُ مرشحٍ — قرارٌ قيميٌّ) · كودٌ · عقودٌ.
+- **(5) التحققُ البرمجيُّ:** جدولُ SERVICES = 27 صفًّا × 4 خلايا · الروابطُ كلُّها تُحلُّ · الشطبُ بلا محوٍ. [الدليل](../12-testing/ci-evidence/2026-10-18T023000Z-clm-0600-gs1-gs3-gs4-spec-corrections/README.md)
+- **(6) الإجراءُ الصارمُ مُتَّبَعٌ:** الحجزُ CLM-0600 سُجِّلَ قبلَ أيِّ تعديلِ مصدرٍ (أولُ شريحةٍ بعدَ قرارِ CLM-0598 الصارمِ).
+- **(7) الحوكمةُ المحليةُ:** الفحوصُ الأربعةُ — نتائجُها في PR.
+- **Deployment:** none.
+- **Next:** قراءةُ حكمِ CI · بعدها البندُ التاليُ القابلُ للتنفيذِ من M0-53/§24b (جردُ الشاشاتِ وحالاتِ UI مقابلَ العقودِ مرشَّحٌ لاستكمالِ المرحلةِ صفرِ) · للمالكِ: G4 · G-S2 · بيئتا G6-المحلية/G7.
+
+# 2026-10-18 — CLM-0599 — M0-53: دقةُ فجواتِ G6/G7 + فحصُ ملكيةِ G-S1/G-S3/G-S4
+
+- **Work Item(s):** M0-53 (CLM-0599)
+- **Status:** Released — توثيقُ دقةٍ فقط. (سببُ none: قراءةُ ملكيةٍ وتحديدُ فجواتٍ.)
+- **Risk(s):** none.
+- **(1) فحصُ CODEOWNERS (قراءةً):** `docs/01-product/` مملوكٌ للمالكِ `@skyosv10-art` حصرًا (السطرُ 153) — **تصحيحُ G-S1/G-S3/G-S4 تطبيقُ ADR نافذٌ** (نمطُ CLM-0590: الشطبُ المؤرَّخُ + الإحالةُ إلى المصدرِ الحاكمِ) لا قرارُ منتجٍ جديدٌ ⇒ **بنودٌ قابلةٌ للتنفيذِ** (لا تُستبعدُ كقراراتِ مالكٍ).
+- **(2) G6 حُدِّدَ بدقةٍ:** المثبتُ (§C7): 12 وظيفةَ `exit-gate-e2e` بـPostgres حقيقيٍّ في CI على رأسَي الدمجِ · المتبقي: بيئةُ تشغيلٍ محليةٍ + تفصيلُ اختبارٍ باختبارٍ — **فجوةُ بيئةٍ لا قرارٌ**.
+- **(3) G7:** `golden-e2e` 39/39 skipped بلا `GOLDEN_STAGING_BASE` — قرارُ مالكٍ (بيئةُ staging · بحذرِ INC-0007).
+- **(4) الحوكمةُ المحليةُ:** `validate-state-sync.sh` · `validate-work-claims.sh` · `require-doc-update.sh` · `verify-governance.sh` — في PR.
+- **Deployment:** none.
+- **Next:** قراءةُ حكمِ CI · بعدها البندُ التالي: **تصحيحُ G-S1/G-S3/G-S4 بالشطبِ المؤرَّخِ** (نمطُ CLM-0590) — بندٌ قابلٌ للتنفيذِ الآنَ.
+
+# 2026-10-18 — CLM-0598 — M0-53: إصلاحُ بنيةِ صفِّ M0-53 (مراجعةٌ مستقلةٌ ثالثة)
+
+- **Work Item(s):** M0-53 (CLM-0598)
+- **Status:** Released — إصلاحُ بنيةِ جدولٍ وتشخيصٍ · لا شفرةَ ولا نشرَ. (سببُ none: توثيقُ بنيةٍ فقط.)
+- **Risk(s):** none.
+- **(1) العيبُ:** إصلاحُ CLM-0596 لصفِّ M0-53 دمجَ الخلايا المتفجّرةَ (10→) إلى **6** خلايا لا 7 — حُذفَ نصُّ CLM-0595 كاملًا وفُقدَ عمودُ «الخطوة التالية».
+- **(2) الإصلاحُ:** استعادةُ الأعمدةِ السبعةِ صراحةً (فاصلُ «دليلُ الإغلاقِ / الخطوةُ التالية» عندَ حدِّ `G4 وG-S2 ما زالا UNRESOLVED`) · استعادةُ نصِّ CLM-0595 من `138026b8` · إضافةُ ملخصِ CLM-0596 · تحقُّقٌ: 7 خلايا كالترويسةِ · كلُّ ملاحظاتِ CLM-0579..0596 موجودةٌ (فحصُ برمجيًّا).
+- **(3) N2/G4:** أُزيلَ «3/5» كتعارضٍ (عدّادانِ مستقلانِ · CLM-0590 §3.3 · العددُ قابلٌ للتعديلِ من Configuration) — التعارضُ القيميُّ المتبقيُّ: مهلةُ المرشحِ (10ث/30ث) حصرًا.
+- **(4) تشخيصُ فشلِ #748 صُحِّحَ:** السببُ الفعليُّ (قراءةُ سجلِ الوظيفةِ): الالتزامُ `0c15ad57` حُمِّلَ قبلَ تسجيلِ حجزِ CLM-0596 — لا «مقارنةُ main←main». صُحِّحَ بالإضافةِ في تعليقِ PR.
+- **(5) الانحرافُ المسجَّلُ:** تعديلاتُ اللوحةِ بدأتْ قبلَ تسجيلِ حجزِ CLM-0598 (نفسُ خطأِ CLM-0593/0596/0597 — الرابعَ تواليًا؛ **إجراءٌ صارمٌ من الآنَ: الحجزُ قبلَ أيِّ تعديلٍ دائمًا**).
+- **(6) الحوكمةُ المحليةُ:** `validate-state-sync.sh` · `validate-work-claims.sh` · `require-doc-update.sh` · `verify-governance.sh` — في PR.
+- **Deployment:** none.
+- **Next:** قراءةُ حكمِ CI · فحصُ CODEOWNERS لملكيةِ G-S1/G-S3/G-S4 (قراءةٌ فقط) · تحديدُ ما بقي من G6 بدقةٍ · بعدها اختيارُ الشريحةِ التاليةِ من شروطِ إكمالِ M0-53 و§24b.
 # 2026-10-18 — CLM-0597 — M6-18B: دمجُ main داخلَ فرعِ #730 (ثانيةً) — إزالةُ التعارضِ بعدَ 6 دمجاتٍ
 
 - **Work Item(s):** M6-18B (CLM-0597)
@@ -9,7 +1168,6 @@
 - **(4) الانحرافُ المسجَّلُ:** نفسُ خطأِ CLM-0593/0596 — الالتزامُ تمَّ قبلَ تحديثِ حجزِ CLM-0578 الموجودِ (الحجزُ الموسَّعُ يغطي الملفاتِ لكنَّ تحديثَ وصفِهِ تأخَّرَ)؛ يُعترَفُ به هنا.
 - **Deployment:** none — دفعُ فرعِ PR لا يصلُ main.
 - **Next:** قراءةُ حكمِ CI على الرأسِ الجديدِ · #730 يبقى HOLD حتى تدويرِ مفتاحِ Render (قرارُ المالكِ).
-
 # 2026-10-18 — CLM-0596 — M0-53: فحصُ محتوى مخرَجِ CLM-0594 فعليًّا لا نصًّا (شريحةُ CLM-0595 المصحَّحةُ نفسُها)
 
 - **Work Item(s):** M0-53 (CLM-0596 · الحجزُ المستقلُّ `fix/clm-0595b-content-verification` — رأسُ الالتزامِ `0c15ad57` تمَّ على main قبلَ إنشاءِ الفرعِ · الحجزُ سُجِّلَ بعدَه)
@@ -10648,3 +11806,47 @@ Tests: dispatch 271/271 (+8 in `user-assertion-ownership.test.ts`: off ×2, enfo
   - `infra/render/host-sources.json` classification; `infra/render/deploy-target.json` gains `legacy_owner`.
   - `scripts/checks/validate-render-host-sources.sh` (baseline + 7 mutations) in `scripts/verify.sh`, plus a `VERIFY_COMMAND.md` row.
 - **Not changed:** both Render workspaces, Telegram, DNS, Supabase, `deploy-target.json` mode, `RENDER_API_KEY`.
+## [2026-10-22] CLM-0660 — تابع: توليدُ الأساسِ الآليِّ
+- Changed units: docs/12-testing/BASELINE.json, docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/README.md, docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/verify-7ffd738.log
+- Regenerated BASELINE.json from the in-tree transition verify log (stripped of ANSI): static risks_not_closed 26 (RISK-0031/RISK-0062 closed on this branch), lockfile fingerprint updated (vitest ^4.1.12), dynamic measured from the recorded log: tests 6273, files 441, governance suite 694/1, verify verdict recorded (RISK-0028 door 4: the verdict is recorded, not required to be green — CI verify on the PR will produce the clean log for a follow-up regen, the CLM-0652 pattern).
+- Risk(s): RISK-0028 → mitigating (baseline regeneration chain restored)
+- Verified: validate-baseline green (all doors, fingerprint sha256:6d505828…)
+## [2026-10-22] CLM-0660 — تابع: إصلاحان بعد أول تشغيل CI على PR #806
+- Work Item(s): CLM-0660
+- Kind: correction — ملف سجل التحقق الذي يحيل إليه BASELINE.json كان محجوبًا بقاعدة `*.log` في .gitignore فلم يُدرج في الالتزام، فرفض البابُ 4 مصدرَ الأرقام الحركية في CI (RISK-0028)؛ وترقية vitest 4 أسقطت `@types/node` كتبعية نظيرة كان يحصل عليها packages/contracts/support عبر vitest 3.2.7، فأُضيفت صراحةً إلى devDependencies وحُدّث pnpm-lock.yaml.
+- Changed units: docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/verify-7ffd738.log, packages/contracts/support/package.json, pnpm-lock.yaml
+- No-Test-Reason: تصحيح إدراج ملف شاهدة وحزمة أنواع TypeScript — لا تغيير سلوكي ولا منطق قابلاً للاختبار؛ القياس: pnpm typecheck أخضر بالكامل (0 أخطاء) محليًا
+- Risk(s): RISK-0028 → mitigating
+- Verified: pnpm typecheck exit 0 (all projects) · validate-state-sync OK · validate-baseline OK (بصمة اللاكف محدثة بعد إضافة @types/node) · البابُ 4 يجد المصدر داخل الشجرة الآن
+## [2026-10-22] CLM-0660 — تابع: @types/node في جذر المستودع
+- Work Item(s): CLM-0660
+- Kind: correction — بعد إصلاح contracts/support ظهر الفشل نفسه في packages/resilience في CI؛ السبب الجذري: vitest 3 كان يجلب @types/node كتبعية نظيرة (auto-install-peers) فيجعلها مرئية لكل الحزم، وvitest 4 أسقطها. أُضيفت @types/node إلى package.json الجذري (مرئية لكل الحزم عبر تسلسل typeRoots) بدل مطاردة كل حزمة على حدة.
+- Changed units: package.json, pnpm-lock.yaml
+- No-Test-Reason: إضافة حزمة أنواع TypeScript للجذر — لا تغيير سلوكي؛ القياس: pnpm typecheck أخضر بالكامل (0 أخطاء) لكل المشاريع محليًا
+- Risk(s): none — إصلاح تبعية أنواع لا يمس سطح هجوم (توثيق القرار في هذا السطر)
+- Verified: pnpm typecheck exit 0 · validate-state-sync OK
+## [2026-10-22] CLM-0660 — تابع: إدراج سجلا الشواهد الناقصين
+- Work Item(s): CLM-0660
+- Kind: correction — دليل القياس (README §3) يحيل إلى سجل الاختبارات وسجل التحقق النوعي في raw/ ولم يُلتزما (حجب *.log)؛ أُدرجا الآن مجردين من رموز ANSI: run-tests-vitest-4112.log (مجموع Tests passed = 6273 · Test Files = 441 · صفر FAIL) وtypecheck-vitest-4112.txt (أخضر بعد إصلاح globalThis).
+- Changed units: docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/run-tests-vitest-4112.log, docs/12-testing/ci-evidence/2026-10-22T053000Z-clm-0660-vitest-4-1-12-mocker-cves/raw/typecheck-vitest-4112.txt
+- No-Test-Reason: إدراج ملفات شواهد قياس موجودة مسبقًا — لا تغيير في الشفرة أو الاختبارات
+- Risk(s): none — شواهد قياس لا تمس سطح الهجوم
+- Verified: مجموع «Tests N passed» في السجل المدرج = 6273 يطابق dynamic.tests_passed في BASELINE.json
+
+# 2026-10-22 — CLM-0662 — إصلاحُ عيوبِ توجيهِ Channel Edge إلى الخدمات (G-S9.7 · D1–D5 · D8)
+
+- **Work Item(s):** M0-53 (G-S9.7) · M1-05 (حارسُ مصفوفةِ التفويضِ) · M2-04 (مخطَّطُ الإعدادِ) · M0-08 (تجديدُ الأساسِ)
+- **Kind:** fix + tests — شيفرةُ إنتاجٍ في الحزمةِ والتركيبِ، لا فتحَ مساراتٍ ولا منحَ إنتاجٍ ولا نشرَ ولا T1/T2.
+- **Status:** Released (CLM-0662 — الدمجُ هو التحريرُ: الوحداتُ المُعدَّلةُ `.env.example` · `packages/channel-edge` · `bots/customer-bot` · `bots/driver-bot` · `packages/app-edge-e2e` · `packages/config/env-registry.json` · `scripts/checks/lib/edge_allowlist_guard.py` · `scripts/checks/lib/gov-cases-edge-allowlist.sh` · `docs/12-testing/BASELINE.*`).
+- **الفرع:** `fix/clm-0662-channel-edge-proxy-routing` · **الأساس:** main `1d1d99f2` (ما بعدَ دمجِ #808) · **الـPR:** #809.
+
+- **D8:** `authorization` تُقرأُ **قبلَ** حذفِ الترويساتِ الداخليةِ — كانَ الحذفُ يسبقُ القراءةَ فيُردُّ كلُّ نداءٍ محميٍّ بـ401 قبلَ أيِّ منبعٍ.
+- **D1:** ربطُ ملفِّ القائمةِ بحقلِ `surface` في جذرِ الملفِّ — وعدمُ التطابقِ يمنعُ اكتمالَ التركيبِ (`EDGE_ALLOWLIST_SURFACE_MISMATCH`).
+- **D2:** منفذُ `serviceUrlFor(service)` وخريطةُ عناوينٍ في تركيبِ البوتينِ من متغيراتِ `*_SERVICE_URL` المعلنةِ في `env-registry`.
+- **D5:** منفذُ `requestSignerFor(service)` — جمهورٌ حرفيٌّ وصلاحياتُ ثابتٍ مسمّىً موثقٌ في دليلِ المنحةِ (شرطُ حارسِ M1-05)؛ ولا مصنعَ لخدمةٍ بلا منحةٍ: فشلٌ مغلقٌ قبلَ الاستماعِ.
+- **D3 · E-20:** حقلُ `query` في القائمةِ (allowed/pinned) — تمريرٌ وفقَ العقدِ وتثبيتُ ما يملكُهُ الحدُّ ورفضُ 400 لكلِّ ما خرجَ عنهُ، والتوقيعُ على المسارِ الفعليِّ مع الاستعلامِ (ADR-036).
+- **D4:** معاملاتُ المسارِ تُستبدَلُ بقيمِها الفعليةِ عندَ المنبعِ. **فشلٌ مغلقٌ:** مسارٌ مفتوحٌ بلا وجهةٍ/موقِّعٍ يمنعُ اكتمالَ التركيبِ.
+- **إصلاحاتُ ما بعدَ فحصِ CI الأولِ (39769966301):** جمهورٌ حرفيٌّ (M1-05) · متغيراتُ env-registry الأربعةُ وقرّاؤها (M2-04) · حجزٌ `Active` (2) · إضافةُ اللوحةِ والتوثيقِ (3·26) · تجديدُ الأساسِ من سجلِّ تحققٍ مقيسٍ (11).
+- **تعزيزاتُ الدفعةِ الثانيةِ (مراجعةٌ مستقلةٌ قبلَ الدفعِ):** اختبارُ الجمهورِ الخاطئِ يقرأُ سببَ الرفضِ (`audience_mismatch`) بربطٍ كاملٍ لا نجاحًا أعمى · صلاحياتُ كلِّ خدمةٍ تُطالَبُ عندَ المستقبلِ (403 لا 200) · طفرتا M7 (جمهورٌ ثابتٌ) وM8 (توقيعٌ بلا استعلامٍ) مُلتقطتان · تركيبُ البوتينِ يُغلقُ على `env` الترتيبِ (اختبارُ تركيبٍ حيٌّ يميّزُهُ) ومسارُ القائمةِ يُحلُّ من موقعِ الوحدةِ لا `cwd` · مساراتُ الحدِّ تحملُ تصنيفَ `serviceIdentity: "open"` (كشفها اختبارُ التركيبِ: حاجزُ هويةِ الخدمةِ كانَ يُسقطُ أيَّ تطبيقٍ يُركَّبُ عليهِ الحدُّ) · سياسةُ التثبيتِ ضُمِّرت إلى `visible_only=true` وحدَهُ (EA-QUERY-PIN-VALUE) وعقدُ الاستعلامِ لـGET وحدَهُ (EA-QUERY-METHOD — أُزيلَ عقدُ الـPOST غيرُ المقيسِ وأُضيفَ `status` المقيسُ من التطبيقِ لعقدِ `GET /order-requests`).
+- **الأدلة:** [دليلُ CLM-0662](../12-testing/ci-evidence/2026-10-22T111200Z-clm-0662-channel-edge-proxy-routing/README.md) — اختباراتٌ محليةٌ وطفراتُ شيفرةٍ وحارسٍ.
+- **ما لم يُثبتْ:** لا رحلةَ عبرَ T1/إنتاجٍ ولا فتحَ مساراتٍ (`production_open=false` كما هو) ولا منحَ إنتاجٍ جديدةٍ؛ D6 (تركيبُ main.ts) وحدةٌ لاحقةٌ وD7 (wasla-search في T1) قرارُ مالكٍ.

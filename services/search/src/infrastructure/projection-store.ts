@@ -5,8 +5,9 @@
  * so duplicate delivery and replay are safe (review 2/N req 3,4,10).
  */
 
-import type { Pool } from "pg";
-import type { ProjectionStore } from "../ports.js";
+import type { Pool, PoolClient } from "pg";
+import type { CatalogStore, ProjectionStore } from "../ports.js";
+import { normalizeStoreName } from "../domain/store-search.js";
 import type {
   MarketplaceOutboxRow,
   RelayCheckpoint,
@@ -15,8 +16,48 @@ import type {
 } from "../domain/consumed-events.js";
 import type { StoreProjection, ProductProjection } from "../domain/projector.js";
 
+/**
+ * G-S9.20 · CLM-0655 — namespace of the search relay's consumer lock.
+ * Advisory locks are per database and the key is `(namespace, hashtext(consumerId))`
+ * (the same two-int scheme as delivery's relay, M5-13R). A namespace distinct
+ * from delivery's (42626) keeps the two services' locks apart even when they
+ * share one database. Arbitrary on purpose; must not be reused for another purpose.
+ */
+export const SEARCH_RELAY_ADVISORY_LOCK_NAMESPACE = 42627;
+
 export class PostgresProjectionStore implements ProjectionStore {
   constructor(private readonly pool: Pool) {}
+
+  /**
+   * Session-level advisory lock held for the whole batch (checkpoint read →
+   * last checkpoint write). A transaction-level lock would release at the
+   * first COMMIT — mid-batch, exactly where the race lived (RISK-0070). The
+   * lock belongs to the leased session, so lock and unlock run on the same
+   * client; the batch's own queries go through the pool on other connections.
+   * Hence a pool of fewer than 2 connections would wait on itself forever:
+   * refused up front instead of hanging.
+   */
+  async withConsumerLock<T>(consumerId: string, fn: () => Promise<T>): Promise<T> {
+    const max = (this.pool as unknown as { options?: { max?: unknown } }).options?.max;
+    if (typeof max === "number" && max < 2) {
+      throw new Error(
+        `search relay consumer lock needs a pool of at least 2 connections (got max=${max}): ` +
+          "the lock holds one session for the whole batch while the batch queries through the pool",
+      );
+    }
+    const ns = SEARCH_RELAY_ADVISORY_LOCK_NAMESPACE;
+    const client: PoolClient = await this.pool.connect();
+    try {
+      await client.query("SELECT pg_advisory_lock($1, hashtext($2))", [ns, consumerId]);
+      try {
+        return await fn();
+      } finally {
+        await client.query("SELECT pg_advisory_unlock($1, hashtext($2))", [ns, consumerId]);
+      }
+    } finally {
+      client.release();
+    }
+  }
 
   async getCheckpoint(consumerId: string): Promise<RelayCheckpoint | null> {
     const r = await this.pool.query<{ last_commit_sequence: string; last_outbox_id: string; last_created_at: string }>(
@@ -189,11 +230,38 @@ export class PostgresProjectionStore implements ProjectionStore {
     );
   }
 
+  // ── store-name read model (G-S9.7 · ADR-025 §6) ──
+  async hasStoreDoc(storeId: string): Promise<boolean> {
+    const r = await this.pool.query(`SELECT 1 FROM search_store_index WHERE store_id = $1::uuid`, [storeId]);
+    return (r.rowCount ?? 0) > 0;
+  }
+
+  async upsertStoreDoc(store: CatalogStore): Promise<void> {
+    const norm = (v: string | null): string | null => (v === null ? null : normalizeStoreName(v));
+    await this.pool.query(
+      `INSERT INTO search_store_index
+         (store_id, store_slug, title_ar, title_en, title_ur, name_norm_ar, name_norm_en, name_norm_ur)
+       VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (store_id)
+       DO UPDATE SET store_slug = EXCLUDED.store_slug,
+                     title_ar = EXCLUDED.title_ar,
+                     title_en = EXCLUDED.title_en,
+                     title_ur = EXCLUDED.title_ur,
+                     name_norm_ar = EXCLUDED.name_norm_ar,
+                     name_norm_en = EXCLUDED.name_norm_en,
+                     name_norm_ur = EXCLUDED.name_norm_ur`,
+      [
+        store.store_id, store.store_slug, store.title_ar, store.title_en, store.title_ur,
+        normalizeStoreName(store.title_ar), norm(store.title_en), norm(store.title_ur),
+      ],
+    );
+  }
+
   async clearAll(): Promise<void> {
     await this.pool.query(
       `TRUNCATE search_relay_checkpoint, search_relay_consumed_events,
                  search_product_index, search_marketplace_product_state,
-                 search_marketplace_store_state, search_outbox RESTART IDENTITY CASCADE`,
+                 search_marketplace_store_state, search_store_index, search_outbox RESTART IDENTITY CASCADE`,
     );
   }
 

@@ -1,0 +1,19 @@
+# vitest services/audit audit-routes.test.ts @ 9e1c622d — total=18 passed=18 failed=0
+passed	POST /audit/events creates an audit event and returns 201
+passed	POST /audit/events derives actor_id from obo when present
+passed	POST /audit/events rejects missing required fields with 400
+passed	POST /audit/events defaults metadata to empty object when omitted
+passed	POST /audit/events rejects empty string fields with 400
+passed	POST /audit/events ignores actor_id and actor_role in body (derived from token)
+passed	GET /audit/events returns empty list when no events exist
+passed	GET /audit/events returns seeded events newest-first
+passed	GET /audit/events filters by action
+passed	GET /audit/events filters by actor_id
+passed	GET /audit/events filters by resource_type and resource_id
+passed	GET /audit/events respects limit and offset
+passed	Audit immutability does not expose PUT /audit/events/:id
+passed	Audit immutability does not expose DELETE /audit/events/:id
+passed	Audit immutability does not expose PATCH /audit/events/:id
+passed	Authz enforcement rejects POST without audit:write scope
+passed	Authz enforcement rejects GET without audit:read scope
+passed	Authz enforcement rejects unsigned requests

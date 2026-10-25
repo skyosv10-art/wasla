@@ -317,6 +317,43 @@ export class InMemoryGeographyRepository implements GeographyRepository {
     };
   }
 
+  /**
+   * Test seam (CLM-0645): flip a fixture zone's status so the "active only"
+   * rule of searchActiveZones can be exercised without a second fixture. The
+   * Postgres adapter is exercised the same way with an UPDATE in its
+   * integration test.
+   */
+  setZoneStatus(zoneId: string, status: Zone["status"]): void {
+    const zone = this.zones.get(zoneId);
+    if (!zone) throw new Error(`no zone ${zoneId}`);
+    this.zones.set(zoneId, { ...zone, status });
+  }
+
+  async searchActiveZones(
+    query: string,
+    limit: number,
+  ): Promise<ZoneDetailRecord[]> {
+    const needle = query.toLowerCase();
+    const matches = [...this.zones.values()]
+      .filter((z) => z.status === "active")
+      .filter((z) => {
+        const n = this.namesOf("zone", z.id);
+        return [n.ar, n.en, n.ur].some(
+          (name) => typeof name === "string" && name.toLowerCase().includes(needle),
+        );
+      })
+      .sort((a, b) =>
+        a.code < b.code ? -1 : a.code > b.code ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+      )
+      .slice(0, limit);
+    const out: ZoneDetailRecord[] = [];
+    for (const z of matches) {
+      const detail = await this.getZoneDetail(z.id);
+      if (detail) out.push(detail);
+    }
+    return out;
+  }
+
   async findUserLocation(
     waslaPublicId: string,
   ): Promise<UserLocationAssignment | null> {

@@ -10,7 +10,7 @@
  * adapter.
  */
 
-import { asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, ilike, inArray, sql } from "drizzle-orm";
 
 import type { GeographyEvent } from "@wasla/contracts-geography";
 
@@ -266,6 +266,28 @@ export class PostgresGeographyRepository implements GeographyRepository {
     if (!r) return null;
     const names = await loadNames(this.db, "zone", [r.id]);
     return { ...mapZone(r), names: names.get(r.id)! };
+  }
+
+  async searchActiveZones(
+    query: string,
+    limit: number,
+  ): Promise<ZoneDetailRecord[]> {
+    // LIKE metacharacters in user input are literal: escape `\`, `%`, `_`
+    // (Postgres' default LIKE escape character is the backslash).
+    const pattern = `%${query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+    const rows = await this.db
+      .selectDistinct({ id: geoZones.id, code: geoZones.code })
+      .from(geoZones)
+      .innerJoin(geoZoneNames, eq(geoZoneNames.zoneId, geoZones.id))
+      .where(and(eq(geoZones.status, "active"), ilike(geoZoneNames.name, pattern)))
+      .orderBy(asc(geoZones.code), asc(geoZones.id))
+      .limit(limit);
+    const out: ZoneDetailRecord[] = [];
+    for (const r of rows) {
+      const detail = await this.getZoneDetail(r.id);
+      if (detail) out.push(detail);
+    }
+    return out;
   }
 
   async getZoneDetail(zoneId: string): Promise<ZoneDetailRecord | null> {

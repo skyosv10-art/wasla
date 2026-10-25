@@ -1,0 +1,1326 @@
+
+ RUN  v3.2.7 /home/user/workspace/wasla/apps/customer-mini-app
+
+stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > renders all form fields
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+
+stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > renders the saved-place pickers for pickup and dropoff (G-S9.1)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+
+stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > a manual zone edit without a picked place keeps the label the user typed (CLM-0622)
+Warning: An update to RideOrder inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+
+stderr | src/__tests__/RideOrder.test.tsx > RideOrder screen > shows offered price field only when price_mode is customer_offer
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at RideOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/RideOrder.tsx:12:57)
+
+ ❯ src/__tests__/RideOrder.test.tsx (16 tests | 1 failed) 1390ms
+   ✓ RideOrder screen > renders all form fields 55ms
+   ✓ RideOrder screen > renders the saved-place pickers for pickup and dropoff (G-S9.1) 11ms
+   ✓ RideOrder screen > loads saved places on mount and lists them in the pickup picker (G-S9.1) 15ms
+   ✓ RideOrder screen > submitting with saved places selected sends source saved_place with the place's zone and label (G-S9.1) 37ms
+   ✓ RideOrder screen > two pickers on one screen share a single places request (CLM-0622) 10ms
+   × RideOrder screen > a failed places load is visible and retry loads the places (CLM-0622) 1018ms
+     → Unable to find an element by: [data-testid="pickup-place-select-error"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"screen ride-order-screen"[39m
+    [36m>[39m
+      [36m<h1>[39m
+        [0mطلب مشوار[0m
+      [36m</h1>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-place"[39m
+        [36m>[39m
+          [0mمكان محفوظ لنقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"مكان محفوظ لنقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-place-select"[39m
+          [33mid[39m=[32m"pickup-place"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mاختر مكانًا محفوظًا[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-zone"[39m
+        [36m>[39m
+          [0mنقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"نقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-zone-input"[39m
+          [33mid[39m=[32m"pickup-zone"[39m
+          [33mplaceholder[39m=[32m"معرّف المنطقة"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-label"[39m
+        [36m>[39m
+          [0mاسم نقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"اسم نقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-label-input"[39m
+          [33mid[39m=[32m"pickup-label"[39m
+          [33mplaceholder[39m=[32m"مثال: المنزل، العمل"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-place"[39m
+        [36m>[39m
+          [0mمكان محفوظ للوصول[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"مكان محفوظ للوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-place-select"[39m
+          [33mid[39m=[32m"dropoff-place"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mاختر مكانًا محفوظًا[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-zone"[39m
+        [36m>[39m
+          [0mنقطة الوصول[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"نقطة الوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-zone-input"[39m
+          [33mid[39m=[32m"dropoff-zone"[39m
+          [33mplaceholder[39m=[32m"معرّف المنطقة"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-label"[39m
+        [36m>[39m
+          [0mاسم نقطة الوصول[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"اسم نقطة الوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-label-input"[39m
+          [33mid[39m=[32m"dropoff-label"[39m
+          [33mplaceholder[39m=[32m"مثال: المنزل، العمل"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"vehicle-class"[39m
+        [36m>[39m
+          [0mنوع المركبة[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"نوع المركبة"[39m
+          [33mdata-testid[39m=[32m"vehicle-class-select"[39m
+          [33mid[39m=[32m"vehicle-class"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"sedan"[39m
+          [36m>[39m
+            [0mسيدان[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"suv"[39m
+          [36m>[39m
+            [0mدفع رباعي[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"van"[39m
+          [36m>[39m
+            [0mفان[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"pickup"[39m
+          [36m>[39m
+            [0mبيك أب[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"motorcycle"[39m
+          [36m>[39m
+            [0mدراجة نارية[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"truck_small"[39m
+          [36m>[39m
+            [0mشاحنة صغيرة[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"price-mode"[39m
+        [36m>[39m
+          [0mنمط السعر[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"نمط السعر"[39m
+          [33mdata-testid[39m=[32m"price-mode-select"[39m
+          [33mid[39m=[32m"price-mode"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"negotiable"[39m
+          [36m>[39m
+            [0mقابل للتفاوض[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"customer_offer"[39m
+          [36m>[39m
+            [0mسعر مقترح[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"notes"[39m
+        [36m>[39m
+          [0mملاحظات[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33maria-label[39m=[32m"ملاحظات"[39m
+          [33mdata-testid[39m=[32m"notes-input"[39m
+          [33mid[39m=[32m"notes"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mplaceholder[39m=[32m"أضف ملاحظات للسائق..."[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-actions"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mdata-testid[39m=[32m"preview-button"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mمعاينة الطلب[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mdata-testid[39m=[32m"submit-button"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mإرسال الطلب[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"screen ride-order-screen"[39m
+    [36m>[39m
+      [36m<h1>[39m
+        [0mطلب مشوار[0m
+      [36m</h1>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-place"[39m
+        [36m>[39m
+          [0mمكان محفوظ لنقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"مكان محفوظ لنقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-place-select"[39m
+          [33mid[39m=[32m"pickup-place"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mاختر مكانًا محفوظًا[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-zone"[39m
+        [36m>[39m
+          [0mنقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"نقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-zone-input"[39m
+          [33mid[39m=[32m"pickup-zone"[39m
+          [33mplaceholder[39m=[32m"معرّف المنطقة"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-label"[39m
+        [36m>[39m
+          [0mاسم نقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"اسم نقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-label-input"[39m
+          [33mid[39m=[32m"pickup-label"[39m
+          [33mplaceholder[39m=[32m"مثال: المنزل، العمل"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-place"[39m
+        [36m>[39m
+          [0mمكان محفوظ للوصول[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"مكان محفوظ للوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-place-select"[39m
+          [33mid[39m=[32m"dropoff-place"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mاختر مكانًا محفوظًا[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-zone"[39m
+        [36m>[39m
+          [0mنقطة الوصول[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"نقطة الوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-zone-input"[39m
+          [33mid[39m=[32m"dropoff-zone"[39m
+          [33mplaceholder[39m=[32m"معرّف المنطقة"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-label"[39m
+        [36m>[39m
+          [0mاسم نقطة الوصول[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"اسم نقطة الوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-label-input"[39m
+          [33mid[39m=[32m"dropoff-label"[39m
+          [33mplaceholder[39m=[32m"مثال: المنزل، العمل"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"vehicle-class"[39m
+        [36m>[39m
+          [0mنوع المركبة[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"نوع المركبة"[39m
+          [33mdata-testid[39m=[32m"vehicle-class-select"[39m
+          [33mid[39m=[32m"vehicle-class"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"sedan"[39m
+          [36m>[39m
+            [0mسيدان[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"suv"[39m
+          [36m>[39m
+            [0mدفع رباعي[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"van"[39m
+          [36m>[39m
+            [0mفان[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"pickup"[39m
+          [36m>[39m
+            [0mبيك أب[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"motorcycle"[39m
+          [36m>[39m
+            [0mدراجة نارية[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"truck_small"[39m
+          [36m>[39m
+            [0mشاحنة صغيرة[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"price-mode"[39m
+        [36m>[39m
+          [0mنمط السعر[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"نمط السعر"[39m
+          [33mdata-testid[39m=[32m"price-mode-select"[39m
+          [33mid[39m=[32m"price-mode"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"negotiable"[39m
+          [36m>[39m
+            [0mقابل للتفاوض[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"customer_offer"[39m
+          [36m>[39m
+            [0mسعر مقترح[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"notes"[39m
+        [36m>[39m
+          [0mملاحظات[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33maria-label[39m=[32m"ملاحظات"[39m
+          [33mdata-testid[39m=[32m"notes-input"[39m
+          [33mid[39m=[32m"notes"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mplaceholder[39m=[32m"أضف ملاحظات للسائق..."[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-actions"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mdata-testid[39m=[32m"preview-button"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mمعاينة الطلب[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mdata-testid[39m=[32m"submit-button"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mإرسال الطلب[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ✓ RideOrder screen > a manual zone edit after picking a place drops the picker-filled label (CLM-0622) 26ms
+   ✓ RideOrder screen > a manual zone edit without a picked place keeps the label the user typed (CLM-0622) 10ms
+   ✓ RideOrder screen > manually editing the zone after picking a place reverts the stop source to manual_zone (G-S9.1) 41ms
+   ✓ RideOrder screen > shows offered price field only when price_mode is customer_offer 13ms
+   ✓ RideOrder screen > validates and shows error when pickup zone is empty 16ms
+   ✓ RideOrder screen > calls preview API and shows result 48ms
+   ✓ RideOrder screen > calls submit API with Idempotency-Key header 26ms
+   ✓ RideOrder screen > disables buttons while submitting 24ms
+   ✓ RideOrder screen > shows error message when preview fails 19ms
+   ✓ RideOrder screen > shows error message when submit fails 19ms
+stderr | src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > renders all form fields including shipment details
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+
+stderr | src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > renders the saved-place pickers for pickup and dropoff (G-S9.1)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+
+stderr | src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > shows shipment type options
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+Warning: An update to SavedPlacePicker inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at SavedPlacePicker (/home/user/workspace/wasla/apps/customer-mini-app/src/components/SavedPlacePicker.tsx:9:3)
+    at div
+    at DeliveryOrder (/home/user/workspace/wasla/apps/customer-mini-app/src/screens/DeliveryOrder.tsx:13:57)
+
+ ✓ src/__tests__/DeliveryOrder.test.tsx (8 tests) 234ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/RideOrder.test.tsx > RideOrder screen > a failed places load is visible and retry loads the places (CLM-0622)
+TestingLibraryElementError: Unable to find an element by: [data-testid="pickup-place-select-error"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"screen ride-order-screen"[39m
+    [36m>[39m
+      [36m<h1>[39m
+        [0mطلب مشوار[0m
+      [36m</h1>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-place"[39m
+        [36m>[39m
+          [0mمكان محفوظ لنقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"مكان محفوظ لنقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-place-select"[39m
+          [33mid[39m=[32m"pickup-place"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mاختر مكانًا محفوظًا[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-zone"[39m
+        [36m>[39m
+          [0mنقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"نقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-zone-input"[39m
+          [33mid[39m=[32m"pickup-zone"[39m
+          [33mplaceholder[39m=[32m"معرّف المنطقة"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-label"[39m
+        [36m>[39m
+          [0mاسم نقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"اسم نقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-label-input"[39m
+          [33mid[39m=[32m"pickup-label"[39m
+          [33mplaceholder[39m=[32m"مثال: المنزل، العمل"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-place"[39m
+        [36m>[39m
+          [0mمكان محفوظ للوصول[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"مكان محفوظ للوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-place-select"[39m
+          [33mid[39m=[32m"dropoff-place"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mاختر مكانًا محفوظًا[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-zone"[39m
+        [36m>[39m
+          [0mنقطة الوصول[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"نقطة الوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-zone-input"[39m
+          [33mid[39m=[32m"dropoff-zone"[39m
+          [33mplaceholder[39m=[32m"معرّف المنطقة"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-label"[39m
+        [36m>[39m
+          [0mاسم نقطة الوصول[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"اسم نقطة الوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-label-input"[39m
+          [33mid[39m=[32m"dropoff-label"[39m
+          [33mplaceholder[39m=[32m"مثال: المنزل، العمل"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"vehicle-class"[39m
+        [36m>[39m
+          [0mنوع المركبة[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"نوع المركبة"[39m
+          [33mdata-testid[39m=[32m"vehicle-class-select"[39m
+          [33mid[39m=[32m"vehicle-class"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"sedan"[39m
+          [36m>[39m
+            [0mسيدان[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"suv"[39m
+          [36m>[39m
+            [0mدفع رباعي[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"van"[39m
+          [36m>[39m
+            [0mفان[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"pickup"[39m
+          [36m>[39m
+            [0mبيك أب[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"motorcycle"[39m
+          [36m>[39m
+            [0mدراجة نارية[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"truck_small"[39m
+          [36m>[39m
+            [0mشاحنة صغيرة[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"price-mode"[39m
+        [36m>[39m
+          [0mنمط السعر[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"نمط السعر"[39m
+          [33mdata-testid[39m=[32m"price-mode-select"[39m
+          [33mid[39m=[32m"price-mode"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"negotiable"[39m
+          [36m>[39m
+            [0mقابل للتفاوض[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"customer_offer"[39m
+          [36m>[39m
+            [0mسعر مقترح[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"notes"[39m
+        [36m>[39m
+          [0mملاحظات[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33maria-label[39m=[32m"ملاحظات"[39m
+          [33mdata-testid[39m=[32m"notes-input"[39m
+          [33mid[39m=[32m"notes"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mplaceholder[39m=[32m"أضف ملاحظات للسائق..."[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-actions"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mdata-testid[39m=[32m"preview-button"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mمعاينة الطلب[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mdata-testid[39m=[32m"submit-button"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mإرسال الطلب[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"screen ride-order-screen"[39m
+    [36m>[39m
+      [36m<h1>[39m
+        [0mطلب مشوار[0m
+      [36m</h1>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-place"[39m
+        [36m>[39m
+          [0mمكان محفوظ لنقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"مكان محفوظ لنقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-place-select"[39m
+          [33mid[39m=[32m"pickup-place"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mاختر مكانًا محفوظًا[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-zone"[39m
+        [36m>[39m
+          [0mنقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"نقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-zone-input"[39m
+          [33mid[39m=[32m"pickup-zone"[39m
+          [33mplaceholder[39m=[32m"معرّف المنطقة"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"pickup-label"[39m
+        [36m>[39m
+          [0mاسم نقطة الالتقاط[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"اسم نقطة الالتقاط"[39m
+          [33mdata-testid[39m=[32m"pickup-label-input"[39m
+          [33mid[39m=[32m"pickup-label"[39m
+          [33mplaceholder[39m=[32m"مثال: المنزل، العمل"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-place"[39m
+        [36m>[39m
+          [0mمكان محفوظ للوصول[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"مكان محفوظ للوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-place-select"[39m
+          [33mid[39m=[32m"dropoff-place"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m""[39m
+          [36m>[39m
+            [0mاختر مكانًا محفوظًا[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-zone"[39m
+        [36m>[39m
+          [0mنقطة الوصول[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"نقطة الوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-zone-input"[39m
+          [33mid[39m=[32m"dropoff-zone"[39m
+          [33mplaceholder[39m=[32m"معرّف المنطقة"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"dropoff-label"[39m
+        [36m>[39m
+          [0mاسم نقطة الوصول[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-label[39m=[32m"اسم نقطة الوصول"[39m
+          [33mdata-testid[39m=[32m"dropoff-label-input"[39m
+          [33mid[39m=[32m"dropoff-label"[39m
+          [33mplaceholder[39m=[32m"مثال: المنزل، العمل"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"vehicle-class"[39m
+        [36m>[39m
+          [0mنوع المركبة[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"نوع المركبة"[39m
+          [33mdata-testid[39m=[32m"vehicle-class-select"[39m
+          [33mid[39m=[32m"vehicle-class"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"sedan"[39m
+          [36m>[39m
+            [0mسيدان[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"suv"[39m
+          [36m>[39m
+            [0mدفع رباعي[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"van"[39m
+          [36m>[39m
+            [0mفان[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"pickup"[39m
+          [36m>[39m
+            [0mبيك أب[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"motorcycle"[39m
+          [36m>[39m
+            [0mدراجة نارية[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"truck_small"[39m
+          [36m>[39m
+            [0mشاحنة صغيرة[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"price-mode"[39m
+        [36m>[39m
+          [0mنمط السعر[0m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-label[39m=[32m"نمط السعر"[39m
+          [33mdata-testid[39m=[32m"price-mode-select"[39m
+          [33mid[39m=[32m"price-mode"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"negotiable"[39m
+          [36m>[39m
+            [0mقابل للتفاوض[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"customer_offer"[39m
+          [36m>[39m
+            [0mسعر مقترح[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-group"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mfor[39m=[32m"notes"[39m
+        [36m>[39m
+          [0mملاحظات[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33maria-label[39m=[32m"ملاحظات"[39m
+          [33mdata-testid[39m=[32m"notes-input"[39m
+          [33mid[39m=[32m"notes"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mplaceholder[39m=[32m"أضف ملاحظات للسائق..."[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"form-actions"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mdata-testid[39m=[32m"preview-button"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mمعاينة الطلب[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mdata-testid[39m=[32m"submit-button"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mإرسال الطلب[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/__tests__/RideOrder.test.tsx:148:32
+    146|     render(<RideOrder />);
+    147| 
+    148|     const alert = await screen.findByTestId("pickup-place-select-error…
+       |                                ^
+    149|     expect(alert).toHaveAttribute("role", "alert");
+    150|     expect(alert).toHaveTextContent("تعذّر تحميل الأماكن المحفوظة");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 23 passed (24)
+   Start at  00:59:46
+   Duration  3.24s (transform 232ms, setup 160ms, collect 361ms, tests 1.62s, environment 723ms, prepare 113ms)
+

@@ -1,0 +1,29 @@
+# PR #730 — read 2026-10-22T09:3xZ (GET pulls/730, pulls/730/reviews, commits/{head}/check-runs, compare/main...head)
+head=c5480eb679b8b791c5de21646d5a059aef019ba2 base=9d82ea2f91ef252f497a378ea27407c130dd6626 state=open draft=false mergeable=false mergeable_state=dirty commits=15 changed_files=45 updated_at=2026-10-22T07:57:39Z
+vs main ac3af2a5: ahead_by=15 behind_by=102 merge_base=9d82ea2f91ef252f497a378ea27407c130dd6626
+check-runs on head: total=42 {"success":42} last_completed=2026-10-17T23:42:47Z
+# reviews (id login state commit submitted_at):
+5543292618 xuuux-voox APPROVED b165f9dd 2026-10-16T05:06:15Z
+5543398202 xuuux-voox APPROVED 28e802b8 2026-10-16T05:22:41Z
+5543905751 xuuux-voox APPROVED 62745cb9 2026-10-16T06:35:37Z
+5544959555 xuuux-voox APPROVED 52b1a712 2026-10-16T08:24:04Z
+5545301122 xuuux-voox APPROVED 52b1a712 2026-10-16T08:52:17Z
+5546360166 xuuux-voox APPROVED 45e13f83 2026-10-16T10:21:01Z
+5554920863 xuuux-voox APPROVED 26ad7858 2026-10-17T00:01:13Z
+5555054759 xuuux-voox APPROVED cf83d11a 2026-10-17T00:25:42Z
+5555142899 xuuux-voox APPROVED cf83d11a 2026-10-17T00:44:56Z
+5555268934 xuuux-voox APPROVED cf83d11a 2026-10-17T01:10:02Z
+5555416754 xuuux-voox APPROVED cf83d11a 2026-10-17T01:45:28Z
+5555538974 xuuux-voox APPROVED cf83d11a 2026-10-17T02:20:29Z
+5556625776 xuuux-voox APPROVED cf83d11a 2026-10-17T06:24:32Z
+5596790475 xuuux-voox APPROVED c5480eb6 2026-10-21T08:15:49Z
+5597957994 xuuux-voox APPROVED c5480eb6 2026-10-21T09:56:41Z
+5610945166 xuuux-voox APPROVED c5480eb6 2026-10-22T07:57:39Z
+# files touching CI/deploy:
+.github/workflows/ci.yml
+scripts/checks/validate-workflow-supply-chain.sh
+scripts/ci/test-verify-sbom-attestations-live.sh
+scripts/ci/test-verify-sbom-attestations.sh
+scripts/ci/verify-sbom-attestations.sh
+# render-deploy.yml trigger on main: workflow_dispatch only (no push/schedule) — a merge does not start a deploy by itself; deploy-target.json mode=frozen environment=test owner_id=null isolation_evidence=null
+# verdict: HOLD. Approvals on c5480eb6 are review evidence, not owner authorization for INC-0007. The head is 102 commits behind main and conflicts (dirty); its checks are from 2026-10-17 on base 9d82ea2f, so none of them is evidence for a merge onto ac3af2a5.

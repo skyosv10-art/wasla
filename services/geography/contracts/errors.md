@@ -27,6 +27,7 @@
 | `GEO_INVALID_PUBLIC_ID` | `validation_error` | صيغة Wasla Public ID غير صالحة | لا تطابق `^WS-[0-9]{10}$` |
 | `GEO_UNSUPPORTED_LOCALE` | `validation_error` | locale غير مدعوم | locale ليس ضمن `ar`/`en`/`ur` |
 | `GEO_INVALID_REQUEST_BODY` | `validation_error` | جسم الطلب غير صالح شكلياً | PUT /geo/users/{id}/location بـ `zone_id` مفقود/غير نصي أو `source` خارج القيم المسموحة (أُضيف في MR 5 — طبقة HTTP) |
+| `GEO_INVALID_SEARCH_QUERY` | `validation_error` | معاملات البحث غير صالحة | GET /geo/zones/search بـ`q` مفقود أو طوله بعد القصّ خارج 2..64، أو `limit` ليس عددًا صحيحًا 1..20 (أُضيف في CLM-0645 — G-S9.3) |
 | `GEO_COUNTRY_NOT_FOUND` | `not_found` | لا بلد بهذا المعرّف | GET /geo/countries/{id}/regions لبلد غير موجود |
 | `GEO_REGION_NOT_FOUND` | `not_found` | لا منطقة بهذا المعرّف | GET /geo/regions/{id}/cities لمنطقة غير موجودة |
 | `GEO_CITY_NOT_FOUND` | `not_found` | لا مدينة بهذا المعرّف | GET /geo/cities/{id}/districts لمدينة غير موجودة |

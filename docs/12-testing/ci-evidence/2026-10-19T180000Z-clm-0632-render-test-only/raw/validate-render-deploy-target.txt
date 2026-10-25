@@ -1,0 +1,45 @@
+  ✓ Render deploy target declared (frozen, environment=test); render-sync.py has no built-in workspace; frozen mode deploys nothing without network
+  ✓ test-only: workflow_dispatch only (sha/purpose/confirm=test-only), deploy intent required, isolation preflight blocks production data before any deploy
+    ✓ deploy to the frozen legacy owner
+        caught by: owner_id tea-damm8atbedkc73ca3ahg is frozen
+    ✓ frozen but naming an owner
+        caught by: frozen mode must not name an owner_id
+    ✓ unknown mode
+        caught by: mode 'auto' is not frozen|deploy
+    ✓ built-in workspace default returns
+        caught by: render-sync.py hard-codes a workspace id
+    ✓ frozen check removed (would reach Render)
+        caught by: frozen render-sync.py did not skip cleanly: rc=1 refusing to deploy: RENDER_DEPLOY_INTENT=test-only and a RENDER_DEPLOY_PURPOSE (test-plan item) are required — Render is 
+    ✓ workflow stops using render-sync.py
+        caught by: render-deploy.yml does not run render-sync.py
+    ✓ target loses environment=test
+        caught by: deploy-target.json must declare environment=test (Render is a test environment only — CLM-0632)
+    ✓ target loses production_database_refs
+        caught by: deploy-target.json must list production_database_refs (isolation rule)
+    ✓ workflow regains a push trigger
+        caught by: render-deploy.yml must trigger on workflow_dispatch only (got ['push', 'workflow_dispatch'])
+    ✓ workflow gains a schedule
+        caught by: render-deploy.yml must trigger on workflow_dispatch only (got ['schedule', 'workflow_dispatch'])
+    ✓ workflow confirm gate removed
+        caught by: render-deploy.yml must gate on confirm=test-only and pass RENDER_DEPLOY_INTENT
+    ✓ workflow purpose optional
+        caught by: render-deploy.yml input purpose must be required
+    ✓ workflow target defaults to the pushed commit
+        caught by: render-deploy.yml must not default the target to the pushed commit
+    ✓ render-sync accepts environment=production
+        caught by: render-sync.py starts in deploy mode with environment=production
+    ✓ render-sync deploy intent check removed
+        caught by: render-sync.py deploys without RENDER_DEPLOY_INTENT=test-only (rc=1, calls=12, refusing to deploy: 2 isolation finding(s) — the Render test environment reaches production
+    ✓ isolation ignores production-named groups
+        caught by: isolation_findings wrong for 'production-named group linked': []
+    ✓ isolation ignores service DATABASE_URLs
+        caught by: isolation_findings wrong for 'service DATABASE_URL on the production project': []
+    ✓ isolation finding prints the value
+        caught by: isolation finding leaks a value for 'service DATABASE_URL on the production project'
+    ✓ isolation findings do not stop the deploy
+        caught by: isolation preflight not on the deploy path (rc=1, crashed past the guard: ModuleNotFoundError("No module named 'render_plan'"))
+    ✓ isolation preflight dropped from the deploy path
+        caught by: isolation preflight not on the deploy path (rc=1, crashed past the guard: ModuleNotFoundError("No module named 'render_plan'"))
+    ✓ isolation reads the env-var list
+        caught by: isolation preflight reads the env-var list instead of keys
+  ✓ self-test: 21/21 mutations caught

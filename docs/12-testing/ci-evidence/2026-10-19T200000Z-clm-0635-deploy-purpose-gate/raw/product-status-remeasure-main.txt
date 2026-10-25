@@ -1,0 +1,41 @@
+# PRODUCT_STATUS re-measurement at main efc8761c97de5a16106b918b94221889dab362e5 (2026-10-19T09:48:48Z) — code search, not a journey run
+## inventory
+routes=187 calls=77 unresolved=0 screens=26 services_db=27 e2e=15 bots=3
+{"routes_total": 187, "routes_domain": 165, "routes_domain_tested": 162, "routes_domain_success_and_failure": 160, "routes_domain_untested": ["partners DELETE /partners/credentials/:id", "partners POST /partners/lifecycle/suspend", "partners POST /partners/lifecycle/reinstate"], "caller_kind": {"app": 67, "internal-http": 30, "none-http": 68}, "routes_none_http": ["audit POST /audit/events", "billing POST /billing/invoices", "customers GET /customers/:waslaPublicId/order-requests/:orderRequestId", "delivery POST /store-orders", "delivery GET /store-orders/:orderPublicId", "delivery POST /store-orders/:orderPublicId/cancellation", "delivery PUT /store-orders/:orderPublicId/payment-mirror", "delivery POST /store-orders/:orderPublicId/confirmation", "delivery POST /store-orders/:orderPublicId/fulfillment-transition", "delivery GET /store-orders/:orderPublicId/delivery-task", "delivery POST 
+## P-03 identity session routes
+291:      "/identity/sessions",
+370:      "/identity/sessions/exchange",
+504:      "/identity/sessions/revoke",
+## P-04 edge wiring — what main.ts runs
+bots/driver-bot/src/main.ts:7: * It passes `buildApp` and does **not** call `runBot(BOT)`: `runBot` builds the app
+bots/driver-bot/src/main.ts:10: * see `runBotApp` in @wasla/bot-runtime for what it cost.
+bots/driver-bot/src/main.ts:13:import { runBotApp } from "@wasla/bot-runtime";
+bots/driver-bot/src/main.ts:15:import { BOT, buildApp } from "./server.js";
+bots/driver-bot/src/main.ts:17:void runBotApp(BOT, () => buildApp());
+bots/customer-bot/src/main.ts:7: * It passes `buildApp` and does **not** call `runBot(BOT)`: `runBot` builds the app
+bots/customer-bot/src/main.ts:10: * see `runBotApp` in @wasla/bot-runtime for what it cost.
+bots/customer-bot/src/main.ts:13:import { runBotApp } from "@wasla/bot-runtime";
+bots/customer-bot/src/main.ts:15:import { BOT, buildApp } from "./server.js";
+bots/customer-bot/src/main.ts:17:void runBotApp(BOT, () => buildApp());
+## P-04 production_open entries true?
+0 entries with production_open=true
+## D-03
+248:      const dispatchJob = await attemptDispatchJob(deps, previous);
+252:    const dispatchJob = await attemptDispatchJob(deps, orderRequest);
+306:  const dispatchJob = await attemptDispatchJob(deps, stored);
+326:async function attemptDispatchJob(
+## P-07 unconfiguredEventSink callers outside tests/definitions
+(no match)
+## R-07 trial callers in driver app/bot
+(no match)
+## D-06 escalated_community publisher in bots
+(no match)
+## render-deploy triggers
+['workflow_dispatch']
+## deploy target
+frozen None test
+## risks
+[(('accepted', 'high'), 1), (('accepted', 'low'), 2), (('accepted', 'medium'), 1), (('closed', 'critical'), 3), (('closed', 'high'), 17), (('closed', 'low'), 4), (('closed', 'medium'), 20), (('mitigating', 'high'), 6), (('mitigating', 'medium'), 4), (('open', 'high'), 4), (('open', 'low'), 3), (('open', 'medium'), 4)]
+## Render env (read by key, value not read): wasla-customers
+DISPATCH_SERVICE_URL: HTTP 404 (absent)
+ORDER_SERVICE_URL: HTTP 200 (present)

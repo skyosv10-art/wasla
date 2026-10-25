@@ -16,6 +16,7 @@ paths:
       tags: [health]
       summary: Liveness probe
       operationId: getHealth
+      security: []
       responses:
         '200':
           description: Service is alive
@@ -51,6 +52,10 @@ paths:
           schema:
             type: string
       responses:
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         '200':
           description: Ticket list with pagination cursor
           content:
@@ -70,6 +75,10 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateTicketRequest'
       responses:
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         '201':
           description: Ticket created
           content:
@@ -93,6 +102,10 @@ paths:
             type: string
             format: uuid
       responses:
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         '200':
           description: Ticket found
           content:
@@ -122,6 +135,10 @@ paths:
             schema:
               $ref: '#/components/schemas/AttachEvidenceRequest'
       responses:
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         '201':
           description: Evidence attached
           content:
@@ -151,6 +168,10 @@ paths:
             schema:
               $ref: '#/components/schemas/EscalateRequest'
       responses:
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         '200':
           description: Ticket escalated
           content:
@@ -180,6 +201,10 @@ paths:
             schema:
               $ref: '#/components/schemas/ResolveRequest'
       responses:
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         '200':
           description: Ticket resolved
           content:
@@ -203,6 +228,10 @@ paths:
             type: string
             format: uuid
       responses:
+        '401':
+          $ref: '#/components/responses/AuthUnauthorized'
+        '403':
+          $ref: '#/components/responses/AuthForbidden'
         '200':
           description: Ticket closed
           content:
@@ -373,6 +402,38 @@ components:
           type: string
           format: uuid
   responses:
+    AuthUnauthorized:
+      description: ترويسة هويّة الخدمة غائبة أو غير صالحة (401)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: object
+                required: [code, message]
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+    AuthForbidden:
+      description: الرمز صحيح لكنه يفتقد الصلاحية المطلوبة (403)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: object
+                required: [code, message]
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
     ErrorResponse:
       description: Error response
       content:

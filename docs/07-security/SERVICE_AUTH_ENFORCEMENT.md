@@ -708,6 +708,7 @@ const ownerScoped = (...scopes: string[]) => ({
 | `services/delivery/src/infrastructure/http-marketplace-catalog.ts` | marketplace | موقَّع | `services/delivery/src/__tests__/http-marketplace-catalog.test.ts` يقرأُ ترويسةَ التوقيعِ في كلِّ نداءٍ · `DELIVERY_MARKETPLACE_SCOPES` · **حدُّ السوقِ نفسُهُ غيرُ مفروضٍ بعدُ** (المراجعةُ 8/N · `CLM-0127`): التوقيعُ صفةُ المنادي لا رخصةٌ من المُنادى، فلا يُؤجَّلُ إلى أن يُفرَضَ الحدُّ. **⟵ وقد فُرِضَ الحدُّ في 29/N (`CLM-0150` · §2.8): هذا التوقيعُ صارَ مفحوصاً.** ويُقرأُ السطرُ الأصليُّ كما هوَ لأنَّ محوَهُ كانَ سيُخفي أنَّ التوقيعَ بقيَ بلا فحصٍ 21 مراجعةً. |
 | `services/delivery/src/infrastructure/http-marketplace-probe.ts` | marketplace | موقَّع | `services/delivery/src/__tests__/marketplace-health-probe.test.ts` يقرأُ ترويسةَ التوقيعِ والمسارَ المُوقَّعَ في كلِّ نداءٍ · `DELIVERY_MARKETPLACE_PROBE_SCOPES` = **قائمةٌ فارغةٌ** عن قصدٍ (مسبارُ صحّةٍ لا يقرأُ متجراً ولا منتجاً، فحملُ نطاقِ قراءةٍ يُوسِّعُ أثرَ سرقةِ رمزٍ بلا سببٍ) · وبوّابةُ الخروجِ تُثبِتُ قبولَ هذا التوقيعِ على حدِّ السوقِ الحقيقيِّ (المراجعةُ 15/N · `CLM-0136`) |
 | `services/delivery/src/infrastructure/http-marketplace-reservation.ts` | marketplace | موقَّع | `services/delivery/src/__tests__/http-marketplace-reservation.test.ts` يقرأُ ترويسةَ التوقيعِ في كلِّ نداءٍ · `DELIVERY_MARKETPLACE_SCOPES` (المراجعةُ 10/N · `CLM-0129`) |
+| `services/search/src/infrastructure/http-marketplace-catalog.ts` | marketplace | موقَّع | `services/search/src/__tests__/store-search.test.ts` يتحقّقُ من الرمزِ نفسِه (`verifyServiceToken` بجمهورِ marketplace مربوطًا بـ`GET` والمسارِ حرفيًّا) لـ`/stores/{slug}` و`/products/{id}` · `SEARCH_MARKETPLACE_SCOPES` = `marketplace:product:read` + `marketplace:store:read` · منحةُ `PRODUCTION_GRANTS[search]` · **CLM-0649 (G-S9.19):** حلَّ محلَّ `catalog-read-port.ts` الذي كانَ يُنادي marketplace **بلا هويّةٍ** وبـ`this.fetchImpl(` فلم يرَه البابُ 7 (يقيسُ `fetch(`)؛ وmarketplace مفروضٌ، فكانَ كلُّ جلبٍ سيُرفَضُ 401 ويُعلِّقُ الحدثَ. **لا تركيبَ إنتاجيًّا للمُرحِّلِ بعدُ** (يُركَّبُ في الاختبارِ و`packages/search-e2e` فقط) — الموقِّعُ مُثبَتٌ وحدةً لا نشرًا |
 | `services/customers/src/infrastructure/http-geography.ts` | geography | موقَّع | `services/customers/src/__tests__` (عبر بوّاباتِ e2e) · `CUSTOMERS_GEOGRAPHY_SCOPES` |
 | `services/customers/src/infrastructure/http-identity-lookup.ts` | identity | موقَّع | `services/identity/src/__tests__/http/service-identity.test.ts` · `CUSTOMERS_IDENTITY_SCOPES` |
 | `services/customers/src/infrastructure/http-order-intake.ts` | orders | موقَّع | `services/customers/src/__tests__/http-order-intake.test.ts` · `CUSTOMERS_ORDERS_SCOPES` |
@@ -750,13 +751,26 @@ const ownerScoped = (...scopes: string[]) => ({
 | `packages/load-testing/src/harness.ts` | مِعْوانُ اختبارِ الحملِ والفوضى: يُولِّدُ حملًا متزامنًا ضدَّ staging ويقيسُ SLOs. (CLM-0342 · M4-03) |
 | `packages/incident-ops/src/harness.ts` | مِعْوانُ عمليّاتِ الحوادثِ والاسترجاعِ: يتحقّقُ من صحّةِ الخدماتِ بعدَ الاسترجاع. (CLM-0344 · M4-04) |
 | `services/observability/src/scraper.ts` | مُجمِّعُ مراقبةٍ — يقرأُ /metrics من 14 خدمة (نقطةُ نهايةٍ عامّةٌ بلا مُصادقةٍ لـPrometheus). ليسَ نداءً بينَ الخدماتِ ولا يحملُ رمزَ خدمةٍ. (CLM-0335 · M2-08 Stage B) |
-| `packages/channel-edge/src/create-channel-edge.ts` | حدُّ القناةِ — يوجِّهُ الطلبَ إلى الخدمةِ الخلفيةِ بحمولةِ `X-Wasla-User-Assertion` القادمِ من `exchange` لا بموقِّعِ الخدمةِ المباشرِ؛ الحدُّ لا يُنادي خلفيًّا بلا تأكيدٍ موقَّعٍ من identity (ADR-069 · §2.1-2 · CLM-0524). |
+| `packages/channel-edge/src/create-channel-edge.ts` | حدُّ القناةِ — يوجِّهُ الطلبَ إلى الخدمةِ الخلفيةِ بحمولةِ `X-Wasla-User-Assertion` القادمِ من `exchange` لا بموقِّعِ الخدمةِ (المسارُ مُدرَجٌ في السجلِّ §2.5). |
+| `packages/bot-runtime/src/identity-bootstrap.ts` | منفذُ القنواتِ إلى identity: موقَّعٌ (`signRequest: ServiceRequestSigner` — identity-bootstrap.test.ts يقرأُ الترويسةَ)؛ خارجُ تسميةِ عملاءِ `*/src/infrastructure/http-*.ts` فلم يُحصَ في §2.5 — **G-S9.19 · CLM-0654** |
+| `packages/bot-runtime/src/user-assertion.ts` | نحو identity: موقَّعٌ (`verifyServiceToken` على خادمٍ حقيقيٍّ في user-assertion.test.ts؛ عمى البابِ 7 عن `this.fetchImpl(` هوَ أحدُ وجهَي RISK-0027) — **G-S9.19 · CLM-0654** |
+| `packages/telegram-adapter/src/bot-api-client.ts` | حدٌّ خارجيٌّ إلى Telegram Bot API بنموذجِ مصادقةِ توكنِ البوتِ (ADR-007 §3) — ليسَ حدًّا داخليًا بينَ الخدماتِ ولا يَنبغي أن يحملَ موقِّعَها — **G-S9.19 · CLM-0654** |
+| `packages/tick-scheduler/src/main.ts` | جذرُ تركيبٍ: يمرِّرُ `globalThis.fetch` إلى العميلِ الموقَّعِ http-tick.ts المُحصَى في §2.5 ولا يَندُبُ حدًّا بنفسِهِ — **G-S9.19 · CLM-0654** |
+| `packages/tick-scheduler/src/scheduler.ts` | إعلانُ منفذِ حقنِ fetch (`readonly fetch: typeof fetch`) وتمريرُه موقَّعاً إلى العميلِ المُحصَى http-tick.ts عبر postTick — لا يَندُبُ حدّاً بنفسِهِ — **G-S9.19 · CLM-0654** |
+| `packages/customer-e2e/src/stub-order-engine.ts` | خادمٌ واردٌ بديلٌ لمحرّكِ الطلباتِ داخلَ بوّابةِ خروجِ العميلِ (`createServer` من `node:http` · لا نداءَ صادرٍ: لا `request(` ولا `get(` — مقيسٌ 2026-10-23) — يُحصى منذُ CLM-0667 لأنّ النمطَ يرى استيرادَ `node:http` لا اتجاهَه. |
+| `services/observability/src/index.ts` | خادمُ جامعِ المراقبةِ الواردُ (`http.createServer` · لا نداءَ صادرٍ — مقيسٌ 2026-10-23)؛ الكشطُ الصادرُ نفسُهُ في `services/observability/src/scraper.ts` مُعلَنٌ أعلاهُ بسببِهِ — يُحصى منذُ CLM-0667. |
 
 <!-- fetch-exceptions:end -->
 
 ### 4.2 · أغلفةُ النداءِ المُعلَنةُ — قُفلٌ بالرفضِ افتراضاً (البابُ 8)
 
-البابُ 7 يقيسُ `fetch(` **وحدَهُ**، وهذا حدُّهُ المُعلَنُ. فلو دخلَ المستودعَ
+**تصحيحٌ مؤرَّخٌ (G-S9.19 · CLM-0654 · 2026-10-21):** كانَ النصُّ هنا يقولُ إنّ
+البابُ 7 يقيسُ `fetch(` **وحدَهُ** وأنّ هذا حدُّهُ المُعلَنُ — وكانَ صادقاً حتى هذا
+التاريخِ، وهذا عينُ العمى الذي سجّلَتهُ RISK-0027 (الجالبُ المحقونُ `fetchImpl(`
+وأخواتُهُ لم تُرَ). النمطُ الآنَ يُحصي الجالبَ المحقونَ والمُسمّى بغيرِ اسمِهِ
+(`fetchImpl` · `*Fetch` · `globalThis.fetch`) كما يُحصي `fetch(` الخامَ، فحدُّ
+البابِ المُعلَنُ اتسعَ معَهُ، وبقيَ مُعلَناً هنا. أما البابُ 8 فباقٍ على علّتِهِ
+الأصليّةِ: لو دخلَ المستودعَ
 `axios` أو `undici` أو غيرُهما لعمِيَ البابُ 7 **بصمتٍ وبقيَ أخضرَ** — وهوَ عمىً
 أسوأُ من عمى `RISK-0027` لأنّهُ يُولَدُ أخضرَ فلا يُنبِّهُ أحداً. فقُفِلَ البابُ
 هنا **بالرفضِ افتراضاً:** أيُّ مكتبةِ نداءٍ في أيِّ `package.json`
@@ -919,7 +933,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | الصلاحيّة | المسارُ الذي تفتحُه |
 |---|---|
 | `geography:hierarchy:read` | `GET /geo/countries` · `GET /geo/countries/{countryId}/regions` · `GET /geo/regions/{regionId}/cities` · `GET /geo/cities/{cityId}/districts` · `GET /geo/districts/{districtId}/zones` |
-| `geography:zone:read` | `GET /geo/zones/{zoneId}` |
+| `geography:zone:read` | `GET /geo/zones/{zoneId}` · `GET /geo/zones/search` (CLM-0645) |
 | `geography:location:read` | `GET /geo/users/{waslaPublicId}/location` · `GET /geo/users/{waslaPublicId}/location/history` |
 | `geography:location:write` | `PUT /geo/users/{waslaPublicId}/location` |
 
@@ -1034,6 +1048,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 | `POST /audit/events` | `audit:write` | — (مسارٌ إداريٌّ بلا مُنتَفِعٍ) | — |
 | `GET /audit/events` | `audit:read` | — (مسارٌ إداريٌّ بلا مُنتَفِعٍ) | — |
 | `GET /health` | مفتوحٌ بتصنيفٍ صريح | — | — |
+| PUT · PATCH · DELETE على `/audit/events` و PUT · PATCH · DELETE · POST على `/audit/events/{id}` | **لا مسارَ مسجَّلٌ** — هويّةُ خدمةٍ مثبتةٌ بلا صلاحيّةٍ (المغلقُ افتراضيًّا للمسارِ غيرِ المسجَّلِ) ثمَّ **405 + `Allow`** (ADR-072 D2 · CLM-0605) | — | — |
 
 <!-- audit-scopes:end -->
 
@@ -1168,6 +1183,7 @@ axios-retry، request-promise، isomorphic-fetch، cross-fetch) يجبُ أن ت
 |---|---|---|
 | `GET /search/ready` | `search:ready:read` | — (عمليّةٌ داخليّةٌ) |
 | `GET /search/products` | `search:products:read` | — (عمليّةٌ داخليّةٌ) |
+| `GET /search/stores` | `search:stores:read` | — (عمليّةٌ داخليّةٌ · بحثُ المتاجرِ بالاسمِ G-S9.7 · CLM-0649 · ADR-025 §6 · صلاحيّةٌ مستقلّةٌ عن المنتجاتِ · مدخلُ حدٍّ P مغلقٌ ADR-025 §6.7) |
 | `GET /search/relay/dead-letters` | `search:relay-dead-letters:read` | — (عمليّةٌ داخليّةٌ · مسارُ تشغيلٍ) |
 | `POST /search/relay/dead-letters/{ledger}/{outbox_id}/requeue` | `search:relay-dead-letters:requeue` | — (عمليّةٌ داخليّةٌ · مسارُ تشغيلٍ · نطاقٌ مستقلٌّ عن نطاقِ القراءةِ: قراءةُ مقياسٍ ليست تغييرَ حالةِ صفٍّ) |
 | `POST /search/relay/dead-letters/{ledger}/{outbox_id}/acknowledgement` | `search:relay-dead-letters:acknowledge` | — (عمليّةٌ داخليّةٌ · مسارُ تشغيلٍ · **صلاحيّةٌ رابعةٌ مستقلّةٌ**: الإقرارُ يُخرِجُ صفّاً من حكمِ التنبيهِ، وجمعُهُ بصلاحيّةِ الإعادةِ كانَ يُعطي لوحةَ إنقاذٍ قدرةَ إسكاتِ ما لا تُصلِحُهُ) |

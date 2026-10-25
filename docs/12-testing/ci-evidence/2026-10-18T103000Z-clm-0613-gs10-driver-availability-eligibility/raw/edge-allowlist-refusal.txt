@@ -1,0 +1,6 @@
+  ✗ [EA-SNAPSHOT-NEW] driver-mini-app PUT /drivers/:waslaPublicId/availability: مدخل خارج لقطة route-enforcement.json — يحتاج قرارًا موثقًا
+  ✗ [EA-SNAPSHOT-NEW] driver-mini-app GET /drivers/:waslaPublicId/eligibility: مدخل خارج لقطة route-enforcement.json — يحتاج قرارًا موثقًا
+
+✗ edge-allowlist-guard: 2 إخفاقًا (من 31 مدخلًا)
+  - [EA-SNAPSHOT-NEW] driver-mini-app PUT /drivers/:waslaPublicId/availability: مدخل خارج لقطة route-enforcement.json — يحتاج قرارًا موثقًا
+  - [EA-SNAPSHOT-NEW] driver-mini-app GET /drivers/:waslaPublicId/eligibility: مدخل خارج لقطة route-enforcement.json — يحتاج قرارًا موثقًا

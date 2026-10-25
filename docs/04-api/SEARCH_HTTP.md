@@ -17,7 +17,7 @@
 هذا توثيقُ خدمةِ البحثِ لـ M5-12. **المراجعة 3/N (طبقة HTTP) مُدمجةٌ** فوق المراجعتَين 1/N (العقدُ والنطاقُ) و2/N (المستهلكُ relay). لا تُدّعى إكمالُ بوّابة relevance/load ولا وظائفُ CI التكامليّةُ بعد. ما يُغطّيه:
 
 - **عقدُ البياناتِ** (`schema.sql`): وثيقةُ فهرسِ المنتجِ المُشتقّة (`search_product_index`) مع فهارسِ `tsvector` (إنجليزي) و`pg_trgm` (عربي/تقريبي) وoutbox.
-- **عقدُ الواجهةِ** (`api.openapi.yml`): `GET /search/products` + `GET /search/health` + `GET /search/ready`.
+- **عقدُ الواجهةِ** (`api.openapi.yml`): `GET /search/products` + `GET /search/stores` (CLM-0649 · §2.1) + `GET /search/health` + `GET /search/ready`.
 - **عقدُ الأحداثِ** (`events.json`): أحداثُ دورةِ حياةِ الفهرسِ (بُنيَ/أُعيدَ بناؤُهُ/تدهورَ).
 - **كتالوجُ الأخطاءِ** (`errors.md`): أكوادٌ ثابتةٌ + مساراتُ فشلٍ.
 - **نواةُ النطاقِ** (`src/domain/`): تطبيعُ الاستعلامِ (عربي/إنجليز)، قواعدُ الترتيبِ المفسَّرة، قواعدُ الظهورِ المُعادةِ من الحالةِ.
@@ -45,6 +45,19 @@ GET /search/products?q=...&locale=ar|en&category_id=...&page=1&page_size=20&sort
 - **`category_id`** (اختياريٌّ): فلترُ تصنيف. التصنيفُ من أصلِ السوقِ لا يُخترَعُ هنا.
 - **`page`/`page_size`**: تجزئةٌ (1-based، الحدُّ الأعلى 50).
 - **`sort`**: `relevance` (افتراضي) · `price_asc` · `price_desc` · `newest`.
+
+### 2.1 بحثُ المتاجرِ بالاسمِ (G-S9.7 · CLM-0649 · ADR-025 §6)
+
+```text
+GET /search/stores?q=...&locale=ar|en|ur&page=1&page_size=20
+```
+
+- **نموذجُ قراءةٍ مشتقٌّ** `search_store_index` (أسماءُ ar/en/ur ونُسَخُها المطبَّعةُ) — marketplace مصدرُ الحقيقةِ، ولا `?q=` في مساراتِه (ADR-016 §9). الاسمُ يجلبُه الناقلُ عندَ `store_approved` بمنفذٍ **موقَّعٍ** (`GET /stores/{storeSlug}` · `marketplace:store:read`) قبلَ أيِّ تعديلٍ في الإسقاطِ.
+- **الإتاحةُ تُشتقُّ عندَ القراءةِ:** `store_state = 'approved'` ∧ منتجٌ واحدٌ على الأقلِّ منشورٌ ومعتمَدُ الاعتدالِ بمخزونٍ > 0 وغيرُ مؤرشَفٍ. لا عمودَ `is_visible`/`is_public`.
+- **المعاملاتُ (CLM-0652 · ADR-025 §6.8 — حدودُ `/search/products` نفسُها):** `q` 1..200 محرفٍ بعدَ القصِّ وغيرُ فارغٍ بعدَ التطبيعِ · `locale` ar/en/ur (ar افتراضيٌّ) · `page` عددٌ صحيحٌ ≥ 1 بلا حدٍّ أعلى · `page_size` 1..50 (20). **أيُّ معاملٍ آخرَ ⇒ `400 SEARCH_UNKNOWN_PARAMETER`.** *(كانت في CLM-0649: `q` 2..64 · `page` ≤ 50 · `page_size` ≤ 20 (10) — انحرافٌ صُحِّحَ.)*
+- **الجوابُ:** `{ items: [{ store_slug, title, category_slug }], page, page_size, total }` فقط؛ `title` بلغةِ `locale` أو العربيّةِ. المعالجُ يبني كلَّ عنصرٍ حقلًا حقلًا فلا يتسرّبُ ما يُرجعُه المنفذُ زيادةً.
+- **المطابقةُ والترتيبُ:** على كلِّ حقولِ الاسمِ بعدَ `normalizeStoreName` (التشكيلُ والتطويلُ · أ إ آ ٱ←ا · ى ی ئ←ي · ؤ←و · ة ہ ۃ←ه · ک←ك · خفضُ الحالةِ)؛ `%` و`_` و`\` حرفيّةٌ (`LIKE … ESCAPE '\'`)؛ تامٌّ ثم بادئةٌ ثم احتواءٌ ثم `store_slug` تصاعديًّا.
+- **الحارسُ:** `internalScoped(SEARCH_SCOPES.storesRead)` = `search:stores:read`. مدخلُ حدِّ العميلِ P **مغلقٌ** (ADR-025 §6.7).
 
 ---
 

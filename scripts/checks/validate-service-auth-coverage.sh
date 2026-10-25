@@ -20,7 +20,7 @@
 #   3) كلُّ صفٍّ يقول «موقَّع» يُثبِتُه grep في الملفِّ نفسِه — لا سجلَّ يكذب.
 #   4) كلُّ صفٍّ يقول «مؤجَّل» يحملُ مرجعَ البوّابةِ المؤجَّلِ إليها (M1-04).
 #   5) كلُّ حدٍّ يقول السّجلُّ إنّه مفروضٌ فيه registerServiceIdentity فعلاً.
-#   7) **لا مُناديَ خامٍ (`fetch(`) خارجَ بصرِ السّجلِّ** في services/ وbots/
+#   7) **لا مُناديَ خامٍ ولا جالبٍ محقونٍ (`fetch(` · `fetchImpl(` · `globalThis.fetch`) خارجَ بصرِ السّجلِّ** في services/ وbots/
 #      وpackages/ — إمّا عميلٌ مُحصَىً، أو استثناءٌ مُعلَنٌ بسببِه (`RISK-0027`).
 #   6) **جدولُ صلاحيّاتِ كلِّ حدٍّ يُطابِقُ ثابتَ الصلاحيّاتِ في شفرتِه** — لا
 #      صلاحيّةٌ مفروضةٌ غيرُ مكتوبةٍ، ولا صلاحيّةٌ مكتوبةٌ غيرُ مفروضةٍ.
@@ -124,8 +124,10 @@ LEDGER_BODY="$(awk '/<!-- coverage-ledger:start -->/{f=1;next}/<!-- coverage-led
 # أينَما كانَ يُقابَلُ بالسّجلِّ أو باستثناءٍ مُعلَنٍ بسببِه.
 # و`packages/*/src/infrastructure/http-*.ts` (CLM-0330): أوّلُ عميلٍ إنتاجيٍّ في
 # `packages/` هوَ مُجدوِلُ النبضاتِ (`packages/tick-scheduler`)، ويُنادي بـ`fetchImpl(`
-# المحقونِ فلا يراهُ نمطُ البابِ 7 (`\bfetch\(`) — فبدونِ هذا التوسيعِ كانَ عميلٌ
-# موقَّعٌ يعيشُ خارجَ بصرِ السّجلِّ كلِّهِ. التوسيعُ يُحاسِبُهُ كما يُحاسَبُ غيرُهُ.
+# المحقونِ. **تصحيحٌ مؤرَّخٌ (G-S9.19 · CLM-0654 · 2026-10-21):** النصُّ الأصليُّ
+# هنا قالَ إنّ نمطَ البابِ 7 لا يرى `fetchImpl(` — وكانَ صادقاً حتى هذا التاريخِ،
+# وهذا عينُ عمى RISK-0027. النمطُ الآنَ يُحصي الجالبَ المحقونَ والمُسمّى بغيرِ
+# اسمِهِ أيضاً (انظر 7-ج)، فالتوسيعُ بالتسميةِ صارَ احتياطاً لا حجاباً.
 mapfile -t CLIENTS < <(ls services/*/src/infrastructure/http-*.ts bots/*/src/infrastructure/http-*.ts packages/*/src/infrastructure/http-*.ts 2>/dev/null | sort)
 if (( ${#CLIENTS[@]} == 0 )); then
   bad "لم يُعثَر على أيِّ عميلٍ صادرٍ — تغيَّرَ التّرتيبُ، والحارسُ يفحصُ موضعاً لا وجودَ له"
@@ -250,7 +252,8 @@ for sfile in "${SCOPE_FILES[@]}"; do
 done
 
 # ── 8) قُفلُ أغلفةِ النداءِ: لا مكتبةَ HTTP تدخلُ بلا إعلانٍ ────────────────
-# البابُ 7 يقيسُ `fetch(` — وهذا حدُّهُ المُعلَنُ. فلو أُضيفَ `axios` أو `undici`
+# البابُ 7 يقيسُ `fetch(` الخامَ **والجالبَ المحقونَ** (منذُ CLM-0654 · G-S9.19)
+# — وهذا حدُّهُ المُعلَنُ. فلو أُضيفَ `axios` أو `undici`
 # غداً لصارَ البابُ 7 أعمى **بصمتٍ** وبقيَ أخضرَ، وهوَ عمىً أسوأُ من عمى
 # `RISK-0027` لأنّه يُولَدُ أخضرَ. فيُقفَلُ البابُ هنا **بالرفضِ افتراضاً**: أيُّ
 # مكتبةِ نداءٍ في أيِّ `package.json` يجبُ أن تُعلَنَ بسببِها بينَ
@@ -321,7 +324,26 @@ else
   done
 
   # 7-ج) كلُّ مُنادٍ خامٍ: عميلٌ مُحصَىً أو استثناءٌ مُعلَنٌ
-  RAW_PATTERN='\bfetch\('
+  # G-S9.19 (CLM-0654): كانَ النمطُ `\bfetch\(` وحدَهُ، فمرَّ عليهِ كلُّ من يخزّنُ fetch
+  # باسمٍ آخرَ (`fetchImpl` · `doFetch` · `globalThis.fetch`) ويُناديهِ من حقنٍ — وهذا
+  # هوَ عمى البابِ 7 الذي سجّلَتهُ RISK-0027 (عميلُ `catalog-read-port.ts` القديمُ
+  # كانَ يُنادي marketplace بلا هويّةٍ وبـ`this.fetchImpl(` فلم يُرَ). النمطُ الآنَ
+  # يُحصي **أيَّ إشارةِ قيمةٍ إلى fetch**: نداءً (`fetch(` · `fetchImpl(` · `*Fetch(`) أو
+  # حقنًا (`globalThis.fetch` · `typeof fetch`) أو **تخزينًا باسمٍ آخرَ** (`= fetch` · تمريرًا
+  # وسيطًا). **حدٌّ معلنٌ:** النمطُ يقيسُ الإشارةَ المباشرةَ للاسمِ؛ إعادةُ تسميةٍ عبر أكثرَ
+  # من قفزةٍ واحدةٍ (`const a = fetch; const b = a;`) تحتاجُ تحليلَ تدفقِ بياناتٍ (AST)
+  # ولا يُدَّعى بعدُ، والنمطُ لا يستبعدُ التعليقاتِ (أنماطُ القيمةِ مضبوطةٌ على الشجرةِ لا جدلًا).
+  # CLM-0667 (G-S9.19 · 2026-10-23): خمسةُ أشكالٍ قيسَ أنّها تُفلِتُ من نمطِ CLM-0654
+  # فأُضيفت — التفكيكُ بإعادةِ التسميةِ (`{ fetch: f } = globalThis` وبدايةُ سطرٍ
+  # في تفكيكٍ متعدّدِ الأسطرِ) · الوصولُ بالأقواسِ (`globalThis["fetch"]`) ·
+  # `Reflect.get/apply(…fetch…)` · ووحداتُ Node المدمجةُ `http`/`https`/`http2`
+  # (استيرادٌ ثابتٌ أو `require(` أو `import(` ديناميكيٌّ). هذهِ الأخيرةُ لا تمرُّ
+  # بـpackage.json فلا يقفلُها البابُ 6، فكانت عمىً مولوداً أخضرَ. النمطُ يرى
+  # الاستيرادَ لا الاتجاهَ، فالخادمُ الواردُ (`createServer`) يُحصى ويُعلَنُ استثناءً
+  # بسببِهِ. وما زالَ حدّاً مُعلَناً: grep لا AST — فالقفزةُ عبرَ الملفّاتِ (ملفٌّ
+  # يستوردُ مرجعاً صدّرَهُ ملفٌّ آخرُ) والمقابسُ الخامُّ (`node:net` · `node:tls`)
+  # والبناءُ الديناميكيُّ للاسمِ (`globalThis["fe"+"tch"]`) خارجَ البصرِ ولا تُدَّعى.
+  RAW_PATTERN='\bfetch\s*\(|\bfetch[A-Z][A-Za-z0-9_]*\s*\(|\b[a-z]+Fetch[A-Za-z0-9_]*\s*\(|\bglobalThis\.fetch\b|=\s*fetch\b|\btypeof\s+fetch\b|\(\s*fetch\s*[,)]|,\s*fetch\s*[,)]|\.fetch\b|(^|[{,])\s*fetch\s*:|\[\s*["'"'"'`]fetch["'"'"'`]\s*\]|\bReflect\.(get|apply)\s*\([^)]*\bfetch\b|\bfrom\s+["'"'"'](node:)?(https?|http2)["'"'"']|\b(require|import)\s*\(\s*["'"'"'](node:)?(https?|http2)["'"'"']\s*\)'
   for w in "${DECLARED_WRAPPERS[@]:-}"; do
     [[ -n "$w" ]] || continue
     RAW_PATTERN="$RAW_PATTERN|from '$w'|from \"$w\"|require\('$w'\)"
@@ -332,18 +354,72 @@ else
       --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=__tests__ \
       --exclude='*.test.ts' 2>/dev/null | sort -u
   )
+  # ── 7-د) المقابسُ والعملياتُ الخامّ (CLM-0681/0683 · G-S9.19) ── begin-raw-sockets ──
+  # فجوةُ المقابسِ الخامّ المُعلَنةُ في بصرِ البابِ 7: المقابسُ الخامّ — `node:net`/`node:tls`/
+  # `node:dgram` (وبلا بادئةٍ). لا تمرُّ عبرَ package.json فلا يقفلُها البابُ 8، ولا
+  # يشبهُ نداؤها fetch فيعمى عنها البابُ 7 — والخطرُ أنّ من يملكُ مقبساً خاماً
+  # يخاطبُ الحدودَ بلا هويّةِ خدمةٍ أصلاً. **القياسُ قبلَ الشيفرةِ:** كلُّ مراجعِها
+  # في الشجرةِ الحيّةِ (عشرُ ملفّاتِ `packages/*-e2e`) من نوعِ `import type {
+  # AddressInfo }` وحدَه — استيرادٌ نوعيٌّ يُمحى عندَ الترجمةِ فلا مقبسَ تشغيليّاً،
+  # فلا يُحصى ولا يحتاجُ استثناءً (لو حُصيَ لصارَ الاستثناءُ قاعدةً تُخفي الفرقَ
+  # بينَ النوعيِّ والتشغيليِّ). الحكمُ على الملفِّ: يُحصى إن كانَ فيهِ مرجعُ مقبسٍ
+  # **ليسَ** استيراداً نوعيًّا — `import { connect } from "node:net"` أو
+  # `require("tls")` أو `import("node:dgram")` الديناميكيُّ كلُّها تشغيليّةٌ وتُسقِط.
+  # حدٌّ معلنٌ باقٍ: grep لا AST — البناءُ الديناميكيُّ لاسمِ الوحدةِ خارجَ البصرِ.
+  #
+  # **توسعةُ CLM-0683 (2026-10-24 · المرحلةُ الثانيةُ من التكليف):** قياسُ أنماطِ
+  # الهروبِ من الحارسِ النصّيِّ أثبتَ ثلاثةً تمرُّ خضراءَ على الشجرةِ النظيفةِ:
+  # التفويضُ عبرَ ملفٍّ مستثنٍ يصدِّرُ fetch الخامَ باسمٍ محايدٍ، والاسمُ
+  # الديناميكيُّ للوحدةِ (`require("node:"+"net")`)، و`node:child_process` الذي
+  # يفتحُ قناةَ اتصالٍ خارجيّةً كاملةً (`exec("curl …")`) بلا أيِّ بصرٍ. الأوّلانِ
+  # يحتاجانِ تحليلَ استيرادٍ (AST) فيوثَّقانِ حدًّا متبقّيًا بقرارِ المالكِ لا
+  # يُدَّعى إغلاقُهُ؛ والثالثُ — معَ `node:dns` (استعلامُ الاسمِ قناةُ شبكةٍ
+  # مباشرةٌ) — نصّيُّ المطابقةِ كالمقابسِ سواءً فأُدمِجَ في نمطِ هذا البابِ.
+  # **القياسُ قبلَ الشيفرةِ:** صفرُ مراجعَ تشغيليّةٍ لهما في نطاقِ الحارسِ
+  # (services/ وbots/ وpackages/ بلا اختباراتٍ) — فالتوسعةُ لا تُنشئُ استثناءً
+  # جديداً ولا تُغيّرُ جرداً قائماً، وحدُّها أنّ من يستورِدُهما تشغيليًّا غداً
+  # يُقابَلُ بالسّجلِّ كما المقبسُ. وبآليّةِ CLM-0682 نفسِها: الاستيرادُ النوعيُّ
+  # (`import type { ExecOptions }`) تعليمةً لا سطراً يُقصُّ ثمّ يُفحَصُ الباقي.
+  SOCKET_PATTERN='\bfrom\s+["'"'"'](node:)?(net|tls|dgram|child_process|dns)["'"'"']|\brequire\s*\(\s*["'"'"'](node:)?(net|tls|dgram|child_process|dns)["'"'"']\s*\)|\bimport\s*\(\s*["'"'"'](node:)?(net|tls|dgram|child_process|dns)["'"'"']\s*\)'
+  # بلا أنبوبٍ يُغذّي grep -q (RISK-0037): أسطرُ المراجعِ تُكتَبُ في ملفٍّ مؤقّتٍ
+  # ثمّ يُسألُ عنها سؤالاً مباشراً. الاستثناءُ النوعيُّ **تعليمةً لا سطراً**
+  # (CLM-0682): يُقصُّ من رأسِ السطرِ تعليمةُ استيرادٍ نوعيٍّ كاملةً (`import
+  # type …;` — أو ذيلُ استيرادٍ نوعيٍّ متعدّدِ الأسطرِ `} from "net";`) ثمّ يُفحَصُ
+  # **الباقي**: سطرٌ تشغيليٌّ يحملُ `// import type` تعليقاً أو `require` بعدَ
+  # استيرادٍ نوعيٍّ في السطرِ نفسِهِ لا يُستثنى — الفحصُ للتعليمةِ لا لورودِ العبارةِ.
+  _SOCKETS_TMP="$(mktemp)"
+  mapfile -t SOCKET_USERS < <(
+    grep -rlE "$SOCKET_PATTERN" services bots packages \
+      --include='*.ts' \
+      --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=__tests__ \
+      --exclude='*.test.ts' 2>/dev/null | while IFS= read -r f; do
+        grep -E "$SOCKET_PATTERN" "$f" > "$_SOCKETS_TMP" 2>/dev/null || true
+        while IFS= read -r _sock_line; do
+          _sock_rest="$(printf '%s' "$_sock_line" | sed -E 's/^[[:space:]]*(import[[:space:]]+type\b[^;]*;?|}[[:space:]]*from[[:space:]]*["'"'"'][^"'"'"']+["'"'"'];?)[[:space:]]*//')"
+          if grep -qE "$SOCKET_PATTERN" <<< "$_sock_rest"; then printf '%s\n' "$f"; break; fi
+        done < "$_SOCKETS_TMP"
+      done
+  )
+  rm -f "$_SOCKETS_TMP"
+  for su in "${SOCKET_USERS[@]:-}"; do
+    [[ -n "$su" ]] || continue
+    seen_socket=0
+    for rc in "${RAW_CALLERS[@]}"; do [[ "$rc" == "$su" ]] && seen_socket=1 && break; done
+    (( seen_socket )) || RAW_CALLERS+=("$su")
+  done
+  # ── end-raw-sockets ──
   if (( ${#RAW_CALLERS[@]} == 0 )); then
-    bad "لا مُناديَ خامٍ في المستودعِ كلِّه — تغيَّرَ التّرتيبُ والحارسُ يعدُّ موضعاً لا وجودَ له"
+    bad "لا مُناديَ خامٍ ولا جالبَ محقونٍ في المستودعِ كلِّه — تغيَّرَ التّرتيبُ والحارسُ يعدُّ موضعاً لا وجودَ له"
   fi
   unseen=0
   for rc in "${RAW_CALLERS[@]}"; do
     has_exact "$rc" "${CLIENTS[@]}" && continue
     has_exact "$rc" "${FE_PATHS[@]:-}" && continue
-    bad "مُنادٍ خامٌ خارجَ بصرِ السّجلِّ: $rc"
+    bad "مُنادٍ خامٌ أو جالبٌ محقونٌ خارجَ بصرِ السّجلِّ: $rc"
     printf '      إمّا أن يُسمّى عميلاً في %s، أو يُعلَنَ استثناءً بسببِه بينَ العلامتَينِ.\n' "$LEDGER"
     unseen=1
   done
-  (( unseen )) || ok "لا مُناديَ خامٍ خارجَ البصرِ: ${#RAW_CALLERS[@]} ملفّاً (${#CLIENTS[@]} عميلاً + ${#FE_PATHS[@]} استثناءً مُعلَناً)"
+  (( unseen )) || ok "لا مُناديَ خامٍ ولا جالبَ محقونٍ ولا مقبساً ولا عمليّةً خامّةً خارجَ البصرِ: ${#RAW_CALLERS[@]} ملفّاً (${#CLIENTS[@]} عميلاً + ${#FE_PATHS[@]} استثناءً مُعلَناً · مقابسٌ وعملاءُ خامٌّ: ${#SOCKET_USERS[@]})"
 fi
 
 # ── 9) العقدُ المنشورُ لا يكذبُ على مُصادقةٍ مفروضةٍ ────────────────────
@@ -454,6 +530,68 @@ for contract in "${ALL_CONTRACTS[@]:-}"; do
     bad "عقدٌ يدَّعي مُصادقةً ولا إنفاذَ لها في شفرةِ حدِّه: $contract"
   fi
 done
+
+# 9-هـ) العملياتُ لا العقدُ وحده (CLM-0679 · RISK-0041 · مراجعةُ #820 — K2/K3)
+# البابُ 9-ب يقيسُ العقدَ على مستوى الملفِّ؛ ومراجعةُ RISK-0041 قاست أنّ هذا يتركُ
+# عمليّةً تُفتَحُ بصمتٍ (`security: []` على عمليةٍ مؤمَّنةٍ — K2) أو تُسقَطُ 401/403 من
+# توثيقِها فلا يُدافعُ أحدٌ عن العمليّةِ نفسِها (K3). هذا البابُ يقيسُ **كلَّ عمليّةٍ**:
+# ما عُلِّمَ عامًّا في العقدِ يجبُ أن يكونَ `config: OPEN` في شفرةِ الحدِّ نفسِهِ (لا وعدَ
+# أمنٍ كاذبَ في الاتّجاهينِ)، وما هوَ مؤمَّنٌ يُلزَمُ بتوثيقِ 401، وإن كانَ بصلاحيةٍ فبـ403
+# أيضًا — كما تقيسُها `@wasla/service-auth/fastify` فعلًا (401 هويةٌ غائبةٌ/فاسدةٌ · 403
+# صلاحيّةٌ ناقصةٌ). ولا يُطبَّقُ إلّا على عقدٍ يُعلِنُ أمنًا أصلًا (البابُ 9-ب يحرسُ
+# الاتّجاهَ الآخرَ)، ولا يُخترَعُ ردٌّ لا تقيسُهُ الشفرةُ: الحكمُ على ما في العقدِ لا على
+# ما ليسَ فيه.
+GATE9E="$(python3 - "${ENFORCED[@]:-}" <<'PY'
+import re, sys, yaml
+
+problems = []
+for svc in [a for a in sys.argv[1:] if a]:
+    app = f"services/{svc}/src/http/app.ts"
+    contract = f"services/{svc}/contracts/api.openapi.yml"
+    try:
+        code = open(app, encoding="utf-8").read()
+        spec = yaml.safe_load(open(contract, encoding="utf-8"))
+    except OSError:
+        continue  # البابُ 9-ب يحرسُ غيابَ العقدِ أو الشفرةِ؛ لا يُكرَّرُ هنا
+    if not isinstance(spec, dict):
+        continue
+    comps = spec.get("components") or {}
+    if not (spec.get("securitySchemes") or comps.get("securitySchemes") or spec.get("security")):
+        continue  # عقدٌ لا يُعلِنُ أمنًا: اتجاهُ البابِ 9-ب لا هذا
+    if not isinstance(spec.get("paths"), dict):
+        continue
+    code_open = set()
+    for m, p in re.findall(r"app\.(get|post|put|patch|delete)\(\s*\"([^\"]+)\"\s*,\s*\{ config: OPEN", code):
+        code_open.add((m.upper(), p))
+    gsec = spec.get("security") or []
+    for path, ops in spec["paths"].items():
+        if not isinstance(ops, dict):
+            continue
+        for method, op in ops.items():
+            if method not in ("get", "post", "put", "patch", "delete") or not isinstance(op, dict):
+                continue
+            sec = op.get("security")
+            tag = f"{svc} {method.upper()} {path}"
+            if sec == []:
+                if (method.upper(), path) not in code_open:
+                    problems.append(f"P|عمليّةٌ عُلِّمَتْ عامّةً في العقدِ وليست `config: OPEN` في شفرةِ الحدِّ (K2 — فتحٌ بصمتٌ لوعدِ أمنٍ): {tag}")
+            elif (method.upper(), path) in code_open:
+                problems.append(f"P|الشفرةُ تُعلِنُ المسارَ OPEN والعقدُ يُؤمّنُهُ (وعدُ أمنٍ كاذبٌ): {tag}")
+            else:
+                eff = sec if sec is not None else gsec
+                resp = op.get("responses") or {}
+                if "401" not in resp:
+                    problems.append(f"P|عمليّةٌ مؤمَّنةٌ بلا 401 موثَّقةٍ في عقدِها (K3 — الرفضُ مقيسٌ في @wasla/service-auth/fastify): {tag}")
+                scoped = any(any(v for v in req.values()) for req in eff if isinstance(req, dict))
+                if scoped and "403" not in resp:
+                    problems.append(f"P|عمليّةٌ مؤمَّنةٌ بصلاحيةٍ بلا 403 موثَّقةٍ (الرفضُ مقيسٌ في @wasla/service-auth/fastify): {tag}")
+for p in problems:
+    print(p)
+PY
+)"
+while IFS= read -r line; do
+  [[ -n "$line" ]] && bad "${line#P|}"
+done <<< "$GATE9E"
 
 # ── 10) إقفالُ جردِ حدودِ الدخولِ ─────────────────────────────────────────
 # التعليلُ الكاملُ والاتّجاهاتُ الأربعةُ في مِلفِّ البابِ نفسِه — مصدرُ حقيقةٍ

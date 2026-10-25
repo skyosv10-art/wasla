@@ -1,0 +1,3 @@
+ ✓ src/__tests__/policy.test.ts (40 tests) 40ms
+ ✓ src/__tests__/signer.test.ts (12 tests) 6ms
+      Tests  52 passed (52)

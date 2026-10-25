@@ -1,0 +1,76 @@
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > loads profile on mount
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > renders profile form with loaded data
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > saves profile via PUT
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > shows error on save failure
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > allows changing preferred language
+ ✓ src/__tests__/Profile.test.tsx > Profile screen > links to saved places management from Profile
+ ✓ src/__tests__/Home.test.tsx > Home > renders the app name
+ ✓ src/__tests__/Home.test.tsx > Home > renders each of the seven spec menu items (presence, not count)
+ ✓ src/__tests__/Home.test.tsx > Home > renders exactly seven menu links, in spec order, with no saved-places entry
+ ✓ src/__tests__/Home.test.tsx > Home > renders navigation links with correct hash routes
+ ✓ src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > renders all form fields including shipment details
+ ✓ src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > shows shipment type options
+ ✓ src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > validates and shows error when pickup zone is empty
+ ✓ src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > calls preview API with delivery order_type and shipment
+ ✓ src/__tests__/DeliveryOrder.test.tsx > DeliveryOrder screen > calls submit API with Idempotency-Key header
+ ✓ src/__tests__/RideOrder.test.tsx > RideOrder screen > renders all form fields
+ ✓ src/__tests__/RideOrder.test.tsx > RideOrder screen > shows offered price field only when price_mode is customer_offer
+ ✓ src/__tests__/RideOrder.test.tsx > RideOrder screen > validates and shows error when pickup zone is empty
+ ✓ src/__tests__/RideOrder.test.tsx > RideOrder screen > calls preview API and shows result
+ ✓ src/__tests__/RideOrder.test.tsx > RideOrder screen > calls submit API with Idempotency-Key header
+ ✓ src/__tests__/RideOrder.test.tsx > RideOrder screen > disables buttons while submitting
+ ✓ src/__tests__/RideOrder.test.tsx > RideOrder screen > shows error message when preview fails
+ ✓ src/__tests__/RideOrder.test.tsx > RideOrder screen > shows error message when submit fails
+ ✓ src/__tests__/SavedPlaces.test.tsx > SavedPlaces screen > loads places on mount
+ ✓ src/__tests__/SavedPlaces.test.tsx > SavedPlaces screen > shows empty state when no places
+ ✓ src/__tests__/SavedPlaces.test.tsx > SavedPlaces screen > renders places list
+ ✓ src/__tests__/SavedPlaces.test.tsx > SavedPlaces screen > adds a new place
+ ✓ src/__tests__/SavedPlaces.test.tsx > SavedPlaces screen > deletes a place
+ ✓ src/__tests__/SavedPlaces.test.tsx > SavedPlaces screen > shows error when adding without label
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > loads orders on mount
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > renders orders list
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > shows empty state when no orders
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > filters orders by status
+ ✓ src/__tests__/MyOrders.test.tsx > MyOrders screen > shows error on failure
+ ✓ src/__tests__/Search.test.tsx > Search screen > renders search input and button
+ ✓ src/__tests__/Search.test.tsx > Search screen > disables search button when query is empty
+ ✓ src/__tests__/Search.test.tsx > Search screen > calls search API with query params
+ ✓ src/__tests__/Search.test.tsx > Search screen > shows no results state
+ ✓ src/__tests__/Search.test.tsx > Search screen > renders search results
+ ✓ src/__tests__/Search.test.tsx > Search screen > shows error on failure
+ ✓ src/__tests__/Reputation.test.tsx > Reputation screen > loads score and ratings on mount
+ ✓ src/__tests__/Reputation.test.tsx > Reputation screen > renders score card
+ ✓ src/__tests__/Reputation.test.tsx > Reputation screen > shows no ratings state
+ ✓ src/__tests__/Reputation.test.tsx > Reputation screen > renders ratings list
+ ✓ src/__tests__/Marketplace.test.tsx > Marketplace screen > loads stores on mount
+ ✓ src/__tests__/Marketplace.test.tsx > Marketplace screen > renders stores list
+ ✓ src/__tests__/Marketplace.test.tsx > Marketplace screen > shows empty state when no stores
+ ✓ src/__tests__/Marketplace.test.tsx > Marketplace screen > shows error on failure
+ ✓ src/__tests__/Marketplace.test.tsx > Marketplace screen > loads products when store is clicked
+ ✓ src/__tests__/frontend-quality.test.tsx > locale selection (?locale=) > defaults to Arabic RTL
+ ✓ src/__tests__/frontend-quality.test.tsx > locale selection (?locale=) > accepts ?locale=en and switches document lang/dir
+ ✓ src/__tests__/frontend-quality.test.tsx > locale selection (?locale=) > ur stays RTL
+ ✓ src/__tests__/frontend-quality.test.tsx > locale selection (?locale=) > rejects unknown locales back to Arabic
+ ✓ src/__tests__/frontend-quality.test.tsx > offline banner > is hidden while online and appears on the offline event
+ ✓ src/__tests__/frontend-quality.test.tsx > api client network error mapping > maps a fetch TypeError rejection to network_error (status 0)
+ ✓ src/__tests__/frontend-quality.test.tsx > api client network error mapping > maps an aborted request to timeout (status 408)
+ ✓ src/__tests__/order-form.test.ts > order-form store > initializes with default values
+ ✓ src/__tests__/order-form.test.ts > order-form store > updates pickup zone and clears preview
+ ✓ src/__tests__/order-form.test.ts > order-form store > updates vehicle class and clears preview
+ ✓ src/__tests__/order-form.test.ts > order-form store > builds correct order request body
+ ✓ src/__tests__/order-form.test.ts > order-form store > builds order request with null offered_price for negotiable mode
+ ✓ src/__tests__/order-form.test.ts > order-form store > validates: missing pickup zone
+ ✓ src/__tests__/order-form.test.ts > order-form store > validates: missing dropoff zone
+ ✓ src/__tests__/order-form.test.ts > order-form store > validates: same pickup and dropoff zone
+ ✓ src/__tests__/order-form.test.ts > order-form store > validates: customer_offer with no price
+ ✓ src/__tests__/order-form.test.ts > order-form store > validates: customer_offer with zero price
+ ✓ src/__tests__/order-form.test.ts > order-form store > validates: notes too long
+ ✓ src/__tests__/order-form.test.ts > order-form store > validates: valid form returns null
+ ✓ src/__tests__/order-form.test.ts > order-form store > resetForm restores defaults
+ ✓ src/__tests__/session.test.ts > Session Store > starts unauthenticated
+ ✓ src/__tests__/session.test.ts > Session Store > stores token in memory only
+ ✓ src/__tests__/session.test.ts > Session Store > does not persist to localStorage
+ ✓ src/__tests__/session.test.ts > Session Store > clears session on clearSession()
+ ✓ src/__tests__/session.test.ts > Session Store > reports expired session
+ Test Files  12 passed (12)
+      Tests  74 passed (74)

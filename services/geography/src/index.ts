@@ -37,6 +37,7 @@ export {
   listDistricts,
   listZones,
   getZone,
+  searchZones,
 } from "./use-cases/list-hierarchy.js";
 export { getUserLocation } from "./use-cases/get-user-location.js";
 export type { GetUserLocationInput } from "./use-cases/get-user-location.js";

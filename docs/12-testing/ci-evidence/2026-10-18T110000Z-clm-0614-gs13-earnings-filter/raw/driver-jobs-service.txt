@@ -1,0 +1,10 @@
+ ✓ src/__tests__/http/driver-jobs.test.ts > GET /orders/drivers/:driverPublicId/jobs > returns an empty list for a driver with no completed jobs
+ ✓ src/__tests__/http/driver-jobs.test.ts > GET /orders/drivers/:driverPublicId/jobs > rejects a token whose beneficiary is a different driver (404, not 403)
+ ✓ src/__tests__/http/driver-jobs.test.ts > GET /orders/drivers/:driverPublicId/jobs > rejects an unsigned request (401)
+ ✓ src/__tests__/http/driver-jobs.test.ts > GET /orders/drivers/:driverPublicId/jobs > validates the driver_public_id path parameter shape
+ ✓ src/__tests__/http/driver-jobs.test.ts > GET /orders/drivers/:driverPublicId/jobs > returns a completed job for the driver
+ ✓ src/__tests__/http/driver-jobs.test.ts > GET /orders/drivers/:driverPublicId/jobs > refuses an absent or out-of-enum period with 400 ORDER_VALIDATION_FAILED naming period
+ ✓ src/__tests__/http/driver-jobs.test.ts > GET /orders/drivers/:driverPublicId/jobs > checks ownership before the period: a foreign driver with a bad period still gets 404
+ ✓ src/__tests__/http/driver-jobs.test.ts > GET /orders/drivers/:driverPublicId/jobs > applies the today / week / month windows to completed_at (2026-01-01T00:00Z)
+ ✓ src/__tests__/http/driver-jobs.test.ts > GET /orders/drivers/:driverPublicId/jobs > returns cancelled jobs too, labelled by status (the contract: completed or cancelled)
+      Tests  9 passed (9)

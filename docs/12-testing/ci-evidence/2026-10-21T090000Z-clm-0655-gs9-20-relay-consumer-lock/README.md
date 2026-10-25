@@ -1,0 +1,65 @@
+# CLM-0655 — G-S9.20: إقصاءٌ متبادَلٌ على مستوى المستهلِكِ لناقلِ البحثِ
+
+- **التاريخ:** 2026-10-21 · **العنصر:** M0-53 (G-S9.20) · **الخطر:** RISK-0070 (مسجَّلٌ على فرعِ #800 فقط حتى دمجِهِ — يُحدَّثُ بعدَ rebase)
+- **البيئة:** PostgreSQL 17.11 محلّيٌّ (apt.postgresql.org) — **قياسٌ محلّيٌّ لا يحلُّ محلَّ CI**؛ CI يشغّلُ `postgres:17`.
+
+## التشخيص (مقيسٌ)
+
+`runRelayBatch` لا معاملةَ فيه ولا قفلَ: قراءةُ نقطةِ التفتيشِ ثمّ لكلِّ حدثٍ قراءةٌ (`getConsumed`/`getProductProjection`) فكتاباتٌ منفصلةٌ. ناقلانِ على المستهلِكِ نفسِهِ يتداخلانِ. نُسِخَ السباقُ بمضخِّمِ تأخيرٍ عشوائيٍّ (0–3 ms قبلَ كلِّ نداءٍ؛ لا SQL ولا تأكيدَ ولا مهلةَ تغيّرت) — 9/480 جولةٍ خرقت الثابتَ — بنمطَي فشلٍ:
+
+1. **تحديثٌ مفقودٌ (دائمٌ):** كلُّ الصفوفِ نهائيّةٌ، و`product_state=published` لكن `moderation_state=pending · moderation_sequence=0` → 0 وثيقةِ فهرسٍ. ناقلٌ كتبَ حالةَ المنتَجِ من لقطةٍ أقدمَ من اعتمادِ الإشرافِ.
+2. **تعارضُ فرادةٍ:** كلاهما رأى «لا وثيقةَ متجرٍ» فأدرجَ؛ الثاني سقطَ على `ux_search_store_index_slug` → صفٌّ `pending` وتوقّفت الدفعةُ (تعافيهِ في الدفعةِ التاليةِ استدلالٌ غيرُ مقيسٍ).
+
+الحالةُ الأصليّةُ وحدَها لم تُظهِرْهُ بالتكرارِ هنا (60/60) — كانت 1/30 على PG18 في CLM-0649.
+
+## الإصلاحُ الأدنى
+
+- `ProjectionStore.withConsumerLock(consumerId, fn)` — **مطلوبٌ** على كلِّ مخزنٍ، و`runRelayBatch` يمرُّ به دائماً (لا مسارَ بلا إقصاءٍ).
+- PostgreSQL: `pg_advisory_lock(42627, hashtext(consumerId))` على جلسةٍ مستأجَرةٍ طوالَ الدفعةِ ثمّ `pg_advisory_unlock` في `finally` — تصميمُ ناقلِ delivery نفسُهُ (M5-13R · مساحةٌ 42626) بمساحةٍ مستقلّةٍ. قفلُ المعاملةِ يُفَكُّ عندَ أوّلِ COMMIT فلا يصلحُ.
+- رفضٌ صريحٌ لمجمَّعٍ أقلَّ من اتّصالَينِ (القفلُ يمسكُ جلسةً والدفعةُ تستعلمُ عبرَ المجمَّعِ — كانَ سيتعطّلُ على نفسِهِ مع `WASLA_PG_POOL_MAX=1`).
+- المخزنانِ الوهميّانِ في الاختباراتِ يحملانِ قفلاً حقيقيّاً في الذاكرةِ (سلسلةُ وعودٍ) لا تمريراً.
+
+## الاختبارات
+
+| الحالة | الملف | قبل | بعد |
+| --- | --- | --- | --- |
+| B لا يقرأُ نقطةَ التفتيشِ بينما A يمسكُ القفلَ · القفلُ ظاهرٌ في `pg_locks` ثمّ محرَّرٌ · B يعالجُ 0 | relay-concurrent-dedupe.integration | — (جديدٌ) | ✓ |
+| 60 جولةً مضخَّمةً: صفٌّ لكلِّ outbox_id · كلُّها نهائيّةٌ · وثيقةٌ واحدةٌ | relay-concurrent-dedupe.integration | 2/300 خرقٌ (بلا قفلٍ) | 0/300 |
+| رفضُ مجمَّعٍ من اتّصالٍ واحدٍ | relay-concurrent-dedupe.integration | — | ✓ |
+| الحالةُ الأصليّةُ (دونَ تغييرٍ) ×50 | relay-concurrent-dedupe.integration | 60/60 | 50/50 |
+| `runRelayBatch` يمرُّ بـ`withConsumerLock(consumerId)` · دفعتانِ متزامنتانِ تسلسليّتانِ (`get, write×5, get`) | relay.test (وحدة) | — | ✓ |
+
+المجموعةُ الكاملةُ: تكاملٌ 11 ملفّاً · 80/80 · وحدةٌ 14 ملفّاً · 177/177 · `tsc --noEmit` نظيفٌ. الخامُ: [raw/race-measurements.txt](raw/race-measurements.txt).
+
+## الطفرات ([raw/mutations-integration.txt](raw/mutations-integration.txt))
+
+| الطفرة | القاتل |
+| --- | --- |
+| M1 إزالةُ غلافِ القفلِ من `runRelayBatch` | الحالةُ الحتميّةُ (B قرأ أثناءَ قفلِ A) + حالتا الوحدةِ |
+| M2 مفتاحُ قفلٍ مختلفٌ لكلِّ نداءٍ (قفلٌ لا يقصي) | الحالةُ الحتميّةُ |
+| M3 إزالةُ رفضِ المجمَّعِ الأحاديِّ | حالةُ الرفضِ |
+
+**قراءةٌ صادقةٌ:** المضخِّمُ إشارةُ انحدارٍ لا قاتلُ طفرةٍ موثوقٌ (≈0.7–1.9% للجولةِ؛ مرَّ 0/60 تحتَ M1 في 3 من 5 أشواطٍ). القاتلُ هو الحالةُ الحتميّةُ.
+
+## ما لم يُثبَتْ
+
+- حكمُ CI (`postgres:17`) — يُسجَّلُ بالإضافةِ.
+- **بالإضافةِ · 2026-10-22 · CLM-0658 (حكمٌ مقيسٌ):** دُمجَ #803 بضغطٍ إلى main بالبصمةِ `2a1f7348` (19:19:20Z) — وهو رأسُ main النهائيُّ بعدَ السلسلةِ. على الرأسِ النهائيِّ `2f58e320`: WASLA CI [39649278571](https://github.com/skyosv10-art/wasla/actions/runs/39649278571) ⇒ success وRoadmap freshness [39649277754](https://github.com/skyosv10-art/wasla/actions/runs/39649277754) ⇒ success. وعلى main بعدَ الدمجِ: WASLA CI [39660605222](https://github.com/skyosv10-art/wasla/actions/runs/39660605222) ⇒ success وRoadmap freshness [39660605145](https://github.com/skyosv10-art/wasla/actions/runs/39660605145) ⇒ success (image-supply-chain success). RISK-0070 يبقى **mitigating** لا closed: 2/300 قبلَ و0/300 بعدَ قياسٌ محلّيٌّ على PostgreSQL 17، والمضخِّمُ ليسَ قاتلَ طفراتٍ حتميًّا، وغيابُ السباقِ ليسَ ضمانًا مطلقًا؛ والإغلاقُ قرارُ مالكٍ. [دليلُ CLM-0658](../12-testing/ci-evidence/2026-10-22T005500Z-clm-0658-chain-post-merge-verdicts/README.md)
+- لا عاملَ ناقلٍ منشورٌ أصلاً (`runRelayBatch` بلا مُنادٍ إنتاجيٍّ) — الإصلاحُ في المكتبةِ قبلَ أن يُنشَرَ عاملٌ.
+- تعافي النمطِ 2 في الدفعةِ التاليةِ دونَ قفلٍ: استدلالٌ.
+- انتظارُ B محدودٌ بطولِ دفعةِ A (`batchSize`) بلا مهلةٍ صريحةٍ — كما في delivery.
+- إغلاقُ RISK-0070 قرارٌ بعدَ أدلّةِ main لا بنجاحِ اختبارٍ واحدٍ.
+
+## إضافةٌ مؤرَّخةٌ (2026-10-21) — بعدَ إعادةِ التأسيسِ على main `1066cdfc`
+
+- أدلّةُ PostgreSQL الأصليّةُ أعلاهُ محفوظةٌ دونَ تعديلٍ. أُعيدَ القياسُ على الشجرةِ المؤسَّسةِ: M1/M2/M3 مقتولةٌ بالحالةِ الحتميّةِ ([raw/mutations-integration.txt](raw/mutations-integration.txt)) · وحدةٌ 186/186 · تكاملٌ 82/82 ثلاثَ مرّاتٍ متتاليةٍ.
+- **0/300 و50/50 قياسانِ محلّيّانِ على PostgreSQL 17** — ليسا دليلَ CI ولا إنتاجٍ.
+- RISK-0070 → mitigating بالإضافةِ (لا closed). BASELINE أُعيدَ توليدُهُ بـ`scripts/verify.sh` → `scripts/baseline.sh` من [raw/verify.log](raw/verify.log) (verify_overall=passed · الحوكمةُ 689/0)؛ مجموعاتُ تكاملِ PostgreSQL متخطّاةٌ داخلَ verify.sh بالتصميمِ (مصفوفةُ CI) ولا تُعَدُّ نجاحاً هناك.
+
+## إضافةٌ مؤرَّخةٌ (2026-10-21، ~18:00 UTC) — التأسيسُ على `16e7f44e` وBASELINE من استنساخٍ كاملٍ
+
+- **الاستنساخُ:** `git clone https://github.com/skyosv10-art/wasla.git` بلا مرشِّحٍ (`partialclonefilter` فارغٌ · صفرُ كائنٍ ناقصٍ). فرقُ services/packages مطابقٌ بالبصمةِ لما قبلَ التأسيسِ.
+- **التحقّقُ:** `bash scripts/verify.sh` على الالتزامِ `74915e3b5a87` → rc=0 ([raw/verify-74915e3b.log](raw/verify-74915e3b.log) · [ترويسةُ البيئةِ](raw/verify-74915e3b.header.txt)): حزمةُ الحوكمةِ 695/0 · الفحصُ 11 (الأساسُ) نجحَ · **تخطٍّ مُعلَنٌ واحدٌ** (مجموعاتُ تكاملِ PostgreSQL — مصفوفةُ CI)، فالنجاحُ جزئيٌّ لا كاملٌ.
+- **BASELINE:** `BASELINE_DIRTY_REASON=… bash scripts/baseline.sh --log raw/verify-74915e3b.log --stdout` ثمّ `bash scripts/checks/validate-baseline.sh` → rc=0 ([raw/validate-baseline-74915e3b.txt](raw/validate-baseline-74915e3b.txt)). `risks_not_closed=28` = السجلُّ الحيُّ (28 غيرُ مغلقٍ من 71). `verify_overall=passed` مأخوذٌ من السجلِّ لا مكتوبٌ يدويًّا.
+- **السجلُّ السابقُ** [raw/verify.log](raw/verify.log) (استنساخٌ جزئيٌّ، `cb0d6c82`) محفوظٌ تاريخًا.
+- **رصدُ CI على main:** [raw/ci-main-16e7f44e-race-observation.txt](raw/ci-main-16e7f44e-race-observation.txt) — المحاولةُ 1 أخفقت بالسباقِ، والثانيةُ نجحت؛ لا تمحو الثانيةُ الأولى.

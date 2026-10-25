@@ -1,0 +1,31 @@
+# playwright admin-portal @ 9e1c622d — expected=30 unexpected=0 skipped=0 flaky=0
+passed	accessibility.spec.ts	dashboard has no WCAG A/AA violations
+passed	accessibility.spec.ts	users screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	drivers screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	orders screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	audit log screen has no WCAG A/AA violations
+passed	audit-rbac.spec.ts	audit log screen shows filter bar
+passed	audit-rbac.spec.ts	audit log renders events table when events exist
+passed	audit-rbac.spec.ts	audit log has action filter dropdown
+passed	audit-rbac.spec.ts	audit log has resource type filter
+passed	audit-rbac.spec.ts	operator role can view dashboard
+passed	audit-rbac.spec.ts	operator can view audit log
+passed	audit-rbac.spec.ts	operator can view orders
+passed	audit-rbac.spec.ts	audit log has no edit/delete buttons on events
+passed	audit-rbac.spec.ts	PUT to audit events returns 405
+passed	frontend-quality.spec.ts	locale override ?locale=en switches document lang/dir and renders English
+passed	frontend-quality.spec.ts	offline banner appears when the network drops and clears on reconnect
+passed	frontend-quality.spec.ts	no horizontal overflow at 375px
+passed	navigation.spec.ts	dashboard renders after login
+passed	navigation.spec.ts	navigates to users screen
+passed	navigation.spec.ts	navigates to drivers screen
+passed	navigation.spec.ts	navigates to orders screen
+passed	navigation.spec.ts	navigates to audit log screen
+passed	navigation.spec.ts	sidebar has all 5 nav links
+passed	orders-flow.spec.ts	drivers detail view shows document review buttons
+passed	orders-flow.spec.ts	orders screen shows search by public ID
+passed	orders-flow.spec.ts	orders screen shows order detail after search
+passed	users-drivers-flow.spec.ts	users screen shows search bar and empty state
+passed	users-drivers-flow.spec.ts	users screen renders table when results exist
+passed	users-drivers-flow.spec.ts	drivers screen shows search bar and table
+passed	users-drivers-flow.spec.ts	driver suspend button exists in detail view

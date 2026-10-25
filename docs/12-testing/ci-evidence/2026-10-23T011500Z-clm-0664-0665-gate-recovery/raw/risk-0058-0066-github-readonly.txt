@@ -1,0 +1,48 @@
+# RISK-0058 / RISK-0066 — قراءةٌ من واجهةِ GitHub فقط · 2026-10-23T01:15:16Z
+## RISK-0058 — dr-replacement-restore.yml (آخرُ 8 تشغيلات)
+39728298017 pull_request success 2026-10-22T05:29:17Z stage-zero/clm-0660-vitest-4-1-12-mocker-cves 9495d88b
+39728264410 pull_request success 2026-10-22T05:28:55Z stage-zero/clm-0660-vitest-4-1-12-mocker-cves 2126b9ba
+39722678560 pull_request success 2026-10-22T04:29:41Z stage-zero/clm-0660-vitest-4-1-12-mocker-cves a5969710
+39722652683 pull_request success 2026-10-22T04:29:24Z stage-zero/clm-0660-vitest-4-1-12-mocker-cves 3c538d86
+39719618151 pull_request success 2026-10-22T03:56:48Z stage-zero/clm-0660-vitest-4-1-12-mocker-cves 65f5e8c8
+39719585022 pull_request success 2026-10-22T03:56:26Z stage-zero/clm-0660-vitest-4-1-12-mocker-cves 374720fd
+39717287766 pull_request success 2026-10-22T03:31:15Z stage-zero/clm-0660-vitest-4-1-12-mocker-cves afd5cd1b
+38527739832 pull_request success 2026-10-14T07:20:59Z fix/clm-0555-replay-store-shares-host-pool 98c7f75d
+## آخرُ تشغيلٍ: وظائفُه
+Scenario 2 — DB unavailable (local postgres + fault proxy) | success | 2026-10-22T05:30:44Z → 2026-10-22T05:32:30Z
+Restore the stored production artifact into the replacement project | skipped | 2026-10-22T05:30:43Z → 2026-10-22T05:30:42Z
+(الرأس 9495d88b = PR #806 CLM-0660 ⇒ الدمج 76a223a2)
+## آخرُ تغييرٍ لـpackages/resilience/src/pg-guard.ts على main
+6ad1a384 2026-10-14 fix(clm-0555): replay store borrows the host's guarded pool — fleet ceiling 104 ⇒ 36 (ADR-070, RISK-0067) (#710)
+59bea99b 2026-10-09 CLM-0510: RISK-0067 — app-side pool limits: bounded max in withPgPoolDefaults (default 2, WASLA_PG_POOL_MAX 1..10, cal
+f53e0a78 2026-10-04 fix: CLM-0459 — guard probe default 2.5 s from live TLS measurement (1/140 false 503 at 2 s); ADR-059 amendment 3; bot
+## RISK-0066 — service-health.yml (آخرُ 5 تشغيلاتٍ مجدولة)
+39859217316 schedule success 2026-10-22T21:40:59Z 1d1d99f2
+39820984646 schedule success 2026-10-22T17:15:06Z 1d1d99f2
+39774739171 schedule success 2026-10-22T11:59:21Z 1d1d99f2
+39725122520 schedule success 2026-10-22T04:55:55Z c8fd6a6e
+39681455264 schedule success 2026-10-21T21:46:22Z 2a1f7348
+## آخرُها 39859217316 — الملخّص
+OK  audit          200 33.8s
+OK  customers      200 34.0s
+OK  delivery       200 23.9s
+OK  dispatch       200 33.5s
+OK  drivers        200 35.3s
+OK  geography      200 34.0s
+OK  identity       200 33.3s
+OK  marketplace    200 34.0s
+OK  matching       200 33.6s
+OK  negotiations   200 33.9s
+OK  orders         200 33.5s
+OK  reputation     200 34.9s
+OK  search         200 25.0s
+OK  subscriptions  200 33.7s
+healthy 14/14
+## issue #736
+OPEN · service-health: /health failed · created 2026-10-17T04:39:20Z · updated 2026-10-21T10:22:23Z
+## RISK-0067 — risk-0067-l1-isolated-load.yml / risk-0067-dr-calibration.yml (آخرُ التشغيلات)
+L1 38477010128 workflow_dispatch success 2026-10-13T22:19:32Z
+L1 38465371715 workflow_dispatch success 2026-10-13T20:45:45Z
+DR-cal 38841073296 pull_request success 2026-10-16T02:33:51Z
+DR-cal 38698400572 pull_request success 2026-10-15T07:23:15Z
+## حدود: لم يُقرأ Render API (لا مفتاحَ في بيئةِ المنفّذ ولا يُطلَب) — خطّةُ الخدمات وساعاتُ الخطّةِ المجانيّةِ المستهلكةُ غيرُ مقيسة.

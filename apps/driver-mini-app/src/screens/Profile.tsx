@@ -19,6 +19,8 @@ export function Profile() {
     fetchProfile,
     updateProfile,
     clearErrors,
+    eligibility,
+    fetchEligibility,
   } = useProfileStore();
 
   const [displayName, setDisplayName] = useState("");
@@ -29,8 +31,10 @@ export function Profile() {
   useEffect(() => {
     if (authenticated) {
       fetchProfile();
+      // G-S10 (CLM-0613): DMS §4.9 L213/L221 — eligibility state on Profile too.
+      void fetchEligibility();
     }
-  }, [authenticated, fetchProfile]);
+  }, [authenticated, fetchProfile, fetchEligibility]);
 
   useEffect(() => {
     if (profile) {
@@ -111,6 +115,14 @@ export function Profile() {
               {t(`profile.availability_${profile.declared_availability}`)}
             </span>
           </div>
+          {eligibility && (
+            <div className="info-row">
+              <span className="label">{t("home.eligibility_title")}</span>
+              <span className="value" data-testid="profile-eligibility">
+                {t(`home.eligibility_${eligibility.eligibility_state}`)}
+              </span>
+            </div>
+          )}
           {profile.suspension_reason_code && (
             <div className="info-row" data-testid="profile-suspension">
               <span className="label">{t("profile.suspension_reason")}</span>

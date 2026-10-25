@@ -1,0 +1,3 @@
+{"conclusion":"success","databaseId":39406893227,"headSha":"2e8e13348f38cf66e67b0dfcdfb000a02d24299c","name":"WASLA CI"}
+{"conclusion":"failure","databaseId":39402658627,"failed":["verify","governance-guard"],"headSha":"d2c335502c0a27867fc1bf3f70c96aab0a5bfe37","name":"WASLA CI"}
+{"conclusion":"failure","databaseId":39406728829,"failed":["verify","admin-portal-e2e","governance-guard"],"headSha":"cd88f6d1d803d556325ca614ff8e57557c88b0c5","name":"WASLA CI"}

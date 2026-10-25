@@ -7,6 +7,13 @@
  *
  * The audit log is append-only: there is no PUT, PATCH, or DELETE route,
  * and the repository ports expose only `append` and `list`.
+ *
+ * UAT-08 (ADR-072 D2 · owner decision 2026-10-18): a modification attempt on
+ * the audit log is rejected explicitly with 405 Method Not Allowed and an
+ * `Allow` header — not with the router's generic 404. The rejection is a
+ * hook on *unmatched* requests only, so it registers no route, needs no new
+ * scope, and runs after the service-identity hook (an unsigned attempt is
+ * still 401 before it learns anything). It never reaches the repository.
  */
 
 import Fastify, { type FastifyInstance } from "fastify";
@@ -31,6 +38,29 @@ export interface CreateAuditAppOptions {
     replayGuard: import("@wasla/service-auth").ServiceTokenReplayGuard;
     audience?: string;
   };
+}
+
+/** Methods that would modify an audit record (UAT-08). */
+const MODIFYING_METHODS: ReadonlySet<string> = new Set(["PUT", "PATCH", "DELETE"]);
+
+/**
+ * The audit-log resources and the methods each one actually supports.
+ * `/audit/events` serves GET (with Fastify's automatic HEAD) and POST.
+ * `/audit/events/:id` serves no method at all, so its `Allow` is empty
+ * (RFC 9110 §10.2.1 permits an empty Allow); POST there is also a write
+ * aimed at an existing record and is rejected the same way.
+ */
+const AUDIT_COLLECTION_ALLOW = "GET, HEAD, POST";
+const AUDIT_ITEM_PATH = /^\/audit\/events\/[^/]+$/;
+
+function auditMethodRejection(method: string, path: string): { allow: string } | null {
+  if (path === "/audit/events") {
+    return MODIFYING_METHODS.has(method) ? { allow: AUDIT_COLLECTION_ALLOW } : null;
+  }
+  if (AUDIT_ITEM_PATH.test(path)) {
+    return MODIFYING_METHODS.has(method) || method === "POST" ? { allow: "" } : null;
+  }
+  return null;
 }
 
 function toWire(event: AuditEvent) {
@@ -60,6 +90,22 @@ export function createAuditApp(options: CreateAuditAppOptions): FastifyInstance 
       audience: options.serviceIdentity.audience,
     });
   }
+
+  // Registered after the service-identity hook: identity is verified first.
+  app.addHook("onRequest", async (request, reply) => {
+    if (!request.is404) return;
+    const path = request.url.split("?")[0] ?? "";
+    const rejection = auditMethodRejection(request.method, path);
+    if (rejection === null) return;
+    return reply
+      .status(405)
+      .header("allow", rejection.allow)
+      .send({
+        code: "AUDIT_METHOD_NOT_ALLOWED",
+        message: "سجل التدقيق غير قابل للتعديل أو الحذف",
+        trace_id: request.id,
+      });
+  });
 
   app.get("/health", { config: OPEN }, async (_request, reply) => {
     return reply.status(200).send({ status: "ok" });

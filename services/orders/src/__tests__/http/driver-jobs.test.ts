@@ -120,4 +120,69 @@ describe("GET /orders/drivers/:driverPublicId/jobs", () => {
     expect(body.jobs[0].status).toBe("completed");
     expect(body.jobs[0].completed_at).toBeTruthy();
   });
+
+  // ── G-S13 (CLM-0614) ─────────────────────────────────────────────────────
+  async function assignedDriver(orderId: string): Promise<string> {
+    const assignments = await h.harness.repository.listAssignments(orderId);
+    const accepted = assignments.find((a) => a.state === "accepted");
+    expect(accepted, "should have an accepted assignment").toBeDefined();
+    return accepted!.driverPublicId;
+  }
+
+  async function jobs(driver: string, query: string) {
+    return h.app.inject({
+      method: "GET",
+      url: `/orders/drivers/${driver}/jobs${query}`,
+      headers: { "X-Customer-Public-Id": driver },
+    });
+  }
+
+  it("refuses an absent or out-of-enum period with 400 ORDER_VALIDATION_FAILED naming period", async () => {
+    for (const q of ["?period=decade", "?period=", "?period=TODAY", ""]) {
+      const res = await jobs(DRIVER, q);
+      expect(res.statusCode, `${q} → ${res.body}`).toBe(400);
+      const body = JSON.parse(res.body);
+      expect(body.code).toBe("ORDER_VALIDATION_FAILED");
+      // The orders envelope is {code, message, trace_id} — no details by contract.
+      expect(body.message).toContain("period");
+    }
+  });
+
+  it("checks ownership before the period: a foreign driver with a bad period still gets 404", async () => {
+    const res = await h.app.inject({
+      method: "GET",
+      url: `/orders/drivers/${DRIVER}/jobs?period=decade`,
+      headers: { "X-Customer-Public-Id": OTHER_DRIVER },
+    });
+    expect(res.statusCode, res.body).toBe(404);
+  });
+
+  it("applies the today / week / month windows to completed_at (2026-01-01T00:00Z)", async () => {
+    const orderId = await createOrder(h.harness);
+    await driveTo(h.harness, orderId, "completed");
+    const driver = await assignedDriver(orderId);
+    const count = async (period: string) => JSON.parse((await jobs(driver, `?period=${period}`)).body).jobs.length;
+
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T12:00:00.000Z")); // 12 h later
+    expect([await count("today"), await count("week"), await count("month")]).toEqual([1, 1, 1]);
+    vi.setSystemTime(new Date("2026-01-03T00:00:00.000Z")); // 2 days later
+    expect([await count("today"), await count("week"), await count("month")]).toEqual([0, 1, 1]);
+    vi.setSystemTime(new Date("2026-01-20T00:00:00.000Z")); // 19 days later
+    expect([await count("today"), await count("week"), await count("month")]).toEqual([0, 0, 1]);
+    vi.setSystemTime(new Date("2026-02-15T00:00:00.000Z")); // 45 days later
+    expect([await count("today"), await count("week"), await count("month")]).toEqual([0, 0, 0]);
+  });
+
+  it("returns cancelled jobs too, labelled by status (the contract: completed or cancelled)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T12:00:00.000Z"));
+    const orderId = await createOrder(h.harness);
+    await driveTo(h.harness, orderId, "driver_cancelled");
+    const driver = await assignedDriver(orderId);
+    const res = await jobs(driver, "?period=today");
+    expect(res.statusCode, res.body).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.jobs.map((j: { status: string }) => j.status)).toEqual(["driver_cancelled"]);
+  });
 });

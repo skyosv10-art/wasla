@@ -1,0 +1,98 @@
+# CLM-0648 — measurement commands on main 7166987 (verbatim output)
+
+$ sed -n 185,189p docs/15-decisions/ADR-016-marketplace-store-ownership-catalog-and-moderation-boundary.md
+### 9. **لا حذفَ ولا بحثَ**: النهايةُ `archived`، والبحثُ ملكُ الطور 12
+
+لا `DELETE FROM` في أيِّ مسارٍ من هذا العقد، ولا مسارَ `/search`، ولا معاملَ استعلامٍ نصّيٍّ
+`?q=`، ولا `tsvector`. القراءةُ تُرشَّح بتصنيفٍ وحالةٍ ومتجرٍ وتُصفَّح بمؤشّرٍ معتمٍ
+(`cursor`) بسقفٍ أقصاه 200. و`archived` نهايةٌ لا رجوعَ منها للمنتجِ والمتجرِ كلَيهما:
+
+$ rg -n "حقولٍ حرّةٍ" docs/15-decisions/ADR-025-marketplace-search-read-model.md
+155:| البحثُ في حقولٍ حرّةٍ يكتبُها صاحبُ المتجرِ | **مرفوضٌ** | «البحثُ في حقلٍ حرٍّ بحثٌ في أخطاءِ الإملاء» (ADR-016 — سببُ التصنيفِ المُعطى). التصنيفُ مُعطى ومُوزَّعٌ بعمقٍ ثابت. |
+
+$ rg -n "^  /" services/search/contracts/api.openapi.yml
+26:  /search/products:
+67:  /search/health:
+87:  /search/ready:
+
+$ rg -n "CREATE TABLE" services/search/contracts/schema.sql
+48:CREATE TABLE IF NOT EXISTS search_product_index (
+109:CREATE TABLE IF NOT EXISTS search_marketplace_store_state (
+124:CREATE TABLE IF NOT EXISTS search_marketplace_product_state (
+148:CREATE TABLE IF NOT EXISTS search_outbox (
+176:CREATE TABLE IF NOT EXISTS search_relay_consumed_events (
+224:CREATE TABLE IF NOT EXISTS search_relay_checkpoint (
+
+$ sed -n 109,122p services/search/contracts/schema.sql  (store projection: no title columns)
+CREATE TABLE IF NOT EXISTS search_marketplace_store_state (
+    store_id            UUID        PRIMARY KEY,
+    store_slug         TEXT        NOT NULL,
+    category_slug      TEXT        NOT NULL,
+    store_state        TEXT        NOT NULL CHECK (store_state IN ('draft','pending_review','approved','rejected','suspended','archived')),
+    state_sequence     INTEGER     NOT NULL CHECK (state_sequence >= 1),
+    updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────────────────────────────────────
+-- 3) search_marketplace_product_state — حالةُ المنتجِ المُستهلكةُ (إسقاطٌ)
+--    مصدرُ الحقيقةِ للبحثِ عن حالةِ المنتجِ والاعتدالِ والمخزونِ.
+--    `moderation_sequence` و`adjustment_sequence` يكشفانِ الأحداثِ القديمةَ
+--    لكلِّ بُعدٍ، فلا يُرجِعُ التسليمُ المُعادُ المخزونَ إلى الوراءِ.
+
+$ sed -n 1,8p services/search/src/infrastructure/catalog-read-port.ts
+/**
+ * HttpCatalogReadPort — the SANCTIONED read port for catalog data
+ * (GET /products/{productId}) per ADR-025 §2.3. Events carry no title/price
+ * (ADR-016 decisions 4 & 10); the relay fetches them here when a product
+ * becomes visible. The ProductResource returns sku + category_slug (not
+ * fabricated ids), which the relay writes verbatim into the index.
+ */
+
+
+$ rg -n "name: (state|owner_public_id|category_slug|q)$" services/marketplace/contracts/api.openapi.yml (listStores params)
+14:        - name: state
+18:        - name: owner_public_id
+22:        - name: category_slug
+
+$ rg -n "app.get\(\"/stores\"" services/marketplace/src/http/app.ts
+413:  app.get("/stores", { config: assertedStaff(MARKETPLACE_SCOPES.storeRead) }, async (request, reply): Promise<FastifyReply> => {
+
+$ rg -n "STORE_QUERY_FILTER_KEYS =" -A1 services/marketplace/src/http/requests.ts
+212:export const STORE_QUERY_FILTER_KEYS = Object.freeze([
+213-  "state",
+
+$ rg -n "required: \[store_id" services/marketplace/contracts/api.openapi.yml (StoreResource carries owner_public_id)
+1045:      required: [store_id, store_slug, owner_public_id, title_ar, category_slug, state, state_sequence, is_slug_locked, first_approved_at, created_at, updated_at]
+
+$ rg -n "isStoreVisible|storeVisible|isStorePublic|StoreVisib|store_visible" (whole repo, excl. node_modules) → expect no hits
+exit=1 (1 = no match)
+
+$ sed -n 429,441p packages/contracts/marketplace/src/index.ts (only product visibility is defined)
+export function isProductVisible(input: {
+  storeState: StoreState;
+  productState: ProductState;
+  moderationState: ProductModerationState;
+  quantityOnHand: number;
+}): boolean {
+  return (
+    input.storeState === "approved" &&
+    input.productState === "published" &&
+    input.moderationState === "approved" &&
+    input.quantityOnHand > 0
+  );
+}
+
+$ customer-mini-app edge entry for GET /stores
+    {
+      "method": "GET",
+      "path": "/stores",
+      "service": "marketplace",
+      "class": "W",
+      "required_scopes": ["marketplace:store:read"],
+      "accepts_body": false,
+      "production_open": false,
+      "evidence_tests": [
+        { "file": "services/marketplace/src/__tests__/user-assertion-ownership.integration.test.ts", "case": "GET /stores?owner_public_id lists without an assertion" }
+      ],
+      "blocked_until": "G-ENF(marketplace) — assertOwnerFilter لا يعمل في off"
+    },

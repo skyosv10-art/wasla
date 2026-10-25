@@ -1,0 +1,19 @@
+# T2 local dry run — 2026-10-19T09:48:28Z — sandbox at 826cf08b
+# PostgreSQL is not available in this sandbox → only the bot runs, with WASLA_SERVICE_TOKEN_REPLAY_MODE=memory in a dry-run copy of bot.env.
+# The procedure's bot.env points the replay store at the local PostgreSQL. Token: FAKE (123456789:DRYRUN…). No request reached Telegram. No value is printed.
+$ python3 scripts/test-env/t2_local.py preflight /tmp/t2dry
+preflight: PASS — local database, T2-only keys, webhook secret present (values not printed)
+$ curl -X POST http://127.0.0.1:18083/channel/customer/webhook   # no secret header
+{"code":"CHANNEL_UNAUTHORIZED_WEBHOOK","message":"طلب webhook غير مُصرّح به"}  → HTTP 401
+$ curl -X POST … -H "X-Telegram-Bot-Api-Secret-Token: <wrong 32-char value>"
+{"code":"CHANNEL_UNAUTHORIZED_WEBHOOK","message":"طلب webhook غير مُصرّح به"}  → HTTP 401
+$ curl http://127.0.0.1:18083/health
+{"status":"ok","channel":"telegram"}  → HTTP 200
+$ python3 scripts/test-env/t2_local.py register https://example.trycloudflare.com /tmp/t2dry
+register: REFUSED — T2 is not approved: infra/render/deploy-target.json test_plan_items.T2.approved/approval (owner decision) — nothing sent to Telegram
+  → rc=1
+# bot log (first lines; no secrets are logged by the bot):
+{"level":30,"time":1792403299247,"pid":26712,"hostname":"space-sandbox","event":"user_assertion_config","audience":"channel","mode":"off","kids":[],"msg":"user assertion receiver config"}
+{"level":30,"time":1792403299250,"pid":26712,"hostname":"space-sandbox","msg":"Server listening at http://127.0.0.1:18083"}
+{"level":30,"time":1792403299250,"pid":26712,"hostname":"space-sandbox","msg":"Server listening at http://169.254.0.21:18083"}
+{"level":30,"time":1792403308652,"pid":26712,"hostname":"space-sandbox","reqId":"req-1","req":{"method":"POST","url":"/channel/customer/webhook","host":"127.0.0.1:18083","remoteAddress":"127.0.0.1","remotePort":60268},"m

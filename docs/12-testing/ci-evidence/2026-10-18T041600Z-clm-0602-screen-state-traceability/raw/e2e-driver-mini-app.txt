@@ -1,0 +1,35 @@
+# playwright driver-mini-app @ 9e1c622d — expected=34 unexpected=0 skipped=0 flaky=0
+passed	accessibility.spec.ts	home screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	offers screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	job detail screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	earnings screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	vehicles screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	zones screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	documents screen has no WCAG A/AA violations
+passed	accessibility.spec.ts	profile screen has no WCAG A/AA violations
+passed	auth-session.spec.ts	fresh browser shows loading state without session
+passed	auth-session.spec.ts	no API calls are made without a session token
+passed	auth-session.spec.ts	localStorage does not contain session token
+passed	auth-session.spec.ts	sessionStorage does not contain session token
+passed	auth-session.spec.ts	authenticated session shows app content
+passed	auth-session.spec.ts	API calls carry Authorization Bearer header
+passed	frontend-quality.spec.ts	locale override ?locale=en switches document lang/dir and renders English
+passed	frontend-quality.spec.ts	offline banner appears when the network drops and clears on reconnect
+passed	frontend-quality.spec.ts	no horizontal overflow at 375px
+passed	navigation.spec.ts	home shows menu items
+passed	navigation.spec.ts	navigates to offers screen
+passed	navigation.spec.ts	navigates to job detail screen
+passed	navigation.spec.ts	navigates to earnings screen
+passed	navigation.spec.ts	navigates to vehicles screen
+passed	navigation.spec.ts	navigates to zones screen
+passed	navigation.spec.ts	navigates to documents screen
+passed	navigation.spec.ts	navigates to profile screen
+passed	navigation.spec.ts	clicking menu items navigates correctly
+passed	offer-flow.spec.ts	offers screen renders without errors
+passed	offer-flow.spec.ts	job detail screen renders without errors
+passed	offer-flow.spec.ts	earnings screen shows period buttons
+passed	offer-flow.spec.ts	period buttons switch active state
+passed	offer-flow.spec.ts	documents screen renders without errors
+passed	offer-flow.spec.ts	profile screen renders without errors
+passed	offer-flow.spec.ts	vehicles screen renders without errors
+passed	offer-flow.spec.ts	zones screen renders without errors

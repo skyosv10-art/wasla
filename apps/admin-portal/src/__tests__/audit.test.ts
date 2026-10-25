@@ -43,7 +43,7 @@ describe("audit store", () => {
   });
 
   it("fetchEvents stores events and total", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => mockResponse,
@@ -59,7 +59,7 @@ describe("audit store", () => {
   });
 
   it("fetchEvents sets error on failure", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: false,
       status: 500,
       json: async () => ({ code: "INTERNAL" }),
@@ -74,7 +74,7 @@ describe("audit store", () => {
   });
 
   it("fetchEvents merges overrides into filters", async () => {
-    vi.spyOn(global, "fetch").mockResolvedValueOnce({
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => mockResponse,

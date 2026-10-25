@@ -103,3 +103,48 @@ export async function getZone(
   }
   return toZoneDetailDto(record, locale);
 }
+
+/** G-S9.3 (CLM-0645) — bounds of `GET /geo/zones/search` (api.openapi.yml). */
+export const ZONE_SEARCH_MIN_LENGTH = 2;
+export const ZONE_SEARCH_MAX_LENGTH = 64;
+export const ZONE_SEARCH_DEFAULT_LIMIT = 10;
+export const ZONE_SEARCH_MAX_LIMIT = 20;
+
+/**
+ * Search active zones by localized name (any locale). The validity rule is the
+ * one customers enforces on an order's zone_id (`status = active`), so a result
+ * is always a zone an order may use. `rawQuery` is trimmed; its length is
+ * counted in code points. `rawLimit` is the query-string value (undefined →
+ * default). Invalid input → GEO_INVALID_SEARCH_QUERY (400).
+ */
+export async function searchZones(
+  deps: UseCaseDeps,
+  rawQuery: unknown,
+  rawLimit: unknown,
+  locale: UseCaseLocale,
+): Promise<ZoneDetail[]> {
+  if (typeof rawQuery !== "string") {
+    throw new GeographyError("GEO_INVALID_SEARCH_QUERY", "q is required");
+  }
+  const query = rawQuery.trim();
+  const length = [...query].length;
+  if (length < ZONE_SEARCH_MIN_LENGTH || length > ZONE_SEARCH_MAX_LENGTH) {
+    throw new GeographyError(
+      "GEO_INVALID_SEARCH_QUERY",
+      `q must be ${ZONE_SEARCH_MIN_LENGTH}..${ZONE_SEARCH_MAX_LENGTH} characters after trimming`,
+    );
+  }
+  let limit = ZONE_SEARCH_DEFAULT_LIMIT;
+  if (rawLimit !== undefined && rawLimit !== "") {
+    const parsed = typeof rawLimit === "string" && /^[0-9]+$/.test(rawLimit) ? Number(rawLimit) : NaN;
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > ZONE_SEARCH_MAX_LIMIT) {
+      throw new GeographyError(
+        "GEO_INVALID_SEARCH_QUERY",
+        `limit must be an integer 1..${ZONE_SEARCH_MAX_LIMIT}`,
+      );
+    }
+    limit = parsed;
+  }
+  const records = await deps.repo.searchActiveZones(query, limit);
+  return records.map((r) => toZoneDetailDto(r, locale));
+}

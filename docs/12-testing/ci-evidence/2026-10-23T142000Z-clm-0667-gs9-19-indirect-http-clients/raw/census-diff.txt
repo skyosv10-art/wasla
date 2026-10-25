@@ -1,0 +1,8 @@
+# الجردُ على شجرةِ الفرعِ: OLD 40 ملفّاً · NEW 42 ملفّاً
+# المضافُ بالنمطِ الجديدِ:
+packages/customer-e2e/src/stub-order-engine.ts
+services/observability/src/index.ts
+# المحذوفُ (يجبُ أن يكونَ فارغاً):
+# فحصُ الاتجاهِ للمضافَينِ (نداءٌ صادرٌ = 0 · createServer):
+packages/customer-e2e/src/stub-order-engine.ts outbound=0 createServer=2
+services/observability/src/index.ts outbound=0 createServer=1

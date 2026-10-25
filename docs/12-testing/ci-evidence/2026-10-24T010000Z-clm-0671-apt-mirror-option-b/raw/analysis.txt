@@ -1,0 +1,10 @@
+rows 30 · unique job-attempts 30
+conclusions {'success': 30} · per job {'customer-mini-app-e2e': 10, 'driver-mini-app-e2e': 10, 'admin-portal-e2e': 10}
+install_s median 28.0 min 24 max 56
+B archive kB/s n 30 min 3756.0 median 5517.5
+azure probe kB/s n 30 min 109.2 median 6598.35
+criterion 1 — timeout cancellations: 0
+criterion 2 — azure slow while B succeeded: 2
+   ('1', 'customer-mini-app-e2e', '2026-10-23T23:25:09Z', 'success', 109.2, 'no', 4703.0)
+   ('2', 'customer-mini-app-e2e', '2026-10-23T23:39:14Z', 'success', 141.2, 'no', 4830.0)
+VERDICT (pre-declared criterion): effective

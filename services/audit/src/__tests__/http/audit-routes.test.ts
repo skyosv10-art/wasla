@@ -2,7 +2,8 @@
  * HTTP route tests for the Audit service (M3-04).
  *
  * Tests POST /audit/events (append), GET /audit/events (list with filters),
- * validation, immutability (no update/delete routes), and authz.
+ * validation, immutability (no update/delete routes — modification attempts
+ * are rejected 405 + Allow per UAT-08 / ADR-072 D2), and authz.
  *
  * ADR-063 PO-002 (CLM-0477): actor_id and actor_role are derived from the
  * verified service token, not accepted from the request body.
@@ -212,23 +213,88 @@ describe("GET /audit/events", () => {
   });
 });
 
-describe("Audit immutability", () => {
-  it("does not expose PUT /audit/events/:id", async () => {
+describe("Audit immutability — UAT-08: 405 + Allow (ADR-072 D2)", () => {
+  const COLLECTION_ALLOW = "GET, HEAD, POST";
+
+  for (const method of ["PUT", "PATCH", "DELETE"] as const) {
+    it(`rejects ${method} /audit/events with 405 and Allow: GET, HEAD, POST`, async () => {
+      const { app } = buildSignedAuditApp();
+      const response = await app.inject({ method, url: "/audit/events", payload: {} });
+      expect(response.statusCode).toBe(405);
+      expect(response.headers.allow).toBe(COLLECTION_ALLOW);
+      expect(response.json().code).toBe("AUDIT_METHOD_NOT_ALLOWED");
+      expect(response.json().trace_id).toBeTruthy();
+    });
+  }
+
+  for (const method of ["PUT", "PATCH", "DELETE", "POST"] as const) {
+    it(`rejects ${method} /audit/events/:id with 405 and an empty Allow`, async () => {
+      const { app } = buildSignedAuditApp();
+      const response = await app.inject({ method, url: "/audit/events/1", payload: {} });
+      expect(response.statusCode).toBe(405);
+      expect(response.headers.allow).toBe("");
+      expect(response.json().code).toBe("AUDIT_METHOD_NOT_ALLOWED");
+    });
+  }
+
+  it("every method listed in Allow is actually served on /audit/events", async () => {
     const { app } = buildSignedAuditApp();
-    const response = await app.inject({ method: "PUT", url: "/audit/events/1", payload: {} });
-    expect(response.statusCode).toBe(404);
+    const get = await app.inject({ method: "GET", url: "/audit/events" });
+    const head = await app.inject({ method: "HEAD", url: "/audit/events" });
+    const post = await app.inject({ method: "POST", url: "/audit/events", payload: validEvent });
+    expect(get.statusCode).toBe(200);
+    expect(head.statusCode).toBe(200);
+    expect(post.statusCode).toBe(201);
   });
 
-  it("does not expose DELETE /audit/events/:id", async () => {
-    const { app } = buildSignedAuditApp();
-    const response = await app.inject({ method: "DELETE", url: "/audit/events/1" });
-    expect(response.statusCode).toBe(404);
+  it("modification attempts leave the stored events unchanged", async () => {
+    const { app, deps } = buildSignedAuditApp();
+    await app.inject({ method: "POST", url: "/audit/events", payload: validEvent });
+    await app.inject({
+      method: "POST",
+      url: "/audit/events",
+      payload: { ...validEvent, action: "driver.reinstate" },
+    });
+    // Deep copy: the in-memory repo returns live objects, so an in-place mutation
+    // would otherwise make `before` and `after` equal by aliasing.
+    const before = structuredClone(await deps.repo.list({ limit: 200, offset: 0 }));
+    const beforeWire = (await app.inject({ method: "GET", url: "/audit/events" })).json();
+
+    const tamper = { action: "tampered", resource_id: "WS-0", metadata: { forged: true } };
+    const attempts = [
+      { method: "PUT", url: "/audit/events" },
+      { method: "PATCH", url: "/audit/events" },
+      { method: "DELETE", url: "/audit/events" },
+      { method: "PUT", url: `/audit/events/${before[0]!.id}` },
+      { method: "PATCH", url: `/audit/events/${before[0]!.id}` },
+      { method: "DELETE", url: `/audit/events/${before[0]!.id}` },
+      { method: "POST", url: `/audit/events/${before[0]!.id}` },
+    ] as const;
+    for (const attempt of attempts) {
+      const response = await app.inject({ ...attempt, payload: tamper });
+      expect(response.statusCode).toBe(405);
+    }
+
+    const after = await deps.repo.list({ limit: 200, offset: 0 });
+    expect(after).toEqual(before);
+    expect(after).toHaveLength(2);
+    expect((await app.inject({ method: "GET", url: "/audit/events" })).json()).toEqual(beforeWire);
   });
 
-  it("does not expose PATCH /audit/events/:id", async () => {
+  it("an unsigned modification attempt is 401 before any 405 is disclosed", async () => {
+    const { rawInject } = buildSignedAuditApp();
+    const response = await rawInject({ method: "DELETE", url: "/audit/events/1" });
+    expect(response.statusCode).toBe(401);
+    expect(response.headers.allow).toBeUndefined();
+  });
+
+  it("non-modifying unknown requests keep the router's 404", async () => {
     const { app } = buildSignedAuditApp();
-    const response = await app.inject({ method: "PATCH", url: "/audit/events/1", payload: {} });
-    expect(response.statusCode).toBe(404);
+    const itemGet = await app.inject({ method: "GET", url: "/audit/events/1" });
+    const otherPut = await app.inject({ method: "PUT", url: "/audit/other", payload: {} });
+    expect(itemGet.statusCode).toBe(404);
+    expect(otherPut.statusCode).toBe(404);
+    expect(itemGet.headers.allow).toBeUndefined();
   });
 });
 

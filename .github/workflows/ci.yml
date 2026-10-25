@@ -64,6 +64,7 @@ jobs:
   repo-structure:
     name: repo-structure
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -88,6 +89,7 @@ jobs:
   doc-coverage:
     name: doc-coverage
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -113,6 +115,7 @@ jobs:
   governance-guard:
     name: governance-guard
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     # (CLM-0392) الفحصُ 23 يقرأُ فروعَ المنصّةِ وطلباتِ الدمجِ المفتوحةَ. وبلا رمزٍ
     # كانَ يتخطّى في كلِّ تشغيلٍ — فصارَ تعذُّرُ القراءةِ في CI إخفاقاً، ويُعطى هنا
     # **أقلَّ صلاحيّةِ قراءةٍ** تلزمُهُ لا أكثر: إعطاءُ الفحصِ بيئتَهُ لا تعطيلُهُ.
@@ -195,6 +198,7 @@ jobs:
   verify:
     name: verify
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: read
@@ -265,6 +269,7 @@ jobs:
   typecheck:
     name: typecheck
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -306,6 +311,7 @@ jobs:
   test:
     name: test
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -369,6 +375,7 @@ jobs:
   db-integration:
     name: db-integration
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     container: node:20-alpine
     strategy:
       fail-fast: false
@@ -534,6 +541,7 @@ jobs:
   db-integration-shared:
     name: db-integration-shared
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     container: node:20-alpine
     services:
       postgres:
@@ -592,6 +600,7 @@ jobs:
   exit-gate-e2e:
     name: exit-gate-e2e
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     container: node:20-alpine
     strategy:
       fail-fast: false
@@ -806,6 +815,11 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
       - name: install
         run: pnpm install --frozen-lockfile
+      # CLM-0671 — الخيارُ B (اعتمادٌ بقرارِ المالكِ 2026-10-24، معالجةٌ بقياسٍ محدود): apt من archive.ubuntu.com لا azure؛ يفشلُ مغلقًا؛ المهلةُ 10 دقائقَ بلا تغيير.
+      - name: Test apt mirror scripts (CLM-0671)
+        run: bash scripts/ci/test-apt-mirror-archive-ubuntu.sh
+      - name: Switch apt mirror to archive.ubuntu.com (CLM-0671)
+        run: bash scripts/ci/apt-mirror-archive-ubuntu.sh
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/customer-mini-app
@@ -847,6 +861,11 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
       - name: install
         run: pnpm install --frozen-lockfile
+      # CLM-0671 — الخيارُ B (اعتمادٌ بقرارِ المالكِ 2026-10-24، معالجةٌ بقياسٍ محدود): apt من archive.ubuntu.com لا azure؛ يفشلُ مغلقًا؛ المهلةُ 10 دقائقَ بلا تغيير.
+      - name: Test apt mirror scripts (CLM-0671)
+        run: bash scripts/ci/test-apt-mirror-archive-ubuntu.sh
+      - name: Switch apt mirror to archive.ubuntu.com (CLM-0671)
+        run: bash scripts/ci/apt-mirror-archive-ubuntu.sh
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/driver-mini-app
@@ -888,6 +907,11 @@ jobs:
           corepack prepare pnpm@9.15.9 --activate
       - name: install
         run: pnpm install --frozen-lockfile
+      # CLM-0671 — الخيارُ B (اعتمادٌ بقرارِ المالكِ 2026-10-24، معالجةٌ بقياسٍ محدود): apt من archive.ubuntu.com لا azure؛ يفشلُ مغلقًا؛ المهلةُ 10 دقائقَ بلا تغيير.
+      - name: Test apt mirror scripts (CLM-0671)
+        run: bash scripts/ci/test-apt-mirror-archive-ubuntu.sh
+      - name: Switch apt mirror to archive.ubuntu.com (CLM-0671)
+        run: bash scripts/ci/apt-mirror-archive-ubuntu.sh
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: apps/admin-portal

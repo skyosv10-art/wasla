@@ -45,6 +45,7 @@ import {
   listDistricts,
   listZones,
   getZone,
+  searchZones,
 } from "../use-cases/list-hierarchy.js";
 import { getUserLocation } from "../use-cases/get-user-location.js";
 import { getUserLocationHistory } from "../use-cases/get-user-location-history.js";
@@ -240,6 +241,19 @@ export function createGeographyApp(
       const { districtId } = request.params as { districtId: string };
       const locale = parseLocale((request.query as { locale?: string }).locale);
       const zones = await listZones(deps, districtId, locale);
+      return reply.status(200).send(zones);
+    },
+  );
+
+  // G-S9.3 (CLM-0645): search active zones by localized name. A static path,
+  // so Fastify matches it before the parametric `/geo/zones/:zoneId`.
+  app.get(
+    "/geo/zones/search",
+    { config: scoped(GEO_SCOPES.zoneRead) },
+    async (request, reply) => {
+      const query = request.query as { q?: unknown; limit?: unknown; locale?: string };
+      const locale = parseLocale(query.locale);
+      const zones = await searchZones(deps, query.q, query.limit, locale);
       return reply.status(200).send(zones);
     },
   );

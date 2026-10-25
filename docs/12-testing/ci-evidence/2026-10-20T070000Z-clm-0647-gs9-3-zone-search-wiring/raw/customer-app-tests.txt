@@ -1,0 +1,21 @@
+ ✓ src/__tests__/RideOrder.test.tsx (16 tests) 397ms
+ ✓ src/__tests__/session-init.test.ts (12 tests) 382ms
+ ✓ src/__tests__/MyOrders.test.tsx (19 tests) 297ms
+ ✓ src/__tests__/DeliveryOrder.test.tsx (8 tests) 215ms
+ ✓ src/__tests__/ZoneSearch.test.tsx (10 tests) 186ms
+ ✓ src/__tests__/Profile.test.tsx (6 tests) 156ms
+ ✓ src/__tests__/SavedPlaces.test.tsx (6 tests) 105ms
+ ✓ src/__tests__/Home.test.tsx (4 tests) 102ms
+ ✓ src/__tests__/Reputation.test.tsx (4 tests) 72ms
+ ✓ src/__tests__/Search.test.tsx (6 tests) 78ms
+ ✓ src/__tests__/Marketplace.test.tsx (5 tests) 68ms
+ ✓ src/__tests__/App-session.test.tsx (3 tests) 66ms
+ ✓ src/__tests__/frontend-quality.test.tsx (7 tests) 34ms
+ ✓ src/__tests__/order-form.test.ts (13 tests) 6ms
+ ✓ src/__tests__/session.test.ts (5 tests) 3ms
+ Test Files  15 passed (15)
+      Tests  124 passed (124)
+ ✓ src/__tests__/ZoneSearch.test.tsx (10 tests) 184ms
+      Tests  10 passed (10)
+
+typecheck exit=0

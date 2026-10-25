@@ -129,6 +129,60 @@ _gh_read() { # _gh_read <api-path> — يطبعُ الجواب؛ يرجعُ ≠0
   rm -f "$errf"; printf 'بعدَ %s محاولاتٍ: %s' "$attempts" "$GH_LAST_ERR" > "$GH_ERR_FILE"; return 1
 }
 
+# ── قائمةُ التشغيلاتِ: الجوابُ الفارغُ لقطةٌ لا حكمٌ (CLM-0663) ───────────────
+# المقيسُ 2026-10-22T15:51Z: `actions/runs?head_sha=<FULL>` أجابَ HTTP 200 وJSON صالحًا
+# **بلا** سيرِ WASLA CI في 4 من 50 نداءً على عشرةِ التزاماتٍ لكلٍّ منها سيرٌ موجود،
+# فقرأَ الحارسُ أوّلَ لقطةٍ فارغةٍ «no_verdict» قاطعًا وأسقطَ CI على #809 (السيرُ
+# 39805730912) والمحتوى ثابت. `_gh_read` لا يُعيدُ هذا الجوابَ لأنّه ناجحٌ غيرُ فارغِ النصّ.
+#
+# القاعدة: AUDIT_EMPTY_ATTEMPTS محاولةً (4 افتراضًا) بانتظارٍ مضاعَف (AUDIT_EMPTY_WAIT
+# ثانيةً للأولى، 2 ⇒ 2+4+8 = 14 ث أقصى لكلِّ صفٍّ no_verdict حقيقيٍّ). وكلُّ محاولةٍ تُصنَّفُ:
+#   found   — سيرُ WASLA CI للبصمةِ الكاملةِ نفسِها ⇒ يُعتمَدُ معرِّفُهُ فورًا، فلا تمحوهُ لقطةٌ لاحقة.
+#   empty   — JSON صالحٌ بقائمةٍ لا سيرَ فيها لـWASLA CI ⇒ تُعادُ المحاولة.
+#   invalid — ليسَ JSON · لا قائمةَ · سيرٌ لبصمةٍ أخرى ⇒ تُعادُ، ولا يُقبَلُ بعدَها no_verdict.
+#   خطأُ واجهةٍ بعدَ استنفادِ `_gh_read` محاولاتِه ⇒ توقُّفٌ فوريٌّ «غيرُ محسوم» (لا تُضاعَفُ
+#   مهلةُ الـ45 ث في كلِّ محاولةٍ خارجيّة؛ والحدُّ الكلّيُّ للصفِّ يبقى مقيَّدًا).
+# فـno_verdict يُقبَلُ **فقط** إن كانت المحاولاتُ كلُّها مكتملةً وصالحةً وفارغة (رمزُ 3)؛
+# وأيُّ محاولةٍ غيرِ صالحةٍ أو متعذِّرةٍ بلا دليلٍ إيجابيٍّ ⇒ إخفاقٌ معلَنٌ (رمزُ 1).
+# ولمَ 4؟ إن كانت اللقطةُ الفارغةُ مستقلّةً باحتمالِ p ≈ 0.08 (4/50 المقيسة) فخطأُ
+# «no_verdict» الكاذبِ لصفٍّ ≈ p⁴ ≈ 4×10⁻⁵، ولقرابةِ 13 صفًّا ≈ 5×10⁻⁴ للتشغيل؛ وبثلاثٍ
+# ≈ 7×10⁻³. والانتظارُ المضاعَفُ يُبعِدُ المحاولاتِ زمنًا فيُضعِفُ ارتباطَها. وإن ارتبطت
+# اللقطاتُ فوقَ ذلكَ فالنتيجةُ إخفاقٌ مرئيٌّ (صفٌّ يفارقُ القياس) لا نجاحٌ صامت.
+RUNS_DIAG_FILE="$(mktemp)"; trap 'rm -f "$GH_ERR_FILE" "$RUNS_DIAG_FILE"' EXIT
+_runs_diag() { cat "$RUNS_DIAG_FILE" 2>/dev/null; }
+_runs_lookup() { # _runs_lookup <FULL_SHA> — يطبعُ معرِّفَ السيرِ ويرجعُ 0 | 3 = no_verdict مُستحَقّ | 1 = غيرُ محسوم
+  local FULL="$1" attempts="${AUDIT_EMPTY_ATTEMPTS:-4}" wait="${AUDIT_EMPTY_WAIT:-2}" i json verdict
+  local empty=0 bad=0 why=''
+  [[ "$attempts" =~ ^[1-9][0-9]*$ ]] || attempts=4
+  [[ "$wait" =~ ^[0-9]+$ ]] || wait=2
+  : > "$RUNS_DIAG_FILE"
+  for (( i=1; i<=attempts; i++ )); do
+    if ! json="$(_gh_read "repos/$REPO/actions/runs?head_sha=$FULL&per_page=100")"; then
+      bad=$((bad+1)); why="$(_gh_err)"
+      printf 'بعدَ %s محاولاتٍ: فارغٌ صالحٌ=%d · متعذِّرٌ أو غيرُ صالحٍ=%d · توقّفَ عندَ المحاولةِ %d بخطأِ واجهة (%s)' \
+        "$attempts" "$empty" "$bad" "$i" "$why" > "$RUNS_DIAG_FILE"
+      return 1
+    fi
+    verdict="$(python3 "$LIB/audit_runs.py" run-lookup "$FULL" <<< "$json")" || verdict=$'invalid\tتعذَّرَ تشغيلُ القارئ'
+    case "$verdict" in
+      found$'\t'*)
+        printf 'السيرُ %s في المحاولةِ %d من %d (فارغٌ صالحٌ قبلَه=%d · غيرُ صالحٍ=%d)' \
+          "${verdict#found$'\t'}" "$i" "$attempts" "$empty" "$bad" > "$RUNS_DIAG_FILE"
+        printf '%s' "${verdict#found$'\t'}"; return 0 ;;
+      empty) empty=$((empty+1)) ;;
+      *) bad=$((bad+1)); why="${verdict#invalid$'\t'}" ;;
+    esac
+    (( i < attempts )) && { sleep "$wait"; wait=$(( wait * 2 )); }
+  done
+  if (( bad == 0 )); then
+    printf 'no_verdict بعدَ %s محاولاتٍ كلُّها فارغةٌ صالحة (فارغٌ صالحٌ=%d)' "$attempts" "$empty" > "$RUNS_DIAG_FILE"
+    return 3
+  fi
+  printf 'بعدَ %s محاولاتٍ: فارغٌ صالحٌ=%d · متعذِّرٌ أو غيرُ صالحٍ=%d (آخرُ سبب: %s)' \
+    "$attempts" "$empty" "$bad" "$why" > "$RUNS_DIAG_FILE"
+  return 1
+}
+
 declare -A FULLSHA=()
 UNRESOLVED=0
 while IFS=$'\t' read -r sha cls; do
@@ -162,14 +216,18 @@ else
     # مختصرةً صفرُ تشغيلاتٍ، وكاملةً السيرُ 34877247715 بحكمِ `success`.
     FULL="${FULLSHA[$sha]:-}"
     [[ -n "$FULL" ]] || continue  # أُنذِرَ عنها في البابِ ٢
-    RUNS_JSON="$(_gh_read "repos/$REPO/actions/runs?head_sha=$FULL&per_page=100")" || RUNS_JSON=''
-    if [[ -z "$RUNS_JSON" ]]; then
-      fail "تعذَّرَ قراءةُ تشغيلاتِ $sha ($(_gh_err)) — وتعذُّرُ القياسِ إخفاقٌ لا تخطٍّ"
+    if ! [[ "$FULL" =~ ^[0-9a-f]{40}$ ]]; then
+      fail "$sha: لم تُحَلَّ إلى بصمةٍ كاملةٍ (40 خانةً) بل «$FULL» — والواجهةُ لا تُطابِقُ غيرَها فلا تُسأَلُ بها"
       ERRORS=$((ERRORS+1)); continue
     fi
-    RUN_ID="$(python3 "$LIB/audit_runs.py" run-id <<< "$RUNS_JSON")"
-    if [[ -z "$RUN_ID" ]]; then
+    RUN_ID="$(_runs_lookup "$FULL")"; LOOKUP=$?
+    # سطرُ التشخيصِ لكلِّ صفٍّ مقيسٍ: عددُ المحاولاتِ وما أجابت به — فالإعادةُ مرئيّةٌ لا صامتة.
+    (( LOOKUP == 1 )) || printf '    %s: %s\n' "$sha" "$(_runs_diag)"
+    if (( LOOKUP == 3 )); then
       MEASURED='no_verdict'
+    elif (( LOOKUP != 0 )); then
+      fail "$sha: قائمةُ التشغيلاتِ غيرُ محسومةٍ — $(_runs_diag) — وتعذُّرُ القياسِ إخفاقٌ لا no_verdict ولا تخطٍّ"
+      ERRORS=$((ERRORS+1)); continue
     else
       JOBS_JSON="$(_gh_read "repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100")" || JOBS_JSON=''
       if [[ -z "$JOBS_JSON" ]]; then
@@ -185,7 +243,7 @@ else
         ERRORS=$((ERRORS+1))
       fi
     else
-      fail "$sha: السجلُّ يقولُ «$cls» والقياسُ الحيُّ «$MEASURED» — دعوى لم تُراجَعْ بعدَ أن صارَ العلمُ متاحاً"
+      fail "$sha: السجلُّ يقولُ «$cls» والقياسُ الحيُّ «$MEASURED» — دعوى لم تُراجَعْ بعدَ أن صارَ العلمُ متاحاً · $(_runs_diag)"
       ERRORS=$((ERRORS+1))
     fi
   done <<< "$AUDIT_ROWS"

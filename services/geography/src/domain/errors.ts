@@ -22,6 +22,7 @@ export type GeographyErrorCode =
   | "GEO_INVALID_PUBLIC_ID"
   | "GEO_UNSUPPORTED_LOCALE"
   | "GEO_INVALID_REQUEST_BODY"
+  | "GEO_INVALID_SEARCH_QUERY"
   | "GEO_COUNTRY_NOT_FOUND"
   | "GEO_REGION_NOT_FOUND"
   | "GEO_CITY_NOT_FOUND"
@@ -71,6 +72,7 @@ function classOf(code: GeographyErrorCode): GeographyErrorClass {
     case "GEO_INVALID_PUBLIC_ID":
     case "GEO_UNSUPPORTED_LOCALE":
     case "GEO_INVALID_REQUEST_BODY":
+    case "GEO_INVALID_SEARCH_QUERY":
       return "validation_error";
     case "GEO_COUNTRY_NOT_FOUND":
     case "GEO_REGION_NOT_FOUND":

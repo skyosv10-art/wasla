@@ -168,6 +168,15 @@ export const PRODUCTION_GRANTS: Readonly<Record<Role, readonly Grant[]>> = {
       evidence: ["NEGOTIATIONS_DISPATCH_OFFER_SCOPES"],
     },
   ],
+  search: [
+    {
+      audience: "marketplace",
+      scopes: ["marketplace:product:read", "marketplace:store:read"],
+      reason:
+        "مُرحِّلُ البحثِ يجلبُ بيانَ المنتجِ (ADR-025 §2.3) واسمَ المتجرِ (ADR-025 §6.2 · G-S9.7) عبرَ منفذِ القراءةِ المعتمَدِ — قراءةٌ فقط، والأحداثُ لا تحملُ نصًّا حرًّا (ADR-016 §10).",
+      evidence: ["SEARCH_MARKETPLACE_SCOPES"],
+    },
+  ],
   "customer-bot": [
     {
       audience: "identity",

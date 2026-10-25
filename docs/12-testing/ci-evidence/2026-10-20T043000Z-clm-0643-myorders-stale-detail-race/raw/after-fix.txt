@@ -1,0 +1,9 @@
+
+ Test Files  14 passed (14)
+      Tests  114 passed (114)
+   Start at  04:24:04
+   Duration  12.00s (transform 414ms, setup 1.03s, collect 1.23s, tests 2.20s, environment 4.87s, prepare 809ms)
+
+ ✓ src/__tests__/MyOrders.test.tsx (19 tests) 305ms
+      Tests  19 passed (19)
+

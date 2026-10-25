@@ -43,6 +43,13 @@
       "when": 1790700000000,
       "tag": "0005_relay_commit_sequence",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792400000000,
+      "tag": "0006_store_index",
+      "breakpoints": true
     }
   ]
 }

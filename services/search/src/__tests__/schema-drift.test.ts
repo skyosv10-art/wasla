@@ -44,6 +44,7 @@ import {
   searchProductIndex,
   searchRelayCheckpoint,
   searchRelayConsumedEvents,
+  searchStoreIndex,
 } from "../db/schema.js";
 
 const DDL = readFileSync(SCHEMA_CONTRACT_PATH, "utf8");
@@ -51,6 +52,7 @@ const DDL = readFileSync(SCHEMA_CONTRACT_PATH, "utf8");
 const MIRRORED = [
   searchProductIndex,
   searchMarketplaceStoreState,
+  searchStoreIndex,
   searchMarketplaceProductState,
   searchOutbox,
   searchRelayConsumedEvents,
@@ -263,15 +265,15 @@ function mirrorConstraintNames(table: (typeof MIRRORED)[number]): ReadonlyArray<
 }
 
 describe("حارسُ الانحرافِ يقرأُ العقدَ فعلاً", () => {
-  it("العقدُ مقروءٌ وفيهِ ستّةُ جداولَ وامتدادٌ ودالّتانِ وأربعةُ مُطلِقاتٍ", () => {
+  it("العقدُ مقروءٌ وفيهِ سبعةُ جداولَ (+search_store_index · CLM-0649) وامتدادٌ ودالّتانِ وأربعةُ مُطلِقاتٍ", () => {
     expect(DDL).toContain("CREATE TABLE IF NOT EXISTS search_product_index");
-    expect([...DDL.matchAll(/CREATE TABLE IF NOT EXISTS/gu)]).toHaveLength(6);
+    expect([...DDL.matchAll(/CREATE TABLE IF NOT EXISTS/gu)]).toHaveLength(7);
     expect(DDL).toContain("CREATE EXTENSION IF NOT EXISTS pg_trgm");
     expect([...DDL.matchAll(/CREATE OR REPLACE FUNCTION/gu)]).toHaveLength(2);
     expect([...DDL.matchAll(/CREATE TRIGGER/gu)]).toHaveLength(4);
   });
 
-  it("والمرآةُ ستّةُ جداولَ بأسمائِها", () => {
+  it("والمرآةُ سبعةُ جداولَ بأسمائِها", () => {
     expect(MIRRORED.map((table) => getTableConfig(table).name).sort()).toEqual([
       "search_marketplace_product_state",
       "search_marketplace_store_state",
@@ -279,6 +281,7 @@ describe("حارسُ الانحرافِ يقرأُ العقدَ فعلاً", () 
       "search_product_index",
       "search_relay_checkpoint",
       "search_relay_consumed_events",
+      "search_store_index",
     ]);
   });
 

@@ -78,6 +78,7 @@ export interface AuditAppHarness {
   app: ReturnType<typeof createAuditApp>;
   keys: ServiceAuthKeyRegistry;
   replayGuard: InMemoryServiceTokenReplayGuard;
+  deps: ReturnType<typeof createInMemoryDeps>;
   rawInject: (options: InjectOptions) => Promise<LightMyRequestResponse>;
 }
 
@@ -87,5 +88,5 @@ export function buildSignedAuditApp(): AuditAppHarness {
   const deps = createInMemoryDeps();
   const app = createAuditApp({ deps, serviceIdentity: { keys, replayGuard } });
   const rawInject = attachSigningInject(app, keys);
-  return { app, keys, replayGuard, rawInject };
+  return { app, keys, replayGuard, deps, rawInject };
 }

@@ -20,7 +20,7 @@ servers:
 
 tags:
   - name: search
-    description: البحث في المنتجات
+    description: البحث في المنتجات والمتاجر
 
 paths:
   /search/products:
@@ -64,6 +64,61 @@ paths:
         '403': { $ref: '#/components/responses/AuthForbidden' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
+  /search/stores:
+    get:
+      tags: [search]
+      summary: البحث عن المتاجر بالاسم (G-S9.7 · ADR-025 §6)
+      operationId: searchStores
+      description: |
+        نموذجُ قراءةٍ مشتقٌّ (`search_store_index`) — marketplace مصدرُ الحقيقةِ، ولا `?q=` في
+        مساراتِه (ADR-016 §9). يظهرُ المتجرُ **إن وفقط إن** كانَ `approved` وله منتجٌ واحدٌ على
+        الأقلِّ يحقّقُ `isProductVisible` (منشورٌ · اعتدالُه معتمَدٌ · مخزونُه > 0)؛ تُشتقُّ الأهليّةُ عندَ
+        القراءةِ ولا رايةَ مخزَّنةً. المطابقةُ على أسماءِ ar/en/ur كلِّها بعدَ تطبيعٍ معلَنٍ،
+        و`%` و`_` و`\` حرفيّةٌ. الترتيبُ حتميٌّ: تامٌّ ثم بادئةٌ ثم احتواءٌ، ثم `store_slug` تصاعديًّا.
+        أيُّ معاملٍ غيرِ المعلَنةِ يُرفَضُ (`SEARCH_UNKNOWN_PARAMETER`).
+      security:
+        - ServiceAuth: ['search:stores:read']
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: اسمُ المتجرِ أو جزؤُه — 1..200 محرفٍ بعدَ القصِّ، وغيرُ فارغٍ بعدَ التطبيعِ (حدودُ `/search/products` نفسُها · CLM-0652 · ADR-025 §6.8).
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - name: locale
+          in: query
+          required: false
+          description: لغةُ `title` في الجوابِ؛ الرجوعُ إلى العربيّةِ إن غابَ الاسمُ بها. الافتراضيُّ ar.
+          schema: { $ref: '#/components/schemas/StoreSearchLocale' }
+        - name: page
+          in: query
+          required: false
+          description: عددٌ صحيحٌ ≥ 1 بلا حدٍّ أعلى (CLM-0652). صفحةٌ بعدَ آخرِ نتيجةٍ تُرجِعُ `items` فارغةً و`total` الصادقَ.
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: صفحةُ متاجرَ — ثلاثةُ حقولٍ عامّةٍ لكلِّ متجرٍ فقط
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreSearchPage' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/AuthUnauthorized' }
+        '403': { $ref: '#/components/responses/AuthForbidden' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
   /search/health:
     get:
       tags: [search]
@@ -73,6 +128,7 @@ paths:
         نموذجَ قراءتِها تبقى `ok` هنا ولا تُعادُ تشغيلاً — التوجيهُ يُقرَّرُ من
         `/search/ready`.
       operationId: health
+      security: []
       responses:
         '200':
           description: العمليّةُ حيّةٌ
@@ -194,6 +250,34 @@ components:
         items:
           type: array
           items: { $ref: '#/components/schemas/ProductSearchResult' }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1, maximum: 50 }
+        total: { type: integer, minimum: 0 }
+
+    StoreSearchLocale:
+      type: string
+      enum: [ar, en, ur]
+      default: ar
+      description: لغاتُ اسمِ المتجرِ الثلاثُ في marketplace؛ ar الافتراضيُّ والرجوعُ.
+
+    StoreSearchResult:
+      type: object
+      additionalProperties: false
+      required: [store_slug, title, category_slug]
+      description: الإسقاطُ العامُّ وحدَه — لا owner_public_id ولا حالةٌ ولا مراجعاتٌ ولا طاقمٌ ولا توقيتاتٌ.
+      properties:
+        store_slug: { type: string }
+        title: { type: string, description: الاسمُ بلغةِ locale أو العربيّةِ إن غابَ. }
+        category_slug: { type: string, description: مقطعُ تصنيفِ المتجرِ من السوقِ. }
+
+    StoreSearchPage:
+      type: object
+      additionalProperties: false
+      required: [items, page, page_size, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/StoreSearchResult' }
         page: { type: integer, minimum: 1 }
         page_size: { type: integer, minimum: 1, maximum: 50 }
         total: { type: integer, minimum: 0 }

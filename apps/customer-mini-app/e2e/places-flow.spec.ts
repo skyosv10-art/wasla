@@ -118,4 +118,26 @@ test.describe("Places flow", () => {
     // Should show empty state
     await expect(page.getByText("لا توجد أماكن محفوظة")).toBeVisible({ timeout: 10_000 });
   });
+
+  // ADR-072 D1 (G-S7): the entry point to saved places is Profile, not Home.
+  test("reaches saved places from Profile, then adds and deletes a place", async ({ page }) => {
+    await page.route("**/customers/WS-1234567890/profile", (route) => {
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ display_name: "Ali" }) });
+    });
+
+    await gotoRoute(page, "profile");
+    await page.getByTestId("profile-places-link").click();
+    await expect(page).toHaveURL(/#\/places$/);
+    await expect(page.getByRole("heading", { level: 1, name: "الأماكن المحفوظة" })).toBeVisible();
+    await expect(page.getByText("Home")).toBeVisible({ timeout: 10_000 });
+
+    await page.getByTestId("place-label-input").fill("Gym");
+    await page.getByTestId("place-zone-input").fill("zone-3");
+    await page.getByTestId("add-place-button").click();
+    await expect(page.getByText("Gym")).toBeVisible({ timeout: 10_000 });
+
+    await page.getByTestId("delete-place-place-1").click();
+    await expect(page.getByText("Home")).not.toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("Gym")).toBeVisible();
+  });
 });

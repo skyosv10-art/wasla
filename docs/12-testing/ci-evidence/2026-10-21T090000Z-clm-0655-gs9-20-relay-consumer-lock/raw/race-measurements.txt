@@ -1,0 +1,16 @@
+# CLM-0655 · G-S9.20 · local PostgreSQL 17.11 (apt.postgresql.org) — local measurement, not CI
+## A. original case "two concurrent relay instances…" on main code (no lock), repeated
+60 runs: pass=60 fail=0   (the race does not show by repetition alone here; earlier 1/30 on PG18 in CLM-0649)
+## B. scratch amplifier (random 0-3 ms delay before every store/event call), main code, 40 rounds per run
+runs: 2/40 · 0/40 · 1/40 · 0/40 · 0/40 · 2/40 · then 6 more runs with state dump: 4/240  → 9/480 rounds violated
+failure mode 1 (permanent, lost update): all 5 consumed rows applied/skipped_stale, product_state=published but moderation_state=pending, moderation_sequence=0 → 0 index docs
+failure mode 2 (unique conflict): both instances saw no store doc and inserted; second failed on ux_search_store_index_slug → row left pending (batch stopped; self-healing on next batch = inference, not measured)
+## C. committed amplified case (60 rounds) with the lock REMOVED (mutation M1), 5 runs
+1/60 rounds violated the invariant 0/60 (pass) 0/60 (pass) 0/60 (pass) 1/60 rounds violated the invariant   → 2/300 rounds violated
+## D. after the fix (lock in place)
+original case after fix: pass=50 fail=0  (50/50)
+amplified after fix: runs pass=5 fail=0 (60 rounds each)  → 0/300 rounds violated
+full search integration suite: 11 files · 80/80 · unit: 14 files · 177/177
+## E. honest reading
+the amplifier is a regression signal, not a reliable mutation killer (~0.7-1.9 % per round: 0/60 under M1 happened in 3 of 5 runs).
+the deterministic case (A paused inside the lock; B must not read the checkpoint; pg_locks shows the advisory lock) is the killer.

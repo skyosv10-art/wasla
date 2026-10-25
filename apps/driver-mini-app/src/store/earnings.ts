@@ -4,7 +4,13 @@
  * Fetches completed jobs for the current driver with period filtering.
  * The API contract follows the orders service wire format.
  *
- * GET /orders/drivers/:driverPublicId/jobs?status=completed&period=... → { jobs: JobHistoryEntry[] }
+ * GET /orders/drivers/:driverPublicId/jobs?period=today|week|month → { jobs: JobHistoryEntry[] }
+ *
+ * G-S13 (CLM-0614): the route returns completed AND cancelled jobs (its
+ * contract — `listDriverJobs` declares no `status` parameter, so the
+ * `status=completed` this store used to send was silently ignored). DMS §4.5
+ * shows completed jobs and their earnings, so the store keeps `completed` only,
+ * for both the list and the summary; a cancelled job is never counted or summed.
  *
  * Period filtering:
  * - today: jobs completed today
@@ -70,9 +76,9 @@ export const useEarningsStore = create<EarningsState>((set, get) => ({
 
     try {
       const data = await apiClient.get<{ jobs: JobHistoryEntry[] }>(
-        `/orders/drivers/${driverId}/jobs?status=completed&period=${currentPeriod}`,
+        `/orders/drivers/${driverId}/jobs?period=${currentPeriod}`,
       );
-      const jobs = data.jobs ?? [];
+      const jobs = (data.jobs ?? []).filter((j) => j.status === "completed");
       const summary = computeSummary(jobs, currentPeriod);
       set({ jobs, summary, loading: false });
     } catch (err) {

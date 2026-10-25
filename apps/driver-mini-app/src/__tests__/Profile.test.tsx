@@ -55,6 +55,8 @@ describe("Profile screen", () => {
       fetchProfile: vi.fn(),
       updateProfile: vi.fn(),
       clearErrors: vi.fn(),
+      eligibility: null,
+      fetchEligibility: vi.fn(),
     });
     useSessionStore.getState().setSession("token-123", "drv-123", Date.now() + 3_600_000);
   });
@@ -82,6 +84,28 @@ describe("Profile screen", () => {
     expect(screen.getByTestId("profile-status")).toBeInTheDocument();
     expect(screen.getByTestId("profile-verification")).toBeInTheDocument();
     expect(screen.getByTestId("profile-availability")).toBeInTheDocument();
+  });
+
+  // G-S10 (CLM-0613): DMS §4.9 L221 — eligibility via GET /drivers/:id/eligibility.
+  it("fetches eligibility on mount and shows its state", () => {
+    const fetchEligibility = vi.fn();
+    useProfileStore.setState({
+      profile: mockProfile,
+      fetchEligibility,
+      eligibility: {
+        wasla_public_id: "drv-123", eligibility_state: "ineligible",
+        reason_codes: ["NO_SERVICE_ZONE"], policy_version: 1, evaluated_at: "",
+      },
+    });
+    render(<Profile />);
+    expect(fetchEligibility).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("profile-eligibility")).toHaveTextContent("home.eligibility_ineligible");
+  });
+
+  it("shows no eligibility row before the verdict arrives", () => {
+    useProfileStore.setState({ profile: mockProfile, eligibility: null });
+    render(<Profile />);
+    expect(screen.queryByTestId("profile-eligibility")).toBeNull();
   });
 
   it("shows suspension reason when suspended", () => {

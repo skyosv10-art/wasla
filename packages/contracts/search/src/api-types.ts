@@ -19,6 +19,9 @@ export interface paths {
   "/search/products": {
     get: operations["searchProducts"];
   };
+  "/search/stores": {
+    get: operations["searchStores"];
+  };
   "/search/health": {
     get: operations["health"];
   };
@@ -82,6 +85,27 @@ export interface components {
        */
       total: number;
     };
+    /** لغاتُ اسمِ المتجرِ الثلاثُ (ADR-025 §6.4). ar الافتراضيُّ والرجوعُ. */
+    StoreSearchLocale:
+      | "ar"
+      | "en"
+      | "ur";
+    /**
+     * الإسقاطُ العامُّ لمتجرٍ في نتيجةِ البحثِ — **هذه الحقولُ الثلاثةُ وحدَها**
+     * (`additionalProperties: false`): لا owner_public_id ولا حالةٌ ولا توقيتاتٌ.
+     */
+    StoreSearchResult: {
+      store_slug: string;
+      /** الاسمُ بلغةِ locale، أو العربيّةُ إن غابَ. */
+      title: string;
+      category_slug: string;
+    };
+    StoreSearchPage: {
+      items: components["schemas"]["StoreSearchResult"][];
+      page: number;
+      page_size: number;
+      total: number;
+    };
     ErrorResponse: {
       code: string;
       message: string;
@@ -110,6 +134,40 @@ export interface operations {
       200: {
         content: {
           "application/json": components["schemas"]["SearchPage"];
+        };
+      };
+      400: {
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+      503: {
+        content: {
+          "application/json": components["schemas"]["ErrorResponse"];
+        };
+      };
+    };
+  };
+  /**
+   * بحثُ المتاجرِ بالاسمِ (G-S9.7 · ADR-025 §6). المتجرُ يظهرُ إن وفقط إن كانَ
+   * approved وله منتجٌ ظاهرٌ واحدٌ على الأقلِّ؛ أيُّ معاملٍ غيرِ هذه الأربعةِ يُرفَضُ.
+   */
+  searchStores: {
+    parameters: {
+      query: {
+        /** 1..200 محرفٍ بعدَ القصِّ، وغيرُ فارغٍ بعدَ التطبيعِ (CLM-0652). */
+        q: string;
+        locale?: components["schemas"]["StoreSearchLocale"];
+        /** عددٌ صحيحٌ ≥ 1 بلا حدٍّ أعلى · الافتراضيُّ 1 (CLM-0652). */
+        page?: number;
+        /** 1..50 · الافتراضيُّ 20 (CLM-0652). */
+        page_size?: number;
+      };
+    };
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["StoreSearchPage"];
         };
       };
       400: {

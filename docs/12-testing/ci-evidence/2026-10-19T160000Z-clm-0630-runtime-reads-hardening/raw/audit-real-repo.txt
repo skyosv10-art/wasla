@@ -1,0 +1,63 @@
+audit errors: 0
+runtime files scanned: 855 in 73 workspace packages · cwd rule verified: True
+packages/channel-edge/src/create-channel-edge.ts
+    readFileSync(allowlistUrl, "utf-8") → unresolved (parameter `allowlistUrl` of loadAllowlist)
+packages/customer-e2e/src/harness.ts
+    readFile(CUSTOMER_SCHEMA_SQL, "utf-8") → repo:services/customers/contracts/schema.sql
+packages/delivery-e2e/src/harness.ts
+    readFileSync(DELIVERY_SCHEMA_PATH, "utf8") → repo:services/delivery/contracts/schema.sql
+    readFileSync(CONTRACT_PATH, "utf8") → repo:services/delivery/contracts/events.json
+packages/dispatch-e2e/src/harness.ts
+    readFile(MATCHING_SCHEMA_SQL, "utf-8") → repo:services/matching/contracts/schema.sql
+    readFile(DISPATCH_SCHEMA_SQL, "utf-8") → repo:services/dispatch/contracts/schema.sql
+packages/driver-e2e/src/harness.ts
+    readFile(DRIVER_SCHEMA_SQL, "utf-8") → repo:services/drivers/contracts/schema.sql
+packages/marketplace-e2e/src/harness.ts
+    readFileSync(CONTRACT_PATH, "utf8") → repo:services/marketplace/contracts/events.json
+packages/negotiation-e2e/src/harness.ts
+    readFile(NEGOTIATION_SCHEMA_SQL, "utf-8") → repo:services/negotiations/contracts/schema.sql
+packages/order-e2e/src/harness.ts
+    readFile(ORDER_SCHEMA_SQL, "utf-8") → repo:services/orders/contracts/schema.sql
+packages/search-e2e/src/harness.ts
+    readFileSync(resolve(__dirname, "../../../services/search/contracts/schema.sql"), "utf8") → repo:services/search/contracts/schema.sql
+    readFileSync(resolve(__dirname, "../../../services/marketplace/contracts/schema.sql"), "utf8") → repo:services/marketplace/contracts/schema.sql
+packages/tick-scheduler/src/scheduler.ts
+    mkdir(lockDir, { recursive: true }) → write
+    open(lockPath, "wx") → write
+    rm(lockPath, { force: true }) → write
+services/audit/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/audit/contracts/schema.sql
+services/billing/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/billing/contracts/schema.sql
+services/customers/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/customers/contracts/schema.sql
+services/delivery/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/delivery/contracts/schema.sql
+services/dispatch/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/dispatch/contracts/schema.sql
+services/drivers/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/drivers/contracts/schema.sql
+services/geography/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/geography/contracts/schema.sql
+services/identity/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/identity/contracts/schema.sql
+services/marketplace/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/marketplace/contracts/schema.sql
+services/matching/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/matching/contracts/schema.sql
+services/negotiations/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/negotiations/contracts/schema.sql
+services/observability/src/config.ts
+    readFileSync(`${dir}/${name}.targets`, 'utf8') → prefix:infra/observability/targets/
+services/orders/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/orders/contracts/schema.sql
+services/partners/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/partners/contracts/schema.sql
+services/reputation/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/reputation/contracts/schema.sql
+services/search/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/search/contracts/schema.sql
+services/subscriptions/src/db/migrate.ts
+    readFile(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/subscriptions/contracts/schema.sql
+services/support/src/db/migrate.ts
+    readFileSync(SCHEMA_CONTRACT_PATH, "utf8") → repo:services/support/contracts/schema.sql

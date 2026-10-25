@@ -1,0 +1,8 @@
+# queue = job.started_at - job.created_at. ci.yml has no `needs:` (grep -n "needs:" → none), so every job is created at run start and this is the wait for a runner.
+runs=25 jobs=1025 window=2026-10-21T10:56:50Z..2026-10-22T08:54:58Z
+queue p50 = 14 s
+queue p90 = 74 s
+queue p99 = 153 s
+queue max = (178.0, '39588291925', 'exit-gate-e2e (search, @wasla/search-e2e, wasla_search_e2e, DATABASE_URL)')
+exec max  = (1000.0, '39740985794', 'verify')  (timeout of that job: 30 min)
+# reading: a one-off API measurement on hosted runners. It is not a monitor, not an alert, and not a bound: nothing in the repo fails or alerts on queue time.

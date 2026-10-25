@@ -30,15 +30,16 @@
     "@wasla/outbox": "workspace:*",
     "@wasla/service-auth": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "fastify": "^5.12.5",
+    "fastify": "^5.12.7",
     "pg": "^8.13.0",
     "@wasla/resilience": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.11.0",
+    "@wasla/channel-edge": "workspace:*",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.12",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.12"
   }
 }

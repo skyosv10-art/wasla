@@ -121,6 +121,9 @@ export async function mockDriverApis(page: Page): Promise<void> {
     });
   });
 
+  // G-S10 (CLM-0613): eligibility verdict + availability declaration. Registered
+  // after the catch-all below would shadow them; Playwright matches the most
+  // recently added route first, so these are added at the end (see bottom).
   // Mock driver profile (GET/PATCH /drivers/:id) — catch-all for driver API
   await page.route("**/drivers/**", (route) => {
     const method = route.request().method();
@@ -149,6 +152,29 @@ export async function mockDriverApis(page: Page): Promise<void> {
     return route.fulfill({
       status: 200, contentType: "application/json",
       body: JSON.stringify({}),
+    });
+  });
+  await page.route("**/drivers/*/eligibility", (route) =>
+    route.fulfill({
+      status: 200, contentType: "application/json",
+      body: JSON.stringify({
+        wasla_public_id: "DRV-0000000001", eligibility_state: "eligible",
+        reason_codes: [], policy_version: 1, evaluated_at: "2026-10-18T00:00:00Z",
+      }),
+    }),
+  );
+  await page.route("**/drivers/*/availability", (route) => {
+    const body = route.request().postDataJSON() as { declared_availability?: string } | null;
+    return route.fulfill({
+      status: 200, contentType: "application/json",
+      body: JSON.stringify({
+        wasla_public_id: "DRV-0000000001", display_name: "Test Driver", preferred_locale: "ar",
+        status: "active", verification_status: "verified",
+        declared_availability: body?.declared_availability ?? "available",
+        work_city_zone_id: null, service_kinds: ["ride"], suspension_reason_code: null,
+        eligibility_policy_version: null, eligibility_recheck_at: null, last_published_state: null,
+        last_published_at: null, created_at: "2026-09-22T00:00:00Z", updated_at: "2026-09-22T00:00:00Z",
+      }),
     });
   });
 }

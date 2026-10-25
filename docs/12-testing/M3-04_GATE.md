@@ -26,7 +26,7 @@ PRODUCTION ✅ VERIFIED  — لوحةُ الإدارةِ منشورةٌ (`https:
 | **audit** | §6.2 يشترط `services/audit/` وجدولَ `audit_events` append-only. **قائمٌ** (CLM-0320): `services/audit/` مع `POST /audit/events` و`GET /audit/events` و16 اختبارًا. الجدولُ append-only لا يُكشَفُ له مسارُ تعديلٍ | ✅ |
 | **RBAC** | §5.2 يشترط صلاحيات `admin:*` في مصفوفة M1-05. **قائمةٌ** (CLM-0319): `customers:admin:read/suspend/reinstate` و`drivers:admin:read` في `packages/authz-policy`. وUAT-07 مُثبَتٌ في الواجهة على محاكاة | ✅ (واجهة) |
 | **مساراتُ الإدارة** | `GET /customers` و`GET /customers/:id` و`POST /customers/:id/suspend\|reinstate` (CLM-0319) و`GET /drivers` (CLM-0318) كلُّها قائمة. وبادئةُ `/api/<svc>` أُزيلَت من الواجهة (CLM-0317) | ✅ |
-| UAT-08 (عدمُ قابلية التدقيق للتعديل) | خدمةُ التدقيقِ لا تُكشِفُ مسارَ PUT/PATCH/DELETE — مُثبَتٌ بـ16 اختبارًا | ✅ |
+| UAT-08 (عدمُ قابلية التدقيق للتعديل) | خدمةُ التدقيقِ لا تُكشِفُ مسارَ PUT/PATCH/DELETE — مُثبَتٌ بـ16 اختبارًا — *(إضافةٌ مؤرَّخةٌ 2026-10-18 · CLM-0605: قرارُ المالكِ [ADR-072](../15-decisions/ADR-072-owner-decisions-gs7-uat08.md) D2 = 405 + `Allow`؛ نُفِّذَ رفضٌ صريحٌ واستُبدلتْ توكيداتُ 404 الثلاثُ بتوكيداتِ 405 — راجع [الدليل](ci-evidence/2026-10-18T063000Z-clm-0605-uat08-audit-405/README.md))* | ✅ |
 | مراجعةُ الوثائق وتعليقُ السائق | `POST /drivers/:id/documents/:docId/review` و`suspend` و`reinstate` قائمةٌ في `drivers` | ✅ مسار |
 | E2E + axe | وظيفةُ [`admin-portal-e2e`](https://github.com/skyosv10-art/wasla/actions/runs/35842348529/job/107121204349) نجحت على PR [#416](https://github.com/skyosv10-art/wasla/pull/416) | ✅ على محاكاة |
 

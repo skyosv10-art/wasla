@@ -1,0 +1,9 @@
+── الحارسُ 29 · ترطيبُ حدِّ القناةِ في المدخلِ (D6 · CLM-0691/0693) ──
+  ✓ main.ts يستوردُ buildAppWithEdge من ./edge.js
+  ✓ المُطلِقُ يمرِّرُ buildAppWithEdge إلى runBotApp
+  ✓ allowlistUrl في customer-bot يحلُّ إلى ملفٍّ موجودٍ: packages/channel-edge/allowlist/customer-mini-app.json
+  ✓ قائمةُ سماحِ customer-bot صالحةُ JSON
+  ✓ allowlistUrl في driver-bot يحلُّ إلى ملفٍّ موجودٍ: packages/channel-edge/allowlist/driver-mini-app.json
+  ✓ قائمةُ سماحِ driver-bot صالحةُ JSON
+
+✓ edge-wiring-guard: الترطيبُ مقيسٌ سليم.

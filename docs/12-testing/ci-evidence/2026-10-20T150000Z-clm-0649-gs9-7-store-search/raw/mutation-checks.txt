@@ -1,0 +1,93 @@
+== M1 remove store approved condition
+file: services/search/src/infrastructure/store-search-reader.ts
+cmd: (cd services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts)
+exit: 1 → KILLED
+Tests  5 failed | 17 passed (22)
+failing cases:
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > a suspended store is excluded even with a visible product 40ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > an archived store is excluded 34ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > a stale store event (older state_sequence) cannot re-approve a suspended store 40ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > mutation sentinels — a reader without the predicate leaks > without `store_state = 'approved'` the suspended store appears — the real reader hides it 55ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > mutation sentinels — a reader without the predicate leaks > without the visible-product EXISTS the empty approved store appears — the real reader hides it 45ms
+
+== M2 remove visible-product EXISTS
+file: services/search/src/infrastructure/store-search-reader.ts
+cmd: (cd services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts)
+exit: 1 → KILLED
+Tests  5 failed | 17 passed (22)
+failing cases:
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > an approved store with no visible product is excluded (draft · moderation pending · zero stock) 44ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > losing the last visible product removes the store (stock → 0), restocking brings it back 41ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > archiving the last visible product removes the store 36ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > mutation sentinels — a reader without the predicate leaks > without `store_state = 'approved'` the suspended store appears — the real reader hides it 51ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > mutation sentinels — a reader without the predicate leaks > without the visible-product EXISTS the empty approved store appears — the real reader hides it 44ms
+
+== M3 remove quantity>0 from EXISTS
+file: services/search/src/infrastructure/store-search-reader.ts
+cmd: (cd services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts)
+exit: 1 → KILLED
+Tests  2 failed | 20 passed (22)
+failing cases:
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > an approved store with no visible product is excluded (draft · moderation pending · zero stock) 46ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > losing the last visible product removes the store (stock → 0), restocking brings it back 45ms
+
+== M4 remove LIKE escaping (escapeLike = identity)
+file: services/search/src/domain/store-search.ts
+cmd: (cd services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts)
+exit: 1 → KILLED
+Tests  2 failed | 20 passed (22)
+failing cases:
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > treats %, _ and \ in the query literally 79ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > mutation sentinels — a reader without the predicate leaks > without LIKE escaping `%%` matches every store — the real reader matches none 44ms
+
+== M5 accept undeclared query keys
+file: services/search/src/domain/store-search.ts
+cmd: (cd services/search && pnpm exec vitest run src/__tests__/store-search.test.ts)
+exit: 1 → KILLED
+Tests  2 failed | 33 passed (35)
+failing cases:
+  × parseStoreSearchRequest — bounds come from the shared contract > undeclared keys are rejected by name, never ignored 7ms
+  × GET /search/stores — HTTP > 400 {"q":"نور","owner_public_id":"WS-1"} → SEARCH_UNKNOWN_PARAMETER 5ms
+
+== M6 client stale-response guard removed
+file: apps/customer-mini-app/src/components/StoreSearch.tsx
+cmd: (cd apps/customer-mini-app && pnpm exec vitest run src/__tests__/StoreSearch.test.tsx)
+exit: 1 → KILLED
+Tests  1 failed | 6 passed (7)
+failing cases:
+  × StoreSearch component > a late response to an older search never replaces a newer one 20ms
+
+== M7 route leaks port fields (spread item)
+file: services/search/src/http/app.ts
+cmd: (cd services/search && pnpm exec vitest run src/__tests__/store-search.test.ts)
+exit: 1 → KILLED
+Tests  1 failed | 34 passed (35)
+failing cases:
+  × GET /search/stores — HTTP > emits exactly the public projection even if the port over-returns 75ms
+
+== M8 relay skips name fetch (no store doc)
+file: services/search/src/relay.ts
+cmd: (cd services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts)
+exit: 1 → KILLED
+Tests  15 failed | 7 passed (22)
+failing cases:
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > an approved store with a visible product is found; the relay fetched its names once 80ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > losing the last visible product removes the store (stock → 0), restocking brings it back 36ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > matches across ar/en/ur names and returns the title in the requested locale 33ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > falls back to the Arabic title when the requested locale has no name 33ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > declared Arabic folding: hamza forms, alef maqsura, teh marbuta, diacritics, case 46ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > treats %, _ and \ in the query literally 73ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > orders exact → prefix → contains, ties by store_slug ascending — stable across calls 68ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > pages with a true total, including a page past the last match 90ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > rebuildAll + replay refills the store-name model from events and the read port — no manual data 53ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > duplicate delivery is a no-op: re-running the relay neither duplicates nor refetches 29ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > a failed name fetch leaves the approval pending and the projection untouched; retry applies it 35ms
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > mutation sentinels — a reader without the predicate leaks > without `store_state = 'approved'` the suspended store appears — the real reader hides it 65ms
+
+== M9 rebuild does not clear store index
+file: services/search/src/infrastructure/projection-store.ts
+cmd: (cd services/search && pnpm exec vitest run --config vitest.integration.config.ts src/__tests__/store-search.integration.test.ts)
+exit: 1 → KILLED
+Tests  1 failed | 21 passed (22)
+failing cases:
+  × store-name search — PostgreSQL (G-S9.7 · ADR-025 §6) > rebuildAll + replay refills the store-name model from events and the read port — no manual data 49ms

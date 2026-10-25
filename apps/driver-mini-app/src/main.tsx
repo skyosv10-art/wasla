@@ -2,14 +2,15 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { useSessionStore } from "./store/session";
-import { initSessionFromTelegram } from "./session/session-init";
+import { startSessionLifecycle } from "./session/session-init";
 import "./i18n";
 import "./index.css";
 
 // ADR-069 · CLM-0524 (المرحلة 2 الجزء 2): تهيئةُ الجلسةِ من `Telegram.WebApp.initData`
 // في زمنِ التشغيلِ لا خلفَ خطافِ E2E وحدهُ — الشاشةُ «جارٍ التحميل» لم تعد نهائيةً
 // في الإنتاجِ. لا تُخزَّنُ الجلسةُ في أيِّ تخزينٍ محليٍّ (ADR-045 §4).
-void initSessionFromTelegram();
+// G-S8 (CLM-0610): تهيئةٌ أولى + إعادةٌ محدودةٌ عندَ الانتهاءِ/401.
+startSessionLifecycle();
 
 // E2E test support — compile-time gated, tree-shaken in production.
 // When VITE_E2E is not set, this entire block is removed by the bundler.

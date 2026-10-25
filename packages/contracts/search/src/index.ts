@@ -16,3 +16,4 @@
 
 export * from "./api-types.js";
 export * from "./events-types.js";
+export * from "./store-search.js";

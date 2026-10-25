@@ -1,16 +1,18 @@
-# SERVICES — قائمة الخدمات الـ24
+# SERVICES — قائمة الخدمات الـ27
+
+> *(تصحيحٌ مؤرَّخٌ CLM-0600 · 2026-10-18: العنوانُ كانَ يقولُ «الـ24» — الجردُ الفعليُّ من الشجرةِ الحيةِ (2026-10-18 · فرعُ `fix/clm-0600`) = **27 مجلدَ خدمةً**: 24 مدرجةً في الجدولِ + 3 غيرُ مدرجةٍ (`customers` · `negotiations` · `observability`) أُضيفتِ أدناه. لا يُدَّعى أنَّ المجلداتِ الـ27 كلَّها مُشغَّلةٌ إنتاجيًّا — تصنيفُ الجردِ الهيكليِّ في [دليلِ CLM-0579](../12-testing/ci-evidence/2026-10-17T001000Z-clm-0579-stage-zero-structural-census/README.md) يفرّقُ IMPLEMENTED_UNVERIFIED عن PLACEHOLDER.)*
 
 > **Scope:** قائمة الخدمات (Bounded Contexts) في مستودع WASLA مع وصف موجز ومسؤوليات كل خدمة.
 >
 > **المرجع الأم:** القسم 68 (Repository Structure) وأقسام الخدمات الفردية من الدليل التنفيذي.
 >
-> **Last Updated:** 2026-08-19 · **Status:** Baseline v1.0 · **Related Team:** حسب ملكية كل خدمة في [CODEOWNERS](../../CODEOWNERS)
+> **Last Updated:** 2026-10-18 (تصحيحاتٌ مؤرَّخةٌ CLM-0600 فوقَ Baseline v1.0) · **Status:** Baseline v1.0 + تصحيحاتٌ مؤرَّخةٌ · **Related Team:** حسب ملكية كل خدمة في [CODEOWNERS](../../CODEOWNERS)
 
 ---
 
 ## نظرة عامة
 
-المستودع Monorepo يحتوي على **24 خدمة** تحت `services/`. كل خدمة تمثل Bounded Context مستقل منطقيًا. في البداية تعمل كـModular Monolith على PostgreSQL واحد مع Logical Schemas، وقابلية للاستخراج لاحقًا إلى Microservices عند وجود سبب واضح (انظر [`SCALING.md`](../02-architecture/SCALING.md)).
+المستودع Monorepo يحتوي على ~~**24 خدمة**~~ **27 مجلدَ خدمةً** تحت `services/`. *(تصحيحٌ مؤرَّخٌ CLM-0600 · 2026-10-18 — جردٌ آليٌّ من الشجرةِ.)* كل خدمة تمثل Bounded Context مستقل منطقيًا. في البداية تعمل كـModular Monolith على PostgreSQL واحد مع Logical Schemas، وقابلية للاستخراج لاحقًا إلى Microservices عند وجود سبب واضح (انظر [`SCALING.md`](../02-architecture/SCALING.md)).
 
 > **قاعدة:** بعد استخراج الخدمات، لا تسمح خدمة أن تقرأ جداول خدمة أخرى مباشرة — الاتصال عبر Contracts فقط.
 
@@ -29,7 +31,7 @@
 | 7 | `matching` | Team 04 | Candidate search، Hard constraints، Ranking، Fairness، Reputation inputs، ETA، Eligibility |
 | 8 | `dispatch` | Team 05 | DispatchJob، Offer waves، Timeouts، Assignment، Reassignment، Community fallback، Duplicate prevention |
 | 9 | `drivers` | Team 03 | Driver Profile، الوثائق، المركبة، الحالة، Work City/District/Zone، Community mode |
-| 10 | `subscriptions` | Team 03 | اشتراك السائق: 250/250/400 SAR، Trial، States (TRIAL/ACTIVE/GRACE/EXPIRED/COMMUNITY/SUSPENDED/CANCELLED) |
+| 10 | `subscriptions` | Team 03 | اشتراك السائق: 250/250/400 SAR، Trial، ~~States (TRIAL/ACTIVE/GRACE/EXPIRED/COMMUNITY/SUSPENDED/CANCELLED)~~ States (TRIAL/ACTIVE/EXPIRED/COMMUNITY) — *(تصحيحٌ مؤرَّخٌ CLM-0600: أربعُ حالاتٍ فقط ([ADR-015](../15-decisions/ADR-015-driver-subscription-entitlement-ledger-and-derived-referral-rewards.md) البندُ 3 · `GRACE` رصيدُ سماحٍ 7 أيامٍ داخلَ `community` لا حالةً)) |
 | 11 | `reputation` | Team 04/05/11 | Reputation Engine: Profile، Events، Ratings، Score، Status labels، Recoverable |
 | 12 | `fraud` | Team 11/04/05 | Fraud & Trust Engine: إشارات احتيال، Moderation cases، Trust signals |
 | 13 | `referrals` | Team 03/01 | Referral Engine: كود إحالة، Attribution، Qualified referral، Rewards، Anti-abuse |
@@ -44,6 +46,9 @@
 | 22 | `compliance` | Team 12 | Compliance Policy لكل دولة، KYC adapters، قواعد الامتثال |
 | 23 | `audit` | Team 09 | Audit trail لكل عملية حساسة، Audit integrity، لا حذف للأثر |
 | 24 | `analytics` | Team 09 | Analytics، Warehouse/OLAP، Reporting foundations، KPIs (Fill Rate، ETA Accuracy، ...) |
+| 25 | `customers` | Team 02 | Customer Core (ADR-009): ملف العميل، العناوين، القنوات، ربط الهوية — موضعُ نواةِ العميلِ وحدُّ استقبالِ الطلبِ — *(أُضيف CLM-0600 · من الجردِ)* |
+| 26 | `negotiations` | Team 05 | نواةُ التفاوضِ (ADR-013): الخيوطُ والجولاتُ والانتهاءُ المُخزَّنُ غيرُ المجدولِ · HTTP قائمٌ (`POST /negotiations/tick` في `src/http/app.ts` — قياسُ CLM-0601 من الشجرةِ الحيةِ؛ README الخدمةِ متقادمٌ 2026-08-23 وفجوتُهُ مسجَّلةٌ) — *(أُضيف CLM-0600 · وُصِّف بقياسٍ في CLM-0601)* |
+| 27 | `observability` | Team 09 | المراقبةُ (ADR-041/053): Prometheus · Alertmanager · OpenTelemetry Collector — *(أُضيف CLM-0600 · من الجردِ)* |
 
 ---
 
@@ -65,8 +70,10 @@ Order
 دورة حياة الطلب (Order lifecycle):
 
 ```text
-DRAFT → PUBLISHED → SEARCHING → OFFERED → NEGOTIATING (optional) → ACCEPTED → ASSIGNED → DRIVER_EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED
+PUBLISHED → SEARCHING → OFFERED → NEGOTIATING (optional) → ACCEPTED → ASSIGNED → DRIVER_EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED
 ```
+
+> *(تصحيحٌ مؤرَّخٌ CLM-0600 · 2026-10-18 (أُصلح تنسيقًا في CLM-0601): `DRAFT` مشطوبٌ من المخطط — المحرّكُ لا يُنفّذُ `DRAFT` والطلبُ يُخلَقُ بحالةِ `published` ([ADR-010](../15-decisions/ADR-010-order-engine-state-machine-and-assignment-boundary.md) البندُ 2) — نفسُ تصحيحِ CLM-0590 على USER_FLOWS. النسخةُ الأصليةُ للمخططِ: `DRAFT → PUBLISHED → …` (محفوظةٌ هنا بالإحالةِ لا بالمحوِ).)*
 
 حالات جانبية: `EXPIRED`, `NO_DRIVER_FOUND`, `DRIVER_REJECTED`, `DRIVER_TIMEOUT`, `DRIVER_CANCELLED`, `CUSTOMER_CANCELLED`, `PARTNER_CANCELLED`, `PAYMENT_DISPUTED`, `FAILED`, `BLOCKED`, `UNDER_REVIEW`.
 
@@ -98,7 +105,9 @@ Ride only          250 SAR / month
 Both               400 SAR / month
 ```
 
-أول شهر مجاني بعد إكمال التسجيل. التجديد شهري. لا يوجد حد أقصى افتراضي للأشهر المجانية.
+~~أول شهر مجاني بعد إكمال التسجيل.~~ التجديد شهري. لا يوجد حد أقصى افتراضي للأشهر المجانية.
+
+> *(تصحيحٌ مؤرَّخٌ CLM-0600 · 2026-10-18 (حُصر النطاقُ في CLM-0601): مدةُ التجربةِ المجانيةِ **14 يومًا** لا شهرًا ([ADR-015](../15-decisions/ADR-015-driver-subscription-entitlement-ledger-and-derived-referral-rewards.md) · العقدُ `SUBSCRIPTION_LAUNCH_TRIAL_DAYS = 14`) — نفسُ تصحيحِ CLM-0590. «التجديدُ شهريٌّ» و«لا حدَّ أقصى للأشهرِ المجانية» متطلبانِ غيرُ متعارضينِ معَ ADR-015 فبقيا غيرَ مشطوبين.)*
 
 ### Notifications (`notifications`)
 

@@ -1,0 +1,1 @@
+# بناء @wasla/customer-mini-app بـ vite 6.4.5 — نجاح (1.29s)

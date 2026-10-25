@@ -1,0 +1,31 @@
+"""CLM-0630 reproduction on main 8958621e: arg-blind fingerprint lets a changed read target pass."""
+import json, os, subprocess, sys, tempfile
+sys.path.insert(0, os.path.dirname(__file__))
+import runtime_reads as rr, render_plan as rp
+def sh(r,*a): subprocess.run(["git","-C",r,*a],check=True,capture_output=True)
+def w(r,p,t): p=os.path.join(r,p); os.makedirs(os.path.dirname(p),exist_ok=True); open(p,"w").write(t)
+def commit(r,m): sh(r,"add","-A"); sh(r,"commit","-qm",m); return subprocess.run(["git","-C",r,"rev-parse","HEAD"],capture_output=True,text=True).stdout.strip()
+r=tempfile.mkdtemp(); sh(r,"init","-q"); sh(r,"config","user.email","t@t"); sh(r,"config","user.name","t")
+w(r,"pnpm-workspace.yaml",'packages:\n  - "services/*"\n')
+for f in ("package.json","pnpm-lock.yaml","tsconfig.json","Dockerfile",".dockerignore","scripts/container/entrypoint.sh"): w(r,f,"v1\n")
+w(r,"services/o/package.json",json.dumps({"name":"@t/o"})); w(r,"services/b/package.json",json.dumps({"name":"@t/b"}))
+w(r,"services/b/config.json","1\n"); w(r,"services/o/contracts/s.sql","1\n")
+BASE='import { readFileSync } from "node:fs";\nconst SCHEMA = new URL("../contracts/s.sql", import.meta.url);\nexport const load = () => readFileSync(SCHEMA, "utf8");\n'
+w(r,"services/o/src/c.ts",BASE)
+reg={"files":{"services/o/src/c.ts":{"fs":{"readFileSync":1},"reads":[],"why":"in-package schema"}}}
+w(r,"scripts/deploy/runtime-reads.json",json.dumps(reg)); c0=commit(r,"base")
+variants={
+ "absolute /app path":BASE.replace('readFileSync(SCHEMA, "utf8")','readFileSync("/app/services/b/config.json", "utf8")'),
+ "composed path":BASE.replace('readFileSync(SCHEMA, "utf8")','readFileSync("services/" + serviceName + "/config.json", "utf8")').replace("export const load = ()","export const load = (serviceName: string)"),
+ "target changed via const (../), old registration still valid":BASE.replace('"../contracts/s.sql"','"../../b/config.json"'),
+ "target changed via const (absolute), old registration still valid":BASE.replace('new URL("../contracts/s.sql", import.meta.url)','"/app/services/b/config.json"'),
+ "target changed via const (join + ..), old registration still valid":BASE.replace('import { readFileSync } from "node:fs";','import { readFileSync } from "node:fs";\nimport { join } from "node:path";').replace('new URL("../contracts/s.sql", import.meta.url)','join(process.cwd(), "..", "b", "config.json")'),
+}
+svc={"type":"web_service","serviceDetails":{"envSpecificDetails":{"dockerfilePath":"Dockerfile","dockerContext":"."}}}
+for desc,src in variants.items():
+    sh(r,"checkout","-q",c0); w(r,"services/o/src/c.ts",src); c1=commit(r,desc)
+    w(r,"services/b/config.json","changed\n"); c2=commit(r,"services/b/config.json changed")
+    reg_t,how=rp.registry_for_target(r,c2,None)
+    pk=rp.workspace_packages(r,c2); ins,_=rp.inputs_for(r,c2,svc,"@t/o",pk,reg_t)
+    d=rp.decide(r,c1,c2,ins)
+    print(f"{desc:58} audit={'clean' if reg_t else 'FAIL'} → @t/o {d['decision']} — {'GAP (silent)' if d['decision']!='deploy' else 'ok'}")

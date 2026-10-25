@@ -558,6 +558,16 @@ else
   FAILED+=("28) edge-allowlist-guard — السكربت غير موجود (fail-closed)")
 fi
 
+# ── 29) edge-wiring-guard: ترطيبُ حدِّ القناةِ في مدخلِ البوتِ مقيسٌ (D6 · CLM-0691)
+# يسقطُ إذا عادَ المدخلُ إلى بناءٍ من غيرِ الحدِّ (اختباراتٌ خضراءُ وعمليةٌ بلا
+# مساراتِها — عيبُ السلفِ نفسُهُ)، أو إذا حلَّ allowlistUrl إلى ملفٍّ غائبٍ/غيرِ صالحٍ.
+if [[ -f scripts/checks/validate-edge-wiring.sh ]]; then
+  run_check "29) edge-wiring-guard — مدخلُ البوتِ يبني عبرَ الحدِّ وقوائمُهُ محلولةٌ (D6 · CLM-0691)" \
+    bash scripts/checks/validate-edge-wiring.sh
+else
+  FAILED+=("29) edge-wiring-guard — السكربت غير موجود (fail-closed)")
+fi
+
 # ── الخلاصة ──────────────────────────────────────────────────
 printf '\n%s╔══════════════════════════════════════════════════════════╗%s\n' "$BOLD" "$RST"
 printf '%s║  الخلاصة                                                  ║%s\n' "$BOLD" "$RST"

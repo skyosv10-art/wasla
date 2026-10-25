@@ -12,6 +12,13 @@
 
 import { runBotApp } from "@wasla/bot-runtime";
 
-import { BOT, buildApp } from "./server.js";
+import { BOT } from "./server.js";
+import { buildAppWithEdge } from "./edge.js";
 
-void runBotApp(BOT, () => buildApp());
+// D6 (CLM-0691): the entry point builds through `buildAppWithEdge`, not `buildApp`.
+// Fail-closed by design (ADR-069): with WASLA_EDGE_ENABLED unset or falsy,
+// `buildAppWithEdge` returns the plain composition root — identical behavior to
+// `buildApp` — so this wiring registers the edge only when the owner turns it on.
+// The thing that listens is by construction the thing that was built and tested
+// (edge-composition.test.ts exercises `buildAppWithEdge` with the edge enabled).
+void runBotApp(BOT, buildAppWithEdge);

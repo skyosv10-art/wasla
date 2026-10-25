@@ -1,0 +1,13 @@
+diff --git a/infra/render/deploy-target.json b/infra/render/deploy-target.json
+index 192bb5df..0bdf3fa6 100644
+--- a/infra/render/deploy-target.json
++++ b/infra/render/deploy-target.json
+@@ -19,7 +19,7 @@
+       ],
+       "approved": false,
+       "approval": null,
+-      "note": "Deferred by owner decision, not by engineering: channel-edge is wired in bots/customer-bot/src/main.ts and allowlistUrl resolves to the existing allowlist (fixed CLM-0662, wired D6 CLM-0691, measured by guard 29 validate-edge-wiring.sh). Remaining for T1: owner approval (approved=false, approval=null, unchanged) and a live-environment measurement for D4.3 - a local test is not a substitute."
++      "note": "Deferred: channel-edge is not wired in bots/customer-bot/src/main.ts and allowlistUrl resolves to a missing file (CLM-0630); approval waits for that fix and its tests."
+     },
+     "T2": {
+       "services": [

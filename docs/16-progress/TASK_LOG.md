@@ -1,3 +1,14 @@
+# 2026-10-25 — CLM-0694 — استرجاعُ حقلِ `note` لبندِ T1 في `deploy-target.json` إلى نصّهِ الأصليِّ
+
+- **Work Item(s):** M0-53 (G-S9.7 · T1).
+- **Status:** Active (يُدمَجُ بعدَ الفحوصِ على الرأسِ).
+- **Kind:** corrective revert + docs — استرجاعُ حالةٍ؛ لا تغييرَ في أيِّ قرارِ نشرٍ.
+- **Risk(s):** none — `mode=frozen` · `approved=false` + `approval=null` · `isolation_evidence=null` كلُّها كما هي.
+- **Defect found and fixed:** CLM-0691 عدّلَ حقلَ `note` لبندِ T1 في `deploy-target.json` — تجاوزُ نطاقٍ (توجيهُ المالكِ 2026-10-25: «لا تغيّر deploy-target.json»). استُرجعَ النصُّ الأصليُّ (ما قبلَ #837) حرفيًّا، وتقادمُهُ (الوصلُ والقائمةُ قائمانِ بالقياسِ — الحارسُ 29) يُوثَّقُ في RENDER_TEST_ENVIRONMENT_PLAN لا في الحقلِ.
+- **Measured (local):** `validate-render-deploy-target.sh` 42/42 (بعدَ الاسترجاعِ) · فرقُ الملفِّ سطرٌ واحدٌ (الحقلُ وحدَهُ).
+- **Not changed:** كلُّ حقولِ القرارِ (`mode` · `approved` · `approval` · `isolation_evidence` · `production_database_refs`) · لا نشرَ · Render مجمَّدٌ · NO-GO.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-25T120000Z-clm-0694-deploy-target-note-revert/README.md
+- **Deployment:** none — استرجاعُ نصٍّ بلا أي أثرٍ حيٍّ (Render مجمَّدٌ · production_open=false).
 # 2026-10-25 — CLM-0693 — G-S9.7 · D6: تقويةُ الحارسِ 29 (تجريدُ التعليقاتِ + خاصيةُ allowlistUrl) + اختبارٌ سلوكيٌّ للمدخلِ
 
 - **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.11 · T1).
@@ -11,7 +22,6 @@
 - **Not changed:** `production_open=false` · `approved=false` + `approval=null` · لا نشرَ · Render مجمَّدٌ · NO-GO · D4.3 «غيرُ منفَّذٍ» حتى قياسٍ حيٍّ بإذنِ المالكِ.
 - **Evidence:** docs/12-testing/ci-evidence/2026-10-25T114500Z-clm-0693-guard29-hardening/README.md
 - **Deployment:** none — تقويةُ قياسٍ محليّةٌ بلا أي أثرٍ حيٍّ (Render مجمَّدٌ · production_open=false · T1 بقرار المالك).
-
 # 2026-10-25 — CLM-0692 — حكمُ ما بعدَ الدمجِ لـ#837 (وحدةُ D6 · CLM-0691)
 
 - **Work Item(s):** M0-53 (G-S9.7 · وحدةُ D6).

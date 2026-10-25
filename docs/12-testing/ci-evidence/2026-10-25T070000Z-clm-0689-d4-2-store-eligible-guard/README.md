@@ -27,6 +27,8 @@ PostgreSQL 18 محليٌّ (CI يستعملُ 17). السجلّاتُ في `raw/
 | وحداتُ search | 14 ملفًّا · 187/187 | `raw/search-unit.log` |
 | `tsc --noEmit` (search) | rc=0 | `raw/tsc-search.log` |
 | حالاتُ الحارسِ 28 (مجموعةُ edge-allowlist وحدَها) | 119/0 | `raw/gov-edge-allowlist-positive.log` |
+| `test-governance.sh` كاملًا | 818 ناجح · 0 فاشل (797 + 21 جديدة) | `raw/test-governance-local.log` |
+| `verify-governance.sh` | rc=0 · فحصٌ واحدٌ تُخطّيَ (5: هدفُ طلبِ الدمج — لا ينطبقُ محليًّا) — **نجاحٌ جزئيٌّ لا كامل** | `raw/verify-governance-local.log` |
 
 ## الطفرات — شرطُ الأهليّةِ في الشفرة (`STORE_ELIGIBILITY_SQL`)
 

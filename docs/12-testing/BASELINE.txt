@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-25T10:25:59Z
-الالتزام: 734e5c6fb6028dfcb8d42a7a1c222bec2e3c9761  الفرع: fix/clm-0691-channel-edge-main-wiring  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-10-25T12:44:12Z
+الالتزام: 226ba123b6059c2294128bb6b24dd0684979111b  الفرع: fix/clm-0693-guard29-hardening  شجرةٌ نظيفةٌ
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.8
 القفل: pnpm-lock.yaml · 5059 سطراً · sha256 2f016f46938f20e4…
 
@@ -9,18 +9,18 @@
   packages                   74
   packages_with_typecheck    70
   packages_with_test         74
-  test_files_tracked         587
+  test_files_tracked         588
   ci_jobs                    13
   ci_allow_failure           0
   governance_checks          29
   risks_not_closed           27
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-25T110000Z-clm-0691-channel-edge-main-wiring/raw/verify-local.log):
-  tests_passed               6307
-  test_files_executed        444
-  governance_suite_cases     823
+العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-25T114500Z-clm-0693-guard29-hardening/raw/verify-local.log):
+  tests_passed               6310
+  test_files_executed        445
+  governance_suite_cases     826
   governance_suite_failed    1
   verify_overall             failed
 
-البصمة: sha256:38e9904a4c72f9f15960d8735f7e2a9efbb91aafe0f39f49eb59a039b969b4d3
+البصمة: sha256:e9a4392a7f81afa51d6fc94e02e88b41acd2aba918eacd7019d4a8c835e3de68
 المرجع: docs/12-testing/BASELINE_FORMAT.md

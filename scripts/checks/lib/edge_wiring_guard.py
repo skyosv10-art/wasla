@@ -49,10 +49,51 @@ def must_read(path: Path, what: str) -> str:
         return ""
 
 
+def strip_comments(src: str) -> str:
+    """يجردُ `src` تعليقاتِهِ (سطورَ `//` وكتلَ `/* */`) دونَ المساسِ بـ`//` داخلِ
+    سلسلةٍ نصّيةٍ (مثل `"https://…"`) — فلا يمرَّرَ ترطيبٌ يعيشُ في تعليقٍ فقط.
+    """
+    out: list[str] = []
+    i, n = 0, len(src)
+    in_string = False
+    while i < n:
+        c = src[i]
+        if in_string:
+            out.append(c)
+            if c == "\\" and i + 1 < n:
+                out.append(src[i + 1])
+                i += 2
+                continue
+            if c == '"':
+                in_string = False
+            i += 1
+            continue
+        if c == '"':
+            in_string = True
+            out.append(c)
+            i += 1
+            continue
+        if c == "/" and i + 1 < n and src[i + 1] == "/":
+            while i < n and src[i] != "\n":
+                i += 1
+            continue
+        if c == "/" and i + 1 < n and src[i + 1] == "*":
+            i += 2
+            while i + 1 < n and not (src[i] == "*" and src[i + 1] == "/"):
+                i += 1
+            i = min(i + 2, n)
+            out.append(" ")
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
 def check_main_wiring() -> None:
-    src = must_read(MAIN, "مدخلُ بوتِ العميلِ")
-    if not src:
+    raw = must_read(MAIN, "مدخلُ بوتِ العميلِ")
+    if not raw:
         return
+    src = strip_comments(raw)  # لا يمرَّرَ ترطيبٌ يعيشُ في تعليقٍ (M5)
     # 1) الاستيرادُ من وحدةِ الحدِّ لا من جذرِ التركيبِ وحده
     if re.search(r'import\s*\{[^}]*\bbuildAppWithEdge\b[^}]*\}\s*from\s*"\./edge\.js"', src):
         ok("main.ts يستوردُ buildAppWithEdge من ./edge.js")
@@ -74,15 +115,18 @@ def check_main_wiring() -> None:
 
 
 def check_allowlist(bot: str, edge_path: Path) -> None:
-    src = must_read(edge_path, f"وحدةُ حدِّ بوتِ {bot}")
-    if not src:
+    raw = must_read(edge_path, f"وحدةُ حدِّ بوتِ {bot}")
+    if not raw:
         return
-    # قياسٌ حيٌّ: استخراجُ المسارِ النسبيِّ كما يكتبُهُ الكودُ وحلُّهُ ضدَّ موقعِ الملفِّ
+    src = strip_comments(raw)
+    # قياسٌ حيٌّ: استخراجُ المسارِ النسبيِّ من **خاصيةِ allowlistUrl نفسِها** كما
+    # يكتبُهُ الكودُ وحلُّهُ ضدَّ موقعِ الملفِّ — لا أوّلَ `new URL` عابرٍ في الملفِ (M6).
     m = re.search(
-        r'new URL\(\s*"(\.\./[^"]+)"\s*,\s*import\.meta\.url\s*\)', src
+        r'allowlistUrl\s*:\s*fileURLToPath\(\s*new URL\(\s*"([^"\\]+)"\s*,\s*import\.meta\.url\s*\)\s*,?\s*\)',
+        src,
     )
     if not m:
-        fail("EW-ALLOWLIST-FORM", f"allowlistUrl في {bot} ليس حلًّا من موقعِ الوحدةِ (import.meta.url)")
+        fail("EW-ALLOWLIST-FORM", f"خاصيةُ allowlistUrl في {bot} ليست حلًّا من موقعِ الوحدةِ (fileURLToPath(new URL(…, import.meta.url)))")
         return
     rel = m.group(1)
     resolved = (edge_path.parent / rel).resolve()
@@ -107,7 +151,7 @@ def check_allowlist(bot: str, edge_path: Path) -> None:
 
 
 def main() -> int:
-    print("── الحارسُ 29 · ترطيبُ حدِّ القناةِ في المدخلِ (D6 · CLM-0691) ──")
+    print("── الحارسُ 29 · ترطيبُ حدِّ القناةِ في المدخلِ (D6 · CLM-0691/0693) ──")
     if not MAIN.is_file():
         fail("EW-READ", f"مدخلُ بوتِ العميلِ مفقودٌ: {MAIN.relative_to(ROOT)}")
     else:

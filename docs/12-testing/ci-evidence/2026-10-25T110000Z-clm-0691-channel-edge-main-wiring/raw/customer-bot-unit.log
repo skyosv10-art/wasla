@@ -1,0 +1,19 @@
+
+ RUN  v4.1.12 /home/user/workspace/wasla/bots/customer-bot
+
+ ✓ src/__tests__/bot-role.test.ts (15 tests) 6145ms
+     ✓ answers /negotiations  2014ms
+     ✓ answers /accept  2006ms
+     ✓ answers /reject  2003ms
+ ✓ src/__tests__/customer-flows.test.ts (14 tests) 130ms
+ ✓ src/__tests__/customer-bot.test.ts (6 tests) 79ms
+ ✓ src/__tests__/edge-composition.test.ts (2 tests) 62ms
+ ✓ src/__tests__/http-negotiations-signing.test.ts (4 tests) 25ms
+ ✓ src/__tests__/user-assertion-propagation.test.ts (5 tests) 25ms
+ ✓ src/__tests__/negotiation-flows.test.ts (12 tests) 9ms
+
+ Test Files  7 passed (7)
+      Tests  58 passed (58)
+   Start at  10:41:04
+   Duration  9.54s (transform 781ms, setup 0ms, import 1.96s, tests 6.48s, environment 1ms)
+

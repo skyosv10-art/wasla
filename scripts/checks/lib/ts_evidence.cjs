@@ -72,6 +72,17 @@ function analyzeFile(file) {
       if (ts.isIdentifier(d.name) && d.initializer) moduleConsts.set(d.name.text, d.initializer);
     }
   }
+  // الاستيرادُ المسمّى: الاسمُ المحلّيُّ ⇒ { from, imported } (CLM-0689 · E-20:store-eligible).
+  const imports = {};
+  for (const st of sf.statements) {
+    if (!ts.isImportDeclaration(st) || !ts.isStringLiteral(st.moduleSpecifier)) continue;
+    const nb = st.importClause && st.importClause.namedBindings;
+    if (st.importClause && st.importClause.isTypeOnly) continue;
+    if (nb && ts.isNamedImports(nb)) for (const el of nb.elements) {
+      if (el.isTypeOnly) continue;
+      imports[el.name.text] = { from: st.moduleSpecifier.text, imported: (el.propertyName || el.name).text };
+    }
+  }
   const cases = [];
   const visit = (n, ancestors) => {
     if (ts.isCallExpression(n)) {
@@ -91,7 +102,8 @@ function analyzeFile(file) {
   };
   const visit_children = (n, anc) => ts.forEachChild(n, (c) => visit(c, anc));
   visit(sf, []);
-  return { cases };
+  for (const c of cases) c.imports = imports;
+  return { cases, imports };
 }
 
 // ── دلالات التنفيذ (CLM-0523 · تدعيم) ────────────────────────────────────────
@@ -105,7 +117,7 @@ function caseFacts(title, ownMods, allMods, fn, moduleConsts, sf) {
   const dead = allMods.some((m) => m === "skip" || m === "todo");
   const conditional = allMods.some((m) => m === "skipIf" || m === "runIf" || m === "each");
   const facts = { title, live: !!fn && !dead && !conditional, dead, conditional, mods: allMods,
-                  has_body: !!fn, mode_off: false, mode_sets: [], requests: [], expects: [] };
+                  has_body: !!fn, mode_off: false, mode_sets: [], requests: [], expects: [], seeds: [] };
   if (!fn) return facts;
   const body = fn.body;
   const local = new Map();
@@ -401,6 +413,59 @@ function caseFacts(title, ownMods, allMods, fn, moduleConsts, sf) {
     return null;
   };
 
+  // ── بذرةُ الأهليّةِ وشكلُ المساواةِ (CLM-0689 · E-20:store-eligible) ─────
+  // صفوفُ البذرةِ: مصفوفةٌ حرفيّةٌ من كائناتٍ حرفيّةٍ؛ كلُّ قيمةٍ نصٌّ حرفيٌّ أو null (ثقبٌ).
+  const literalRows = (n) => {
+    const arr = resolve(n);
+    if (!arr || !ts.isArrayLiteralExpression(arr)) return null;
+    const rows = [];
+    for (const el of arr.elements) {
+      const o = resolve(el);
+      if (!o || !ts.isObjectLiteralExpression(o)) return null;
+      const row = {};
+      for (const p of o.properties) {
+        const k = propName(p);
+        if (!k) return null;
+        if (!ts.isPropertyAssignment(p)) { row[k] = null; continue; }
+        const v = resolve(p.initializer);
+        row[k] = v && (ts.isStringLiteral(v) || ts.isNoSubstitutionTemplateLiteral(v)) ? v.text : null;
+      }
+      rows.push(row);
+    }
+    return rows;
+  };
+  const strArray = (x) => {
+    x = x && resolve(x);
+    if (!x || !ts.isArrayLiteralExpression(x)) return null;
+    const v = x.elements.map((e) => { const r = resolve(e); return r && (ts.isStringLiteral(r) || ts.isNoSubstitutionTemplateLiteral(r)) ? r.text : undefined; });
+    return v.every((y) => y !== undefined) ? v : null;
+  };
+  // سلسلةُ وصولٍ خالصةٌ (a.b.c) بلا نداءٍ ولا فهرسٍ ولا ?.
+  const plainChain = (x) => {
+    x = unwrap(x);
+    while (x && ts.isPropertyAccessExpression(x) && !x.questionDotToken) x = unwrap(x.expression);
+    return !!x && ts.isIdentifier(x);
+  };
+  // expect(X.map((i) => i.F))  ⇒ { items: "X", field: "F" } — X سلسلةٌ خالصةٌ (لا filter قبلَه).
+  const mapField = (arg) => {
+    const a = unwrap(arg);
+    if (!ts.isCallExpression(a) || !ts.isPropertyAccessExpression(a.expression) || a.expression.name.text !== "map" || a.arguments.length !== 1) return null;
+    const L = lam(a.arguments[0]);
+    if (!L) return null;
+    const f = fieldOf(L.expr, L.names);
+    return { items: a.expression.expression.getText(sf), plain: plainChain(a.expression.expression), field: f };
+  };
+  // expect(Object.keys(X)) أو expect(Object.keys(X).sort())  ⇒ { of: "X" }
+  const keysOf = (arg) => {
+    let a = unwrap(arg);
+    if (ts.isCallExpression(a) && ts.isPropertyAccessExpression(a.expression) && a.expression.name.text === "sort" && a.arguments.length === 0) a = unwrap(a.expression.expression);
+    if (ts.isCallExpression(a) && ts.isPropertyAccessExpression(a.expression) && a.expression.name.text === "keys" &&
+        ts.isIdentifier(a.expression.expression) && a.expression.expression.text === "Object" && a.arguments.length === 1) {
+      return { of: a.arguments[0].getText(sf) };
+    }
+    return null;
+  };
+
   const MODE_KEYS = new Set(["WASLA_USER_ASSERTION_MODE", "[USER_ASSERTION_MODE_ENV]"]);
   const walk = (n) => {
     if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
@@ -416,6 +481,16 @@ function caseFacts(title, ownMods, allMods, fn, moduleConsts, sf) {
       const k = propName(n), r = resolve(n.initializer);
       if (k && MODE_KEYS.has(k)) {
         facts.mode_sets.push({ value: r && ts.isStringLiteral(r) ? r.text : null, path: stmtPath(n), exec: execInfo(n) });
+      }
+    }
+    if (ts.isCallExpression(n) && ts.isIdentifier(n.expression)) {
+      for (const [i, a] of n.arguments.entries()) {
+        const rows = literalRows(a);
+        if (rows) {
+          facts.seeds.push({ callee: n.expression.text, arg_index: i, rows, res: resVarOf(n),
+                             path: stmtPath(n), exec: execInfo(n), pos: n.getStart(sf) });
+          break;
+        }
       }
     }
     if (ts.isCallExpression(n)) {
@@ -465,6 +540,9 @@ function caseFacts(title, ownMods, allMods, fn, moduleConsts, sf) {
             arg_ids: [...raw.ids], arg_strs: [...raw.strs], arg_props: [...raw.props],
             published: publishedProof(arg, matcher, negated, expR, n.arguments.length),
             nonempty_of: nonEmptyOf(arg, matcher, negated, expR),
+            map_field: mapField(arg),
+            keys_of: keysOf(arg),
+            expected_strs: exp ? strArray(exp) : null,
             path: stmtPath(n),
             exec: execInfo(n),
             pos: n.getStart(sf),

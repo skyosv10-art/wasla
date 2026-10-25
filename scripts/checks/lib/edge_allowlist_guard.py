@@ -603,8 +603,118 @@ def prove_e20_published(c: dict, e: dict) -> list[str]:
     return best or []
 
 
+# ── E-20:store-eligible (ADR-025 §6.7 D4.2 · CLM-0689) ──────────────────────
+# مسارُ المتاجرِ لا يُثبَتُ «بالمنشورِ فقط» (عناصرُه متاجرُ لا منتجات): الدليلُ بذرةٌ
+# حقيقيّةٌ تفصلُ حالةَ المتجرِ عن حالةِ المنتجِ، ثمّ مساواةٌ تامّةٌ بالمؤهَّلِ وحدَه.
+STORE_ELIGIBLE_ROUTES = {("search", "GET", "/search/stores")}
+STORE_ELIGIBLE_SEED_MODULE = "services/search/src/__tests__/support/store-eligibility-seed.ts"
+STORE_ELIGIBLE_SEED_NAME = "seedStoreEligibility"
+SEED_STORE_STATES = {"approved", "suspended", "archived"}
+SEED_PRODUCT_STATES = {"visible", "archived", "none"}
+STORE_INTERNAL_FIELDS = {"store_state", "state", "visible", "moderation_state", "product_state",
+                         "quantity_on_hand", "archived_at", "store_id", "owner_public_id"}
+
+
+def _resolve_import(test_file: str, spec: str) -> str | None:
+    """مسارُ الوحدةِ المستورَدةِ نسبيًّا إلى ملفِّ الاختبارِ (`.js` ⇒ `.ts`) — أو None."""
+    if not spec.startswith("."):
+        return None
+    base = (ROOT / test_file).parent
+    t = (base / spec).resolve()
+    for cand in (t.with_suffix(".ts") if t.suffix == ".js" else t, t, Path(str(t) + ".ts")):
+        if cand.is_file():
+            try:
+                return str(cand.relative_to(ROOT.resolve()))
+            except ValueError:
+                return None
+    return None
+
+
+def prove_e20_store_eligible(c: dict, e: dict) -> list[str]:
+    """داخل الحالة: نداءٌ مضمونٌ لـ`seedStoreEligibility` المستورَدِ من وحدةِ البذرةِ بعينِها،
+    بصفوفٍ حرفيّةٍ تفصلُ `store` عن `product` وتغطّي: متجرًا موقوفًا، ومتجرًا مؤرشَفًا، ومعتمَدًا
+    بمنتجٍ ظاهرٍ، ومعتمَدًا بمنتجٍ مؤرشَفٍ؛ ثمّ طلبٌ مضمونٌ للمسارِ بعدَها، ثمّ `toEqual` مضمونٌ
+    على `X.map((i) => i.store_slug)` من نتيجتِه يساوي المؤهَّلَ (approved ∧ visible) تمامًا
+    وغيرَ فارغٍ، و`Object.keys(...)` على عنصرٍ منها لا يحوي حقلًا داخليًّا."""
+    why: list[str] = []
+    imports = c.get("imports") or {}
+    test_file = c.get("_file", "")
+    seeds = []
+    for sd in c.get("seeds", []):
+        imp = imports.get(sd["callee"])
+        if not imp or imp.get("imported") != STORE_ELIGIBLE_SEED_NAME:
+            continue
+        if _resolve_import(test_file, imp["from"]) != STORE_ELIGIBLE_SEED_MODULE:
+            continue
+        seeds.append(sd)
+    if not seeds:
+        return [f"لا نداءَ لـ{STORE_ELIGIBLE_SEED_NAME} المستورَدِ من {STORE_ELIGIBLE_SEED_MODULE} بصفوفٍ حرفيّةٍ داخلَ الحالة"]
+    best: list[str] | None = None
+    for sd in seeds:
+        w = _exec_why(sd, "البذرة")
+        rows = sd["rows"]
+        bad = [r for r in rows if not isinstance(r.get("slug"), str) or not r.get("slug")
+               or r.get("store") not in SEED_STORE_STATES or r.get("product") not in SEED_PRODUCT_STATES]
+        if bad:
+            w.append(f"صفوفٌ بقيمٍ غيرِ حرفيّةٍ أو خارجَ المفردات (store∈{sorted(SEED_STORE_STATES)}، "
+                     f"product∈{sorted(SEED_PRODUCT_STATES)}): {bad[:2]}")
+        slugs = [r.get("slug") for r in rows]
+        if len(set(slugs)) != len(slugs):
+            w.append("معرِّفاتٌ مكرَّرةٌ في البذرة")
+        cov = {
+            "متجرٌ موقوفٌ": any(r.get("store") == "suspended" for r in rows),
+            "متجرٌ مؤرشَفٌ": any(r.get("store") == "archived" for r in rows),
+            "معتمَدٌ بمنتجٍ ظاهرٍ": any(r.get("store") == "approved" and r.get("product") == "visible" for r in rows),
+            "معتمَدٌ بمنتجٍ مؤرشَفٍ": any(r.get("store") == "approved" and r.get("product") == "archived" for r in rows),
+        }
+        lack = [k for k, v in cov.items() if not v]
+        if lack:
+            w.append(f"البذرةُ لا تغطّي: {lack} (حالةُ المتجرِ وحالةُ المنتجِ لا تحلُّ إحداهما محلَّ الأخرى)")
+        eligible = sorted(r["slug"] for r in rows if r.get("store") == "approved" and r.get("product") == "visible"
+                          and isinstance(r.get("slug"), str))
+        reqs = [r for r in _route_requests(c, e) if r["res"] and r["exec"]["strict"] and _before(sd["path"], r["path"])]
+        if not reqs:
+            w.append(f"لا طلبَ {e['method']} {e['path']} مضمونَ التنفيذِ بنتيجةٍ بعدَ البذرة")
+            best = w if best is None or len(w) < len(best) else best
+            continue
+        rbest: list[str] | None = None
+        for r in reqs:
+            rw: list[str] = []
+            after = [x for x in c["expects"] if x["on_result"] and x["exec"]["strict"] and _before(r["path"], x["path"])]
+            eq = [x for x in after if x.get("map_field") and x["map_field"].get("field") == "store_slug"
+                  and x["map_field"].get("plain") and x["matcher"] in ("toEqual", "toStrictEqual")
+                  and not x["negated"] and x.get("expected_strs") is not None]
+            if not eq:
+                rw.append("لا expect مضمونَ المساواةِ (toEqual/toStrictEqual غيرُ منفيٍّ) على "
+                          "X.map((i) => i.store_slug) من نتيجةِ الطلبِ بمصفوفةٍ حرفيّة — الاحتواءُ لا يكفي")
+            else:
+                ok = [x for x in eq if x["expected_strs"] and len(x["expected_strs"]) == len(set(x["expected_strs"]))
+                      and sorted(x["expected_strs"]) == eligible]
+                if not ok:
+                    got = [x["expected_strs"] for x in eq]
+                    rw.append(f"المتوقَّعُ {got} لا يساوي المؤهَّلَ من البذرةِ {eligible} تمامًا (أو فارغٌ)")
+            keys = [x for x in after if x.get("keys_of") and x["matcher"] in ("toEqual", "toStrictEqual")
+                    and not x["negated"] and x.get("expected_strs")]
+            if not keys:
+                rw.append("لا expect مضمونَ المساواةِ على Object.keys(عنصرٍ من النتيجة) — الإسقاطُ العامُّ غيرُ مُثبَت")
+            else:
+                leak = sorted({k for x in keys for k in x["expected_strs"] if k in STORE_INTERNAL_FIELDS})
+                if leak:
+                    rw.append(f"الإسقاطُ المتوقَّعُ يكشفُ حقولًا داخليّة {leak}")
+            if not rw:
+                rbest = []
+                break
+            rbest = rw if rbest is None or len(rw) < len(rbest) else rbest
+        w += rbest or []
+        if not w:
+            return []
+        best = w if best is None or len(w) < len(best) else best
+    return best or []
+
+
 PROVERS = {"E-18": prove_e18, "E-19": prove_e19,
-           "E-20:params": prove_e20_params, "E-20:published-only": prove_e20_published}
+           "E-20:params": prove_e20_params, "E-20:published-only": prove_e20_published,
+           "E-20:store-eligible": prove_e20_store_eligible}
 
 
 def evidence_for(e: dict, proof: str, tag: str, need_off: bool) -> list[str]:
@@ -630,7 +740,7 @@ def evidence_for(e: dict, proof: str, tag: str, need_off: bool) -> list[str]:
             if err:
                 why.append(err)
             else:
-                why += PROVERS[proof](c, e)
+                why += PROVERS[proof]({**c, "_file": str(t.get("file"))}, e)
         if not why:
             return []
         problems.append(f"{t.get('file')} «{str(t.get('case',''))[:50]}»: " + "؛ ".join(why))
@@ -737,15 +847,26 @@ def check_surface(surface: str, app_calls: set[tuple[str, str, str]]) -> None:
                     fail(f"[EA-O-E19] {tag}: فتح O يقبل عقده جسمًا بلا دليل E-19 صريح — {why}")
         # P: E-20 بشقيه — معاملات مقيدة، وجواب لا يحوي إلا المنشور.
         e20_ok = False
+        declared_proofs = {pr for t in e.get("evidence_tests", []) for pr in (t.get("proves") or [])}
+        store_route = (e.get("service"), e["method"], e["path"]) in STORE_ELIGIBLE_ROUTES
+        if "E-20:store-eligible" in declared_proofs and not store_route:
+            fail(f"[EA-P-E20-STORE-SCOPE] {tag}: E-20:store-eligible لمسارِ المتاجرِ وحدَه {sorted(STORE_ELIGIBLE_ROUTES)} (ADR-025 §6.7 D5)")
+        if store_route and "E-20:published-only" in declared_proofs:
+            fail(f"[EA-P-E20-STORE-SCOPE] {tag}: «المنشور فقط» لا يُثبتُ أهليّةَ المتاجر — الدليلُ E-20:store-eligible")
         if e["class"] == "P":
             p1 = evidence_for(e, "E-20:params", tag, need_off=False)
-            p2 = evidence_for(e, "E-20:published-only", tag, need_off=False)
+            second = "E-20:store-eligible" if store_route else "E-20:published-only"
+            p2 = evidence_for(e, second, tag, need_off=False)
             e20_ok = not p1 and not p2
+            if store_route and "E-20:store-eligible" in declared_proofs:
+                # الدليلُ المعلَنُ يُفحَصُ ولو كان المدخلُ مغلقًا: لا يُعلَنُ ادعاءٌ لا يُثبَت.
+                for why in p2:
+                    fail(f"[EA-P-E20-STORE] {tag}: دليل E-20:store-eligible معلَنٌ ولا يُثبِت — {why}")
             if opened:
                 for why in p1:
                     fail(f"[EA-P-E20] {tag}: فتح P بلا دليل تقييد المعاملات (E-20) — {why}")
                 for why in p2:
-                    fail(f"[EA-P-E20] {tag}: فتح P بلا دليل «المنشور فقط» (E-20) — {why}")
+                    fail(f"[EA-P-E20] {tag}: فتح P بلا دليل {second} (E-20) — {why}")
         if not opened and e["class"] != "O" and not e.get("blocked_until"):
             fail(f"[EA-BLOCKED-REASON] {tag}: مدخل مغلق غير O بلا blocked_until")
 

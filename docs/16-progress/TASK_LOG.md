@@ -1,3 +1,16 @@
+# 2026-10-25 — CLM-0689 — G-S9.7 · D4.2: حارسُ أهليّةِ المتاجرِ `E-20:store-eligible`
+
+- **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.7 D4.2 · §6.10).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Owner directive:** «D4.2 هو العمل الهندسي التالي قبل T1» · «قبول D4.1 لا يعفي من D4.2».
+- **Kind:** guard + tests — لا تغييرَ في سلوكِ الإنتاجِ.
+- **Risk(s):** none — لا يتغيّرُ خطرٌ؛ المدخلُ مغلقٌ (`production_open=false`).
+- **Changed units:** `services/search/src/__tests__/support/store-eligibility-seed.ts` (جديد) · `services/search/src/__tests__/store-search-journey.integration.test.ts` · `scripts/checks/lib/ts_evidence.cjs` · `scripts/checks/lib/edge_allowlist_guard.py` · `scripts/checks/lib/gov-cases-edge-allowlist.sh` (21 حالة) · `packages/channel-edge/allowlist/customer-mini-app.json` (دليلٌ + `blocked_until`) · ADR-025 §6.10 · `docs/12-testing/EDGE_ALLOWLIST.md` · الدليل · السجلّات.
+- **Measured (local):** الحالةُ الجديدةُ ضمنَ 8/8 · تكاملُ search 95/95 · وحداتُه 187/187 · حالاتُ الحارسِ 28: 119/0 · طفراتُ SQL: 4 من 5 تُسقِطُ (m2 مكافئةٌ — مُعلَنة) · طفرتا البذرة تُسقِطان · طفراتُ الحارسِ الأربعُ تُسقِط.
+- **Defect found in draft and fixed before commit:** طفرةُ «المساواة ← جزء» نجتْ؛ أُضيفتْ حالةُ «المتوقَّعُ ينقصُه متجرٌ مؤهَّل».
+- **Declared limits:** شرطُ `DATABASE_URL` على `describe` لا يراه المحلّل · قائمةُ سماحٍ اصطناعيّة · ليسَ T1.
+- **Not changed:** `production_open=false` · لا نشرَ · Render مجمَّدٌ · `deploy-target.json` · NO-GO · M0-53 In Progress · D4.3/T1 ينتظرُ إذنًا منفصلًا.
+
 # 2026-10-25 — CLM-0688 — G-S9.7: اعتمادُ عقدِ `GET /search/stores` وقبولُ D4.1 بقرارِ المالك
 
 - **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.7 D4).

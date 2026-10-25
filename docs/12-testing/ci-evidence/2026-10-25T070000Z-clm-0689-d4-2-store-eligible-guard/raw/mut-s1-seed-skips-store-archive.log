@@ -1,0 +1,34 @@
+
+ RUN  v4.1.12 <worktree>/services/search
+
+ ❯ src/__tests__/store-search-journey.integration.test.ts (8 tests | 1 failed) 311ms
+     ✓ النجاحُ: المؤهَّلُ وحدَهُ يظهرُ عبرَ الحدِّ كاملِهِ، والإسقاطُ ثلاثةُ حقولٍ لا غير 30ms
+     ✓ بلا جلسةٍ → 401 من الحدِّ قبلَ أيِّ نداءٍ خلفيٍّ 1ms
+     ✓ مفتاحُ توقيعٍ مزوَّفٌ → 401 من حدِّ البحثِ نفسِهِ (التحققُ حقيقيٌّ لا شكليٌّ) 6ms
+     ✓ جمهورٌ صحيحٌ بلا صلاحيةِ المسارِ → 403 من حدِّ البحثِ (الصلاحيةُ تُفحَصُ عندَ المستقبلِ) 4ms
+     ✓ معاملٌ غيرُ مصرَّحٍ بهِ (`store_state`) → 400 من الحدِّ: رفضٌ مغلقٌ (E-20) 1ms
+     ✓ حدودُ العقدِ عبرَ الحدودِ: تطويلٌ خالصٌ يُطبَّعُ فراغاً → 400 من حدِّ البحثِ (`SEARCH_QUERY_EMPTY`) 3ms
+     × E-20:store-eligible — متجرٌ موقوفٌ ومتجرٌ مؤرشَفٌ ومنتجٌ مؤرشَفٌ ومعتمَدٌ بلا منتجٍ خارجَ الجوابِ، والمؤهَّلُ وحدَه يساويه 85ms
+     ✓ حدودُ العقدِ عبرَ الحدودِ: حجمُ صفحةٍ فوقَ الحدِّ → 400 من حدِّ البحثِ (`SEARCH_PAGE_SIZE_INVALID`) 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/store-search-journey.integration.test.ts > G-S9.7 — رحلةُ بحثِ المتاجرِ عبرَ الحدودِ: الحدُّ الحقيقيُّ يوقِّعُ ويُحوِّلُ إلى حدِّ بحثٍ حقيقيٍّ > E-20:store-eligible — متجرٌ موقوفٌ ومتجرٌ مؤرشَفٌ ومنتجٌ مؤرشَفٌ ومعتمَدٌ بلا منتجٍ خارجَ الجوابِ، والمؤهَّلُ وحدَه يساويه
+Error: البذرةُ لم تُسقِطْ حالةَ المتجرِ المُعلَنةَ لـelig-archived-store-visible: approved ≠ archived
+ ❯ seedStoreEligibility src/__tests__/support/store-eligibility-seed.ts:196:13
+    194|       prod[0].visible ? "visible" : prod[0].archived ? "archived" : `o…
+    195|     if (storeState[f.slug] !== f.store) {
+    196|       throw new Error(`البذرةُ لم تُسقِطْ حالةَ المتجرِ المُعلَنةَ لـ$…
+       |             ^
+    197|     }
+    198|     if (productState[f.slug] !== f.product) {
+ ❯ src/__tests__/store-search-journey.integration.test.ts:530:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  07:05:30
+   Duration  1.22s (transform 567ms, setup 0ms, import 741ms, tests 311ms, environment 0ms)
+

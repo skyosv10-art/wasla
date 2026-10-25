@@ -52,6 +52,7 @@ import { SEARCH_SCOPES, SEARCH_SERVICE_AUDIENCE } from "../http/service-identity
 import type { CatalogReadPort } from "../ports.js";
 import type { CatalogProduct } from "../domain/consumed-events.js";
 import { FakeStoreCatalog } from "./support/fake-store-catalog.js";
+import { seedStoreEligibility } from "./support/store-eligibility-seed.js";
 import { createTestKeyRegistry, fakeEmptyReadPort } from "./service-identity-support.js";
 import { PG_ENABLED, T0, resetData, seedOutboxEvent, setupPostgres, type PgFixture } from "./pg-harness.js";
 
@@ -256,6 +257,18 @@ function writeJourneyAllowlist(): string {
   );
   return path;
 }
+
+/* ── E-20:store-eligible — بذرةُ الأهليّةِ (ADR-025 §6.7 D4.2 · CLM-0689) ──
+ * حالةُ المتجرِ وحالةُ المنتجِ حقلانِ منفصلانِ: لا يُعَدُّ «منتجٌ مؤرشَفٌ» بديلًا من
+ * «متجرٍ مؤرشَفٍ» ولا العكسُ. المؤهَّلُ وحدَه `approved ∧ visible`. */
+const ELIGIBILITY_FIXTURES = [
+  { slug: "elig-approved-visible-a", title: "متجر الأهلية أ", store: "approved", product: "visible" },
+  { slug: "elig-approved-visible-b", title: "متجر الأهلية ب", store: "approved", product: "visible" },
+  { slug: "elig-approved-archived-product", title: "متجر الأهلية ج", store: "approved", product: "archived" },
+  { slug: "elig-approved-no-product", title: "متجر الأهلية د", store: "approved", product: "none" },
+  { slug: "elig-suspended-visible", title: "متجر الأهلية هـ", store: "suspended", product: "visible" },
+  { slug: "elig-archived-store-visible", title: "متجر الأهلية و", store: "archived", product: "visible" },
+] as const;
 
 /* ── الرحلةُ ── */
 
@@ -510,6 +523,42 @@ function writeJourneyAllowlist(): string {
       const res = await callEdge({ q: "ـ" });
       expect(res.status).toBe(400);
       expect(res.body.code).toBe("SEARCH_QUERY_EMPTY");
+    });
+
+    it("E-20:store-eligible — متجرٌ موقوفٌ ومتجرٌ مؤرشَفٌ ومنتجٌ مؤرشَفٌ ومعتمَدٌ بلا منتجٍ خارجَ الجوابِ، والمؤهَّلُ وحدَه يساويه", async () => {
+      // 1) البذرةُ في الحالةِ نفسِها: أحداثُ سوقٍ حقيقيّةٌ عبرَ المُرحِّلِ الحقيقيِّ.
+      const seeded = await seedStoreEligibility(pool, ELIGIBILITY_FIXTURES);
+      // 2) الحالتانِ كما أُسقِطتا في جداولِ البحثِ — كلٌّ في جدولِه، لا تحلُّ إحداهما محلَّ الأخرى.
+      expect(seeded.storeState).toEqual({
+        "elig-approved-visible-a": "approved",
+        "elig-approved-visible-b": "approved",
+        "elig-approved-archived-product": "approved",
+        "elig-approved-no-product": "approved",
+        "elig-suspended-visible": "suspended",
+        "elig-archived-store-visible": "archived",
+      });
+      expect(seeded.productState).toEqual({
+        "elig-approved-visible-a": "visible",
+        "elig-approved-visible-b": "visible",
+        "elig-approved-archived-product": "archived",
+        "elig-approved-no-product": "none",
+        "elig-suspended-visible": "visible",
+        "elig-archived-store-visible": "visible",
+      });
+      // 3) الطلبُ عبرَ الحدِّ كاملِه.
+      const res = await edgeApp.inject({
+        method: "GET",
+        url: "/search/stores",
+        headers: { authorization: "Bearer journey-session" },
+        query: { q: "متجر الأهلية" },
+      });
+      expect(res.statusCode).toBe(200);
+      const body = res.json() as { total: number; items: Array<Record<string, unknown>> };
+      // 4) المساواةُ لا الاحتواءُ: المؤهَّلُ وحدَه، بلا زيادةٍ ولا نقصٍ.
+      expect(body.items.map((i) => i.store_slug)).toEqual(["elig-approved-visible-a", "elig-approved-visible-b"]);
+      expect(body.total).toBe(2);
+      // 5) الجوابُ لا يكشفُ الحالةَ: ثلاثةُ حقولٍ عامّةٍ بالضبطِ (ADR-025 §6.3).
+      expect(Object.keys(body.items[0]).sort()).toEqual(["category_slug", "store_slug", "title"]);
     });
 
     it("حدودُ العقدِ عبرَ الحدودِ: حجمُ صفحةٍ فوقَ الحدِّ → 400 من حدِّ البحثِ (`SEARCH_PAGE_SIZE_INVALID`)", async () => {

@@ -1,0 +1,62 @@
+
+ RUN  v4.1.12 <worktree>/services/search
+
+ ❯ src/__tests__/store-search-journey.integration.test.ts (8 tests | 2 failed) 344ms
+     × النجاحُ: المؤهَّلُ وحدَهُ يظهرُ عبرَ الحدِّ كاملِهِ، والإسقاطُ ثلاثةُ حقولٍ لا غير 46ms
+     ✓ بلا جلسةٍ → 401 من الحدِّ قبلَ أيِّ نداءٍ خلفيٍّ 1ms
+     ✓ مفتاحُ توقيعٍ مزوَّفٌ → 401 من حدِّ البحثِ نفسِهِ (التحققُ حقيقيٌّ لا شكليٌّ) 9ms
+     ✓ جمهورٌ صحيحٌ بلا صلاحيةِ المسارِ → 403 من حدِّ البحثِ (الصلاحيةُ تُفحَصُ عندَ المستقبلِ) 5ms
+     ✓ معاملٌ غيرُ مصرَّحٍ بهِ (`store_state`) → 400 من الحدِّ: رفضٌ مغلقٌ (E-20) 1ms
+     ✓ حدودُ العقدِ عبرَ الحدودِ: تطويلٌ خالصٌ يُطبَّعُ فراغاً → 400 من حدِّ البحثِ (`SEARCH_QUERY_EMPTY`) 4ms
+     × E-20:store-eligible — متجرٌ موقوفٌ ومتجرٌ مؤرشَفٌ ومنتجٌ مؤرشَفٌ ومعتمَدٌ بلا منتجٍ خارجَ الجوابِ، والمؤهَّلُ وحدَه يساويه 99ms
+     ✓ حدودُ العقدِ عبرَ الحدودِ: حجمُ صفحةٍ فوقَ الحدِّ → 400 من حدِّ البحثِ (`SEARCH_PAGE_SIZE_INVALID`) 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/store-search-journey.integration.test.ts > G-S9.7 — رحلةُ بحثِ المتاجرِ عبرَ الحدودِ: الحدُّ الحقيقيُّ يوقِّعُ ويُحوِّلُ إلى حدِّ بحثٍ حقيقيٍّ > النجاحُ: المؤهَّلُ وحدَهُ يظهرُ عبرَ الحدِّ كاملِهِ، والإسقاطُ ثلاثةُ حقولٍ لا غير
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/__tests__/store-search-journey.integration.test.ts:393:30
+    391|       const res = await callEdge({ q: "متجر الرحلة" });
+    392|       expect(res.status).toBe(200);
+    393|       expect(res.body.total).toBe(1);
+       |                              ^
+    394|       const items = res.body.items as Array<Record<string, unknown>>;
+    395|       expect(items.map((i) => i.store_slug)).toEqual(["journey-acme"]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/__tests__/store-search-journey.integration.test.ts > G-S9.7 — رحلةُ بحثِ المتاجرِ عبرَ الحدودِ: الحدُّ الحقيقيُّ يوقِّعُ ويُحوِّلُ إلى حدِّ بحثٍ حقيقيٍّ > E-20:store-eligible — متجرٌ موقوفٌ ومتجرٌ مؤرشَفٌ ومنتجٌ مؤرشَفٌ ومعتمَدٌ بلا منتجٍ خارجَ الجوابِ، والمؤهَّلُ وحدَه يساويه
+AssertionError: expected [ …(3) ] to deeply equal [ 'elig-approved-visible-a', …(1) ]
+
+- Expected
++ Received
+
+  [
++   "elig-approved-archived-product",
+    "elig-approved-visible-a",
+    "elig-approved-visible-b",
+  ]
+
+ ❯ src/__tests__/store-search-journey.integration.test.ts:558:51
+    556|       const body = res.json() as { total: number; items: Array<Record<…
+    557|       // 4) المساواةُ لا الاحتواءُ: المؤهَّلُ وحدَه، بلا زيادةٍ ولا نق…
+    558|       expect(body.items.map((i) => i.store_slug)).toEqual(["elig-appro…
+       |                                                   ^
+    559|       expect(body.total).toBe(2);
+    560|       // 5) الجوابُ لا يكشفُ الحالةَ: ثلاثةُ حقولٍ عامّةٍ بالضبطِ (ADR…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  07:05:09
+   Duration  1.24s (transform 551ms, setup 0ms, import 723ms, tests 344ms, environment 0ms)
+

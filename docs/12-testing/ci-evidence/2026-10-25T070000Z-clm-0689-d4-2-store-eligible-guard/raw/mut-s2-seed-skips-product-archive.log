@@ -1,0 +1,34 @@
+
+ RUN  v4.1.12 <worktree>/services/search
+
+ ❯ src/__tests__/store-search-journey.integration.test.ts (8 tests | 1 failed) 359ms
+     ✓ النجاحُ: المؤهَّلُ وحدَهُ يظهرُ عبرَ الحدِّ كاملِهِ، والإسقاطُ ثلاثةُ حقولٍ لا غير 32ms
+     ✓ بلا جلسةٍ → 401 من الحدِّ قبلَ أيِّ نداءٍ خلفيٍّ 1ms
+     ✓ مفتاحُ توقيعٍ مزوَّفٌ → 401 من حدِّ البحثِ نفسِهِ (التحققُ حقيقيٌّ لا شكليٌّ) 7ms
+     ✓ جمهورٌ صحيحٌ بلا صلاحيةِ المسارِ → 403 من حدِّ البحثِ (الصلاحيةُ تُفحَصُ عندَ المستقبلِ) 5ms
+     ✓ معاملٌ غيرُ مصرَّحٍ بهِ (`store_state`) → 400 من الحدِّ: رفضٌ مغلقٌ (E-20) 1ms
+     ✓ حدودُ العقدِ عبرَ الحدودِ: تطويلٌ خالصٌ يُطبَّعُ فراغاً → 400 من حدِّ البحثِ (`SEARCH_QUERY_EMPTY`) 4ms
+     × E-20:store-eligible — متجرٌ موقوفٌ ومتجرٌ مؤرشَفٌ ومنتجٌ مؤرشَفٌ ومعتمَدٌ بلا منتجٍ خارجَ الجوابِ، والمؤهَّلُ وحدَه يساويه 110ms
+     ✓ حدودُ العقدِ عبرَ الحدودِ: حجمُ صفحةٍ فوقَ الحدِّ → 400 من حدِّ البحثِ (`SEARCH_PAGE_SIZE_INVALID`) 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/__tests__/store-search-journey.integration.test.ts > G-S9.7 — رحلةُ بحثِ المتاجرِ عبرَ الحدودِ: الحدُّ الحقيقيُّ يوقِّعُ ويُحوِّلُ إلى حدِّ بحثٍ حقيقيٍّ > E-20:store-eligible — متجرٌ موقوفٌ ومتجرٌ مؤرشَفٌ ومنتجٌ مؤرشَفٌ ومعتمَدٌ بلا منتجٍ خارجَ الجوابِ، والمؤهَّلُ وحدَه يساويه
+Error: البذرةُ لم تُسقِطْ حالةَ المنتجِ المُعلَنةَ لـelig-approved-archived-product: visible ≠ archived
+ ❯ seedStoreEligibility src/__tests__/support/store-eligibility-seed.ts:199:13
+    197|     }
+    198|     if (productState[f.slug] !== f.product) {
+    199|       throw new Error(`البذرةُ لم تُسقِطْ حالةَ المنتجِ المُعلَنةَ لـ$…
+       |             ^
+    200|     }
+    201|   }
+ ❯ src/__tests__/store-search-journey.integration.test.ts:530:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  07:05:32
+   Duration  1.23s (transform 540ms, setup 0ms, import 702ms, tests 359ms, environment 0ms)
+

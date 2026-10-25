@@ -9,6 +9,8 @@
 - **Discovery (measured, not assumed):** وثائقُ T1 كانت تقولُ «allowlistUrl يحلُّ إلى ملفٍّ مفقودٍ» — **متحجِّرةٌ منذ CLM-0662 (#809 · `771beb7f`)** الذي أصلَحَ الحلَّ إلى `import.meta.url`؛ القياسُ الحيُّ (الحارسُ 29) يُثبتُ حلولَهُ إلى ملفٍّ موجودٍ صالحٍ في البوتَينِ. المتبقي لتشغيلِ T1 قرارُ المالكِ وقياسٌ من البيئةِ الحيّةِ.
 - **Declared limits:** وصلٌ محلّيٌّ مقيسٌ لا تشغيلُ T1 ولا دليلَ D4.3 · مدخلُ بوتِ السائقِ ما زالَ على `buildApp` (وحدةٌ لاحقةٌ عندَ اختبارِ مسارِهِ) · `WASLA_EDGE_ENABLED` غيرُ مسجَّلٍ في env-registry (فشلٌ مغلقٌ بقرارٍ).
 - **Not changed:** `production_open=false` · `approved=false` + `approval=null` · لا نشرَ · Render مجمَّدٌ · NO-GO · D4.3 «غيرُ منفَّذٍ» حتى قياسٍ حيٍّ بإذنِ المالكِ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-25T110000Z-clm-0691-channel-edge-main-wiring/README.md
+- **Deployment:** none — وصلٌ محليٌّ مقيسٌ بلا أي أثرٍ حيٍّ (Render مجمَّدٌ · production_open=false · T1 بقرار المالك).
 
 # 2026-10-25 — CLM-0690 — مراجعةُ RISK-0069 (موعدُ 2026-10-26) — قراءةٌ فقط
 

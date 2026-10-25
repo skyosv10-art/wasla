@@ -27,6 +27,8 @@ EA_CUST_APP="services/customers/src/http/app.ts"
 EA_DRV_APP="services/drivers/src/http/app.ts"
 EA_E18="services/customers/src/__tests__/zz-ea-synthetic-owner.test.ts"
 EA_E20="services/search/src/__tests__/zz-ea-synthetic-public.test.ts"
+EA_E20S="services/search/src/__tests__/zz-ea-synthetic-store-eligible.test.ts"
+EA_E20S_LOCAL="services/search/src/__tests__/zz-ea-synthetic-store-local.test.ts"
 
 if [[ ! -f "$EA" ]]; then
   printf '  \033[31m✗\033[0m %s مفقودٌ — لا تُقاسُ عضّةُ حارسٍ غائبٍ\n' "$EA"
@@ -44,7 +46,7 @@ _ea_restore() {
   for _f in "$EA_CUST" "$EA_DRV" "$EA_GRANTS" "$EA_CUST_APP" "$EA_DRV_APP"; do
     cp "$EA_BK/$(echo "$_f" | tr / _)" "$_f"
   done
-  rm -f "$EA_E18" "$EA_E20"
+  rm -f "$EA_E18" "$EA_E20" "$EA_E20S" "$EA_E20S_LOCAL"
 }
 
 # _ea_mut <python> — يعدّلُ ملفّاتِ /tmp ويتحقّقُ أنَّ الطفرةَ غيّرتْ بايتًا فعلًا.
@@ -578,6 +580,170 @@ _ea_write "$EA_E20" "$E20_SRC"
 _ea_mut "d=load(CUST); e=entry(d,'GET','/search/products'); e['production_open']=True; e['evidence_tests']=[$_P_PARAMS,$_P_PUB]; save(CUST,d); ins_grant('customer-bot','search',['search:products:read'])" \
   && _ea_pass "ضابطٌ موجب: فتحُ P بشقّي E-20 ومنحٍ يمرّ"; _ea_restore
 
+# ═══ الفئةُ P: E-20:store-eligible (ADR-025 §6.7 D4.2 · CLM-0689) ══════════
+# مسارُ المتاجرِ: بذرةٌ تفصلُ حالةَ المتجرِ عن حالةِ المنتجِ + مساواةٌ تامّةٌ بالمؤهَّل.
+# الدليلُ المعلَنُ يُفحَصُ والمدخلُ مغلقٌ (EA-P-E20-STORE) — لا فتحَ في أيِّ حالةٍ هنا.
+_SE_HEAD='import { describe, expect, it } from "vitest";
+import { seedStoreEligibility } from "./support/store-eligibility-seed.js";
+const OK_ROWS = [
+  { slug: "s-ok", title: "أ", store: "approved", product: "visible" },
+  { slug: "s-arch-prod", title: "ب", store: "approved", product: "archived" },
+  { slug: "s-none", title: "ج", store: "approved", product: "none" },
+  { slug: "s-susp", title: "د", store: "suspended", product: "visible" },
+  { slug: "s-arch-store", title: "هـ", store: "archived", product: "visible" },
+] as const;
+const REQ = { method: "GET", url: "/search/stores", headers: { authorization: "Bearer s" }, query: { q: "أ" } } as const;'
+_se_case() { # <عنوان> <جسم>
+  printf '  it("%s", async () => {\n%s\n  });\n' "$1" "$2"
+}
+_SE_TAIL='    const res = await edgeApp.inject({ method: "GET", url: "/search/stores", headers: { authorization: "Bearer s" }, query: { q: "أ" } });
+    const items = res.json().items as Array<Record<string, unknown>>;'
+_SE_KEYS='    expect(Object.keys(items[0]).sort()).toEqual(["category_slug", "store_slug", "title"]);'
+_SE_EQ='    expect(items.map((i) => i.store_slug)).toEqual(["s-ok"]);'
+_se_rows() { printf '    await seedStoreEligibility(pool, [\n%s\n    ]);' "$1"; }
+_R_OK='      { slug: "s-ok", title: "أ", store: "approved", product: "visible" },'
+_R_AP='      { slug: "s-arch-prod", title: "ب", store: "approved", product: "archived" },'
+_R_SU='      { slug: "s-susp", title: "د", store: "suspended", product: "visible" },'
+_R_AS='      { slug: "s-arch-store", title: "هـ", store: "archived", product: "visible" },'
+SE_SRC="$_SE_HEAD
+describe(\"synthetic store-eligible evidence (governance mutation only)\", () => {
+$(_se_case "SE ok" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+$_SE_EQ
+$_SE_KEYS")
+$(_se_case "SE no-suspended" "$(_se_rows "$_R_OK
+$_R_AP
+$_R_AS")
+$_SE_TAIL
+$_SE_EQ
+$_SE_KEYS")
+$(_se_case "SE no-archived-store" "$(_se_rows "$_R_OK
+$_R_AP
+$_R_SU")
+$_SE_TAIL
+$_SE_EQ
+$_SE_KEYS")
+$(_se_case "SE no-archived-product" "$(_se_rows "$_R_OK
+      { slug: \"s-none\", title: \"ج\", store: \"approved\", product: \"none\" },
+$_R_SU
+$_R_AS")
+$_SE_TAIL
+$_SE_EQ
+$_SE_KEYS")
+$(_se_case "SE product-holds-store-state" "$(_se_rows "$_R_OK
+      { slug: \"s-arch-prod\", title: \"ب\", store: \"approved\", product: \"suspended\" },
+$_R_SU
+$_R_AS")
+$_SE_TAIL
+$_SE_EQ
+$_SE_KEYS")
+$(_se_case "SE empty-expected" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+    expect(items.map((i) => i.store_slug)).toEqual([]);
+$_SE_KEYS")
+$(_se_case "SE contains" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+    expect(items.map((i) => i.store_slug)).toContain(\"s-ok\");
+$_SE_KEYS")
+$(_se_case "SE array-containing" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+    expect(items.map((i) => i.store_slug)).toEqual(expect.arrayContaining([\"s-ok\"]));
+$_SE_KEYS")
+$(_se_case "SE includes-ineligible" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+    expect(items.map((i) => i.store_slug)).toEqual([\"s-ok\", \"s-susp\"]);
+$_SE_KEYS")
+$(_se_case "SE missing-eligible" "$(_se_rows "$_R_OK
+      { slug: \"s-ok-2\", title: \"و\", store: \"approved\", product: \"visible\" },
+$_R_AP
+$_R_SU
+$_R_AS")
+$_SE_TAIL
+$_SE_EQ
+$_SE_KEYS")
+$(_se_case "SE negated" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+    expect(items.map((i) => i.store_slug)).not.toEqual([\"s-ok\"]);
+$_SE_KEYS")
+$(_se_case "SE filtered-by-state" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+    expect(items.filter((i) => i.store_state === \"approved\").map((i) => i.store_slug)).toEqual([\"s-ok\"]);
+$_SE_KEYS")
+$(_se_case "SE exposes-store-state" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+$_SE_EQ
+    expect(Object.keys(items[0]).sort()).toEqual([\"category_slug\", \"store_slug\", \"store_state\", \"title\"]);")
+$(_se_case "SE no-keys" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+$_SE_EQ")
+$(_se_case "SE seed-in-if" "    if (process.env.SEED) await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+$_SE_EQ
+$_SE_KEYS")
+$(_se_case "SE request-before-seed" "$_SE_TAIL
+    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_EQ
+$_SE_KEYS")
+$(_se_case "SE fixture-not-response" "    await seedStoreEligibility(pool, OK_ROWS);
+$_SE_TAIL
+    const fixture = [{ store_slug: \"s-ok\" }];
+    expect(fixture.map((i) => i.store_slug)).toEqual([\"s-ok\"]);
+$_SE_KEYS")
+});"
+SE_LOCAL_SRC='import { describe, expect, it } from "vitest";
+const seedStoreEligibility = async (_p: unknown, _r: unknown) => ({});
+describe("synthetic local seed (governance mutation only)", () => {
+  it("SE local-helper", async () => {
+    await seedStoreEligibility(pool, [
+      { slug: "s-ok", title: "أ", store: "approved", product: "visible" },
+      { slug: "s-arch-prod", title: "ب", store: "approved", product: "archived" },
+      { slug: "s-susp", title: "د", store: "suspended", product: "visible" },
+      { slug: "s-arch-store", title: "هـ", store: "archived", product: "visible" },
+    ]);
+    const res = await edgeApp.inject({ method: "GET", url: "/search/stores", headers: { authorization: "Bearer s" }, query: { q: "أ" } });
+    const items = res.json().items as Array<Record<string, unknown>>;
+    expect(items.map((i) => i.store_slug)).toEqual(["s-ok"]);
+    expect(Object.keys(items[0]).sort()).toEqual(["category_slug", "store_slug", "title"]);
+  });
+});'
+
+_ea_se_case() { # <وصف> <عنوان الحالة> [pass] [ملف]
+  local f="${4:-$EA_E20S}"
+  _ea_write "$EA_E20S" "$SE_SRC"; _ea_write "$EA_E20S_LOCAL" "$SE_LOCAL_SRC"
+  if _ea_mut "d=load(CUST); e=entry(d,'GET','/search/stores'); assert e['production_open'] is False; e['evidence_tests']=[{'file':'$f','case':'$2','proves':['E-20:store-eligible'],'route':'GET /search/stores'}]; save(CUST,d)"; then
+    if [[ "${3:-door}" == pass ]]; then _ea_pass "$1"; else _ea_door "$1" EA-P-E20-STORE EA-P-E20-STORE-SCOPE; fi
+  fi
+  _ea_restore
+}
+_ea_se_case "ضابطٌ موجب: بذرةٌ كاملةٌ ومساواةٌ تامّةٌ بالمؤهَّلِ وإسقاطٌ عامّ" "SE ok" pass
+_ea_se_case "بذرةٌ بلا متجرٍ موقوف" "SE no-suspended"
+_ea_se_case "بذرةٌ بلا متجرٍ مؤرشَف (المنتجُ المؤرشَفُ لا يُغني عنه)" "SE no-archived-store"
+_ea_se_case "بذرةٌ بلا منتجٍ مؤرشَف (المتجرُ المؤرشَفُ لا يُغني عنه)" "SE no-archived-product"
+_ea_se_case "حقلُ المنتجِ يحملُ حالةَ متجر (suspended)" "SE product-holds-store-state"
+_ea_se_case "المتوقَّعُ قائمةٌ فارغة" "SE empty-expected"
+_ea_se_case "احتواءٌ (toContain) لا مساواة" "SE contains"
+_ea_se_case "احتواءٌ مقنَّعٌ (expect.arrayContaining)" "SE array-containing"
+_ea_se_case "المتوقَّعُ يضمُّ متجرًا موقوفًا" "SE includes-ineligible"
+_ea_se_case "المتوقَّعُ ينقصُه متجرٌ مؤهَّل (جزءٌ لا كلّ)" "SE missing-eligible"
+_ea_se_case "مساواةٌ منفيّة (not.toEqual)" "SE negated"
+_ea_se_case "النتيجةُ مُرشَّحةٌ بـstore_state قبلَ المقارنة" "SE filtered-by-state"
+_ea_se_case "الإسقاطُ المتوقَّعُ يكشفُ store_state" "SE exposes-store-state"
+_ea_se_case "بلا تحقّقٍ من الإسقاطِ العامّ" "SE no-keys"
+_ea_se_case "البذرةُ داخلَ if" "SE seed-in-if"
+_ea_se_case "الطلبُ قبلَ البذرة" "SE request-before-seed"
+_ea_se_case "المساواةُ على مصفوفةٍ ثابتةٍ لا على نتيجةِ الطلب" "SE fixture-not-response"
+_ea_se_case "دالةُ بذرٍ محلّيّةٌ بالاسمِ نفسِه لا المستورَدة" "SE local-helper" door "$EA_E20S_LOCAL"
+# النطاق (D5): الدليلُ لمسارِ المتاجرِ وحدَه، و«المنشورُ فقط» لا يُثبتُ أهليّةَ المتاجر.
+_ea_write "$EA_E20S" "$SE_SRC"
+_ea_mut "d=load(CUST); e=entry(d,'GET','/search/products'); e['evidence_tests'].append({'file':'$EA_E20S','case':'SE ok','proves':['E-20:store-eligible'],'route':'GET /search/products'}); save(CUST,d)" \
+  && _ea_door "E-20:store-eligible معلَنٌ على مسارِ المنتجات" EA-P-E20-STORE-SCOPE; _ea_restore
+_ea_write "$EA_E20" "$E20_SRC"
+_ea_mut "d=load(CUST); e=entry(d,'GET','/search/stores'); e['evidence_tests'].append({'file':'$EA_E20','case':'$E20R_CASE','proves':['E-20:published-only'],'route':'GET /search/stores'}); save(CUST,d)" \
+  && _ea_door "«المنشور فقط» معلَنٌ على مسارِ المتاجر" EA-P-E20-STORE-SCOPE; _ea_restore
+# فتحُ مسارِ المتاجرِ يتطلّبُ store-eligible لا published-only: حذفُ دليلِه يُسقطُ الفتح.
+_ea_mut "d=load(CUST); e=entry(d,'GET','/search/stores'); e['production_open']=True; e['evidence_tests']=[t for t in e['evidence_tests'] if 'E-20:store-eligible' not in (t.get('proves') or [])]; save(CUST,d); ins_grant('customer-bot','search',['search:stores:read'])" \
+  && _ea_door "فتحُ مسارِ المتاجرِ بلا دليلِ store-eligible" EA-P-E20; _ea_restore
+
 # ═══ الصلاحيات ════════════════════════════════════════════════════════════
 _ea_mut "d=load(CUST); entry(d,'GET','/customers/:waslaPublicId/profile')['required_scopes']=['customers:profile:write']; save(CUST,d)" \
   && _ea_door "customers:profile:read → customers:profile:write" EA-SCOPE-CODE EA-SCOPE-UNKNOWN; _ea_restore
@@ -628,4 +794,4 @@ rm -rf "$_EA_FAKE"
 
 # الاستعادةُ صادقة: الأصلُ يمرُّ ولا أثرَ اصطناعيًّا باقٍ.
 t "الأصلُ يمرُّ بعدَ كلِّ الطفراتِ (الاستعادةُ صادقة)" pass bash "$EA"
-t "لا دليلَ اصطناعيًّا باقٍ في النسخة" fail test -e "$EA_E18" -o -e "$EA_E20"
+t "لا دليلَ اصطناعيًّا باقٍ في النسخة" fail test -e "$EA_E18" -o -e "$EA_E20" -o -e "$EA_E20S" -o -e "$EA_E20S_LOCAL"

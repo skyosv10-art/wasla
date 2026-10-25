@@ -307,9 +307,17 @@
         {
           "file": "services/search/src/__tests__/store-search-journey.integration.test.ts",
           "case": "معاملٌ غيرُ مصرَّحٍ بهِ (`store_state`) → 400 من الحدِّ: رفضٌ مغلقٌ (E-20)"
+        },
+        {
+          "file": "services/search/src/__tests__/store-search-journey.integration.test.ts",
+          "case": "E-20:store-eligible — متجرٌ موقوفٌ ومتجرٌ مؤرشَفٌ ومنتجٌ مؤرشَفٌ ومعتمَدٌ بلا منتجٍ خارجَ الجوابِ، والمؤهَّلُ وحدَه يساويه",
+          "proves": [
+            "E-20:store-eligible"
+          ],
+          "route": "GET /search/stores"
         }
       ],
-      "blocked_until": "فتحُ P قرارُ مالكٍ (ADR-069 §6 · ADR-025 §6.7 D3)؛ ويشترطُ قبلَه برهانَ E-20 الخاصَّ بالمتاجرِ (ADR-025 §6.5 · ADR-025 §6.7 D4): الحارسُ الحاليُّ لا يعبّرُ عن «متجرٌ معتمَدٌ له منتجٌ ظاهرٌ» دونَ كشفِ حقولِ الحالةِ، ولا يُوسَّعُ صامتًا",
+      "blocked_until": "فتحُ P قرارُ مالكٍ (ADR-069 §6 · ADR-025 §6.7 D3)؛ وبرهانُ E-20 الخاصُّ بالمتاجرِ على بياناتِ الخدمةِ (D4.2 · E-20:store-eligible · CLM-0689) قائمٌ ويُفحَصُ هنا، لكنّه لا يُغني عن D4.3: قياسٌ حيٌّ عبرَ Channel Edge (T1) بإذنٍ منفصلٍ من المالكِ، ثمّ قرارُ الفتحِ نفسُه",
       "query": {
         "allowed": [
           "q",

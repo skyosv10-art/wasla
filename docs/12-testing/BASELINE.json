@@ -1,14 +1,14 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-24T22:17:44Z",
+  "generated_at": "2026-10-25T05:36:46Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "5b64ff353a09d5cd2f8a4351306c019f00f781eb",
-    "branch": "fix/clm-0685-partners-http-route-tests",
+    "commit": "6a0a22e5f772aaf4775227204b5c9eafab7939fc",
+    "branch": "fix/clm-0687-risk-0072-dr-currency",
     "dirty": false,
     "dirty_files": 0,
     "dirty_reason": "",
-    "tracked_files": 3759
+    "tracked_files": 3763
   },
   "env": {
     "node": "v20.20.2",
@@ -30,17 +30,17 @@
     "ci_jobs": 13,
     "ci_allow_failure": 0,
     "governance_checks": 28,
-    "risks_not_closed": 26
+    "risks_not_closed": 27
   },
   "dynamic": {
     "measured": true,
-    "source": "docs/12-testing/ci-evidence/2026-10-24T215000Z-clm-0685-partners-http-routes/raw/verify-fc7efc79.log",
+    "source": "docs/12-testing/ci-evidence/2026-10-25T050000Z-clm-0687-risk-0072-dr-currency/raw/verify-95911834.log",
     "tests_passed": 6307,
     "test_files_executed": 444,
-    "governance_suite_cases": 789,
+    "governance_suite_cases": 796,
     "governance_suite_failed": 1,
     "verify_overall": "failed"
   },
-  "fingerprint": "sha256:f846fa0118cc18684ac358fa9d8a80e96e24c98ef6ad6109338d15aae52a0eb2",
+  "fingerprint": "sha256:67137a4ea8fd2aa72296a8baa4bb0720b74516179077eb644fb5e40fa6927bde",
   "reference": "docs/12-testing/BASELINE_FORMAT.md"
 }

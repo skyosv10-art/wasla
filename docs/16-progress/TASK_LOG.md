@@ -3,7 +3,7 @@
 - **Work Item(s):** M0-53 (حوكمةُ المخاطر · ADR-073).
 - **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
 - **Kind:** docs — مراجعةُ خطرٍ بالإضافة.
-- **Risk(s):** RISK-0069 — يبقى open/high؛ review 2026-10-26 ⇒ 2026-11-09.
+- **Risk(s):** RISK-0069 → open (بلا تغيير · sev high · review 2026-10-26 ⇒ 2026-11-09).
 - **Measured:** `deploy-target.json` frozen · `isolation_evidence=null` · حارسُ المضمونِ 42/42 · `RENDER_API_KEY` آخرُ تحديثٍ 2026-10-08 (لا تدويرَ بعدَ INC-0007).
 - **Not measured:** العزلُ الحيُّ على Render/Supabase (قرارُ المالكِ «لاحقًا»).
 - **Not changed:** Render مجمَّد · لا عزلَ · لا نشر · NO-GO.

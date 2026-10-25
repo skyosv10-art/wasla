@@ -1,12 +1,12 @@
 {
   "schema": "wasla.baseline/v1",
-  "generated_at": "2026-10-25T12:40:30Z",
+  "generated_at": "2026-10-25T12:44:12Z",
   "generator": "scripts/baseline.sh",
   "repo": {
-    "commit": "7793cd757378eaf27bc72702122b317e59192be9",
+    "commit": "226ba123b6059c2294128bb6b24dd0684979111b",
     "branch": "fix/clm-0693-guard29-hardening",
-    "dirty": true,
-    "dirty_files": 1,
+    "dirty": false,
+    "dirty_files": 0,
     "dirty_reason": "",
     "tracked_files": 3814
   },

@@ -284,3 +284,13 @@ ADR-016 §9 (لا `?q=` في marketplace) · ADR-016 §10 (لا نصَّ حرً�
 - **حدودٌ مُعلَنة:** (1) حذفُ `archived_at IS NULL` وحدَه من `STORE_ELIGIBILITY_SQL` لا يُسقِطُ الحالةَ: المُسقِطُ يضبطُ `product_state=archived` و`archived_at` معًا في `product_archived`، فالشرطُ مكافئٌ على المسارِ الحقيقيِّ، وحذفُه مع `product_state='published'` يُسقطُها. (2) الملفُّ مشروطٌ بـ`DATABASE_URL` على مستوى `describe` والمحلّلُ لا يراه شرطًا؛ التنفيذُ يُثبَتُ في مهمّةِ التكاملِ في CI. (3) قائمةُ سماحٍ اصطناعيّةٌ و`exchangeSession` محوَّرةٌ — ليسَ T1 ولا إثباتًا إنتاجيًّا.
 - **ما لا يتغيّرُ:** `production_open=false` · تحدَّثَ نصُّ `blocked_until` وحدَه ليذكرَ أنّ D4.2 قائمٌ وأنّ D4.3 (T1 بإذنٍ منفصلٍ) وقرارَ الفتحِ باقيان · NO-GO · Render مجمَّد · لا نشر.
 - **الدليل:** [`2026-10-25T070000Z-clm-0689-d4-2-store-eligible-guard`](../12-testing/ci-evidence/2026-10-25T070000Z-clm-0689-d4-2-store-eligible-guard/README.md).
+
+### 6.11 وصلُ حدِّ القناةِ في مدخلِ البوتِ — وحدةُ D6 (2026-10-25 · CLM-0691) — يضيفُ ولا يمحو
+
+> **لماذا:** كانَ تشغيلُ T1 مؤجَّلًا (RENDER_TEST_ENVIRONMENT_PLAN §T1 · T2_LOCAL_WEBHOOK_PROCEDURE) «حتى يُوصَلَ `buildAppWithEdge` ويُصحَّحَ `allowlistUrl`». **`allowlistUrl` أُصلِحَ في CLM-0662 (#809 · `771beb7f`) ولم تُحدَّث الوثائقُ بعده**، ووصلُ المدخلِ بقي وحدةً لاحقةً (D6 في تدقيقِ CLM-0661). هذه الوحدةُ تسدُّ ما تبقّى.
+
+- **الشيفرة:** `bots/customer-bot/src/main.ts` يبني عبرَ `buildAppWithEdge` (من `./edge.js`) ويُمرِّرُهُ إلى `runBotApp` — لا `buildApp` مباشرةً. **فشلٌ مغلقٌ لا يتغيّرُ:** بلا `WASLA_EDGE_ENABLED` يعودُ التركيبُ جذرَهُ الأصليَّ مطابقًا لـ`buildApp` (ADR-069)، و`WASLA_EDGE_ENABLED` غيرُ مسجَّلٍ في env-registry فيبقى التعطيلُ الإنتاجيُّ متعذّرًا بلا قرارِ مالكٍ.
+- **الحارسُ 29 (`validate-edge-wiring.sh` · CLM-0691):** يقيسُ لا يفترضُ — الاستيرادَ من `./edge.js` وتمريرَ `buildAppWithEdge` إلى `runBotApp`، وحلَّ `allowlistUrl` من موقعِ الوحدةِ إلى ملفٍّ موجودٍ صالحِ JSON في البوتَين. مسجَّلٌ في `verify-governance.sh` (29) وطفراتُه M1–M4 في `gov-cases-edge-wiring.sh` (مدخلٌ بلا حدٍّ · مسارٌ غائبٌ · JSON مكسورٌ · وحدةٌ مفقودةٌ) معَ ضابطٍ موجبٍ.
+- **حدودٌ مُعلَنة:** (1) هذا وصلٌ محلّيٌّ مقيسٌ — ليسَ تشغيلَ T1 ولا دليلَ D4.3؛ فD4.3 «غيرُ منفَّذٍ» كما في §6.9 حتى قياسٍ من البيئةِ الحيّةِ بإذنِ المالكِ. (2) مدخلُ بوتِ السائقِ ما زالَ على `buildApp` — وحدةٌ لاحقةٌ عندَ اختبارِ مسارِهِ (T1 للعميلِ وحدَهُ). (3) `approved=false` و`approval=null` في `deploy-target.json` بلا تعديلٍ سوى نصِّ الملاحظةِ.
+- **ما لا يتغيّرُ:** `production_open=false` و`blocked_until` · NO-GO · Render مجمَّدٌ · لا نشرَ ولا فتحَ إنتاجٍ.
+- **الدليل:** [`2026-10-25T110000Z-clm-0691-channel-edge-main-wiring`](../12-testing/ci-evidence/2026-10-25T110000Z-clm-0691-channel-edge-main-wiring/README.md).

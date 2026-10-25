@@ -1,3 +1,15 @@
+# 2026-10-25 — CLM-0691 — G-S9.7 · D6: وصلُ `buildAppWithEdge` في مدخلِ بوتِ العميلِ + الحارسُ 29
+
+- **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.11 · T1).
+- **Status:** Active (يُدمَجُ بعدَ الفحوصِ على الرأسِ).
+- **Kind:** wiring + guard + docs — لا تغييرَ في سلوكِ الإنتاجِ (فشلٌ مغلقٌ).
+- **Risk(s):** none — لا يتغيّرُ خطرٌ؛ المدخلُ مغلقٌ (`production_open=false`) · T1 لم يُشغَّل.
+- **Changed units:** `bots/customer-bot/src/main.ts` (يبني عبرَ `buildAppWithEdge` لا `buildApp` — وحدةُ D6 من تدقيقِ CLM-0661) · `scripts/checks/validate-edge-wiring.sh` + `scripts/checks/lib/edge_wiring_guard.py` (الحارسُ 29) · `scripts/checks/lib/gov-cases-edge-wiring.sh` (M1–M4 + ضابطٌ موجبٌ · مسجَّلٌ في `test-governance.sh`) · `verify-governance.sh` (29) · تصحيحٌ مؤرَّخٌ للوثائقِ المتقادمةِ (RENDER_TEST_ENVIRONMENT_PLAN §T1 · T2_LOCAL_WEBHOOK_PROCEDURE · ملاحظةُ `deploy-target.json` T1) · ADR-025 §6.11 · `BASELINE.json`/`txt` (28→29 بقرارٍ مكتوبٍ — أثرُ الحارسِ الجديدِ لا نطاقٌ جديدٌ) · الدليل · السجلّات.
+- **Measured (local):** وحداتُ بوتِ العميلِ 58/58 (منها edge-composition 2/2) · `tsc --noEmit` نظيفٌ · الحارسُ 29 ✓ · طفراتُه M1–M4 تُسقِطُ بأبوابِها المُعزولةِ · `validate-render-deploy-target.sh` 42/42 (لا تغييرَ في `approved`/`approval`) · `verify-governance.sh` ✓ (بعدَ إعادةِ توليدِ الأساسِ).
+- **Discovery (measured, not assumed):** وثائقُ T1 كانت تقولُ «allowlistUrl يحلُّ إلى ملفٍّ مفقودٍ» — **متحجِّرةٌ منذ CLM-0662 (#809 · `771beb7f`)** الذي أصلَحَ الحلَّ إلى `import.meta.url`؛ القياسُ الحيُّ (الحارسُ 29) يُثبتُ حلولَهُ إلى ملفٍّ موجودٍ صالحٍ في البوتَينِ. المتبقي لتشغيلِ T1 قرارُ المالكِ وقياسٌ من البيئةِ الحيّةِ.
+- **Declared limits:** وصلٌ محلّيٌّ مقيسٌ لا تشغيلُ T1 ولا دليلَ D4.3 · مدخلُ بوتِ السائقِ ما زالَ على `buildApp` (وحدةٌ لاحقةٌ عندَ اختبارِ مسارِهِ) · `WASLA_EDGE_ENABLED` غيرُ مسجَّلٍ في env-registry (فشلٌ مغلقٌ بقرارٍ).
+- **Not changed:** `production_open=false` · `approved=false` + `approval=null` · لا نشرَ · Render مجمَّدٌ · NO-GO · D4.3 «غيرُ منفَّذٍ» حتى قياسٍ حيٍّ بإذنِ المالكِ.
+
 # 2026-10-25 — CLM-0690 — مراجعةُ RISK-0069 (موعدُ 2026-10-26) — قراءةٌ فقط
 
 - **Work Item(s):** M0-53 (حوكمةُ المخاطر · ADR-073).

@@ -1,7 +1,7 @@
 أساسُ البيئةِ والاختبارات — WASLA
 الصيغةُ: wasla.baseline/v1
-التاريخ (UTC): 2026-10-25T05:36:46Z
-الالتزام: 6a0a22e5f772aaf4775227204b5c9eafab7939fc  الفرع: fix/clm-0687-risk-0072-dr-currency  شجرةٌ نظيفةٌ
+التاريخ (UTC): 2026-10-25T10:24:25Z
+الالتزام: 84ca3980b2ba3c3f45a149460c7eac9714784e00  الفرع: fix/clm-0691-channel-edge-main-wiring  شجرةٌ مُعدَّلةٌ (16 ملفّاً)
 البيئة: node v20.20.2 · pnpm 9.15.9 · Linux/x86_64 · python 3.14.8
 القفل: pnpm-lock.yaml · 5059 سطراً · sha256 2f016f46938f20e4…
 
@@ -12,15 +12,15 @@
   test_files_tracked         587
   ci_jobs                    13
   ci_allow_failure           0
-  governance_checks          28
+  governance_checks          29
   risks_not_closed           27
 
-العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-25T050000Z-clm-0687-risk-0072-dr-currency/raw/verify-95911834.log):
+العدَّاداتُ الحركيّةُ (مقيسةٌ من docs/12-testing/ci-evidence/2026-10-25T110000Z-clm-0691-channel-edge-main-wiring/raw/verify-local.log):
   tests_passed               6307
   test_files_executed        444
-  governance_suite_cases     796
+  governance_suite_cases     823
   governance_suite_failed    1
   verify_overall             failed
 
-البصمة: sha256:67137a4ea8fd2aa72296a8baa4bb0720b74516179077eb644fb5e40fa6927bde
+البصمة: sha256:38e9904a4c72f9f15960d8735f7e2a9efbb91aafe0f39f49eb59a039b969b4d3
 المرجع: docs/12-testing/BASELINE_FORMAT.md

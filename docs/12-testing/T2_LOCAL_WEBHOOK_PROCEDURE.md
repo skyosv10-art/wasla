@@ -3,6 +3,7 @@
 > **الحالة:** إجراءٌ جاهزٌ وفحوصُه آليّةٌ — **لا يُنفَّذُ الشقُّ الذي يلمسُ Telegram** (`register` · `info`) قبلَ أن يعتمدَ المالكُ البندَ T2 صراحةً (`test_plan_items.T2.approved=true` + `approval` في `infra/render/deploy-target.json` بـPR مُراجَعٍ). الأداةُ ترفضُ قبلَ ذلك ولا ترسلُ شيئًا.
 > **الأداة:** [`scripts/test-env/t2_local.py`](../../scripts/test-env/t2_local.py) · فحصُها الذاتيُّ (16 حالةً، بلا شبكة) جزءٌ من `validate-render-deploy-target.sh` المُلزِم.
 > **T1 مؤجَّلٌ** حتى يُوصَلَ `buildAppWithEdge` في `bots/customer-bot/src/main.ts` ويُصحَّحَ `allowlistUrl` وتنجحَ اختباراتُهما.
+> **تحديثٌ مؤرَّخٌ (CLM-0691 · 2026-10-25):** وصَلَ الترطيبُ (وحدةُ D6) وقُيِسَ بالحارسِ 29 (`validate-edge-wiring.sh` وطفراتُه M1–M4)، و`allowlistUrl` كانَ قد أُصلِحَ في CLM-0662 (#809). المتبقي لاعتمادِ T1 قرارُ المالكِ (`approved=false` + `approval=null`) وقياسٌ من البيئةِ الحيّةِ — لا اختبارٌ محلّيٌّ بديلٌ عنها.
 
 ## ما يُثبتُه T2 وما لا يُثبتُه
 

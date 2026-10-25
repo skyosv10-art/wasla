@@ -15,7 +15,7 @@
 # كلُّ التشويهاتِ في نسخةِ `/tmp` وحدَها وتُستعادُ بعدَ كلِّ حالةٍ؛ المستودعُ الحقيقيُّ
 # لا يُمسُّ.
 #
-# المرجع: RENDER_TEST_ENVIRONMENT_PLAN (T1) · ADR-069 · CLM-0661 (D6) · CLM-0691.
+# المرجع: RENDER_TEST_ENVIRONMENT_PLAN (T1) · ADR-069 · CLM-0661 (D6) · CLM-0691 · CLM-0693 (M5/M6).
 
 printf '\n\033[1m[د] ترطيبُ حدِّ القناةِ في المدخلِ (D6 · CLM-0691 · الحارسُ 29)\033[0m\n'
 
@@ -117,6 +117,43 @@ git checkout -q -- packages/channel-edge/allowlist/customer-mini-app.json
 mv "$EW_DRV_EDGE" /tmp/edge_wiring_driver_edge.bak
 _ew_door "الطفرةُ M4: وحدةُ حدٍّ مفقودةٌ تُسقِطُ [EW-READ] (فشلٌ مغلقٌ لا تخطٍّ)" "[EW-READ]"
 mv /tmp/edge_wiring_driver_edge.bak "$EW_DRV_EDGE"
+
+# M5 (CLM-0693): ترطيبٌ يعيشُ في تعليقاتٍ فقط — الاستيرادُ والتمريرُ مذكورانِ في
+#     سطورِ تعليقٍ بينما الشيفرةُ تبني عبرَ alias لـbuildApp — الحارسُ يجرّدُ التعليقاتِ
+#     قبلَ المطابقةِ فتسقطُ البابانِ [EW-MAIN-IMPORT] و[EW-MAIN-LAUNCH] (لا يمرَّرَ ما لا
+#     ينفَّذُ).
+python3 - "$EW_MAIN" <<'PY'
+import sys
+from pathlib import Path
+p = Path(sys.argv[1])
+s = p.read_text(encoding="utf-8")
+s = s.replace('import { BOT } from "./server.js";\nimport { buildAppWithEdge } from "./edge.js";',
+              'import { BOT, buildApp as makeApp } from "./server.js";\n\n// import { buildAppWithEdge } from "./edge.js"; — runBotApp(BOT, buildAppWithEdge) reserved for D6')
+s = s.replace("void runBotApp(BOT, buildAppWithEdge);", "void runBotApp(BOT, () => makeApp());")
+p.write_text(s, encoding="utf-8")
+PY
+_ew_door "الطفرةُ M5: ترطيبٌ في تعليقاتٍ فقط وalias لـbuildApp تُسقِطُ [EW-MAIN-IMPORT] و[EW-MAIN-LAUNCH]" "[EW-MAIN-IMPORT]"
+out="$(bash "$EW" 2>&1)"
+if [[ "$out" == *"[EW-MAIN-LAUNCH]"* ]]; then printf '  \033[32m✓\033[0m الطفرةُ M5 تُسقِطُ [EW-MAIN-LAUNCH] أيضًا (التمريرُ لا الاستيرادَ وحده)\n'; ((PASS++)); else printf '  \033[31m✗\033[0m M5 لم تُسقِطِ [EW-MAIN-LAUNCH]\n'; ((FAIL++)); fi
+_ew_restore
+
+# M6 (CLM-0693): متغيّرُ `new URL` سليمٌ قبلَ الخاصيةِ بينما قيمةُ allowlistUrl نفسُها تُشيرُ
+#     إلى غائبٍ — الحارسُ يستخرجُ مسارَ **الخاصيةِ** تحديدًا لا أوّلَ `new URL` في الملفِ،
+#     فتسقطُ [EW-ALLOWLIST-URL] وحدها.
+python3 - "$EW_CUST_EDGE" <<'PY'
+import sys
+from pathlib import Path
+p = Path(sys.argv[1])
+s = p.read_text(encoding="utf-8")
+anchor = "    allowlistUrl: fileURLToPath("
+assert anchor in s
+s = s.replace(anchor, '    const diagUrl = new URL("../../../packages/channel-edge/allowlist/driver-mini-app.json", import.meta.url);\n' + anchor, 1)
+s = s.replace('"../../../packages/channel-edge/allowlist/customer-mini-app.json"',
+              '"../../../packages/channel-edge/allowlist/absent-file.json"')
+p.write_text(s, encoding="utf-8")
+PY
+_ew_door "الطفرةُ M6: URL سليمٌ في متغيّرٍ مجاورٍ وallowlistUrl نفسُها غائبةٌ تُسقِطُ [EW-ALLOWLIST-URL]" "[EW-ALLOWLIST-URL]" "[EW-ALLOWLIST-JSON]"
+_ew_restore
 
 # ضابطٌ موجبٌ: الشجرةُ النظيفةُ تُمرِّرُ الحارسَ.
 _ew_pass "الشجرةُ النظيفةُ تُمرِّرُ الحارسَ (لا جدارًا أعمى)"

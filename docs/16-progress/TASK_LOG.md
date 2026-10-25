@@ -1,3 +1,17 @@
+# 2026-10-25 — CLM-0693 — G-S9.7 · D6: تقويةُ الحارسِ 29 (تجريدُ التعليقاتِ + خاصيةُ allowlistUrl) + اختبارٌ سلوكيٌّ للمدخلِ
+
+- **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.11 · T1).
+- **Status:** Active (يُدمَجُ بعدَ الفحوصِ على الرأسِ).
+- **Kind:** guard-hardening + behavioral test + docs — لا تغييرَ في سلوكِ الإنتاجِ.
+- **Risk(s):** none — لا يتغيّرُ خطرٌ؛ المدخلُ مغلقٌ (`production_open=false`) · T1 لم يُشغَّل.
+- **Defects found and fixed (measured, not assumed):** طفرةُ M5: صيغُ الترطيبِ داخلَ تعليقاتٍ فقط معَ استدعاءِ `buildApp` مباشرةً عبرَ alias كانت تُمرِّرُ الحارسَ (المطابقةُ على النصِّ الخام) — الحارسُ الآن يجردُ التعليقاتِ (سطورَ `//` وكتلَ `/* */` خارجَ السلاسلِ) قبلَ المطابقةِ. طفرةُ M6: `new URL` سليمٌ في متغيّرٍ مجاورٍ قبلَ الخاصيةِ بينما قيمةُ `allowlistUrl` نفسُها تُشيرُ إلى غائبٍ كانت تُمرِّرُ (استخراجُ أولِ `new URL` في الملفِ) — الحارسُ الآن يستخرجُ مسارَ **الخاصيةِ** تحديدًا (`allowlistUrl: fileURLToPath(new URL(…, import.meta.url))`) ويُخفقُ مغلقاً إن غابت الصيغةُ.
+- **Changed units:** `scripts/checks/lib/edge_wiring_guard.py` (تجريدُ التعليقاتِ + استخراجُ الخاصيةِ) · `scripts/checks/lib/gov-cases-edge-wiring.sh` (طفرتا M5/M6) · `bots/customer-bot/src/__tests__/main-entry-wiring.test.ts` (جديدٌ — سلوكيٌّ: محاكاةُ `runBotApp` والتقاطُ المُمرَّرِ هُويّةً لا نصًّا، ومساراتُ النطاقِ حاضرةٌ في الحالتينِ، والحدُّ يُسجَّلُ فقطَ بتمكينٍ من `env` الترتيبِ) · تصحيحٌ مؤرَّخٌ لأدلّةِ CLM-0691 (البصمةُ · سجلُّ `verify-governance` الفاشلُ المُسمّى بوضوحٍ · سجلُّ الحالاتِ الغائبُ) · متابعةٌ مؤرَّخةٌ لـINC-0007 (لا صلاحيّةَ لقراءةِ الأسرارِ ⇒ لا دليلَ حديثاً على المعالجة) · `.env.example` + `packages/config/env-registry.json` + `packages/config/src/registry.generated.ts` (تسجيلُ قارئِ الاختبارِ السلوكيِّ لمتغيّرِ `WASLA_EDGE_ENABLED` وإعادةُ توليدِ الأرتفاكتَينِ المشتقّينِ) · `ROADMAP.md` (إضافةٌ مؤرَّخةٌ) · `BASELINE.json`/`txt` (إعادةُ توليدٍ — `governance_suite_cases` 823→826 بقرارٍ مكتوبٍ).
+- **Measured (local):** وحداتُ بوتِ العميلِ 61/61 (منها السلوكيُّ 3/3) · الحارسُ 29 على الشجرةِ النظيفةِ ✓ · طفراتُ M1–M6 تُسقِطُ بأبوابِها المُعزولةِ (9/0 من مصدرٍ مستقلٍّ) · `verify-governance.sh` ✓ (بعدَ إعادةِ توليدِ الأساسِ).
+- **Declared limits:** تقويةُ قياسٍ محليّةٌ لا تشغيلَ لـT1 ولا دليلَ D4.3 · مدخلُ بوتِ السائقِ ما زالَ على `buildApp` · `WASLA_EDGE_ENABLED` غيرُ مسجَّلٍ في env-registry (فشلٌ مغلقٌ بقرارٍ).
+- **Not changed:** `production_open=false` · `approved=false` + `approval=null` · لا نشرَ · Render مجمَّدٌ · NO-GO · D4.3 «غيرُ منفَّذٍ» حتى قياسٍ حيٍّ بإذنِ المالكِ.
+- **Evidence:** docs/12-testing/ci-evidence/2026-10-25T114500Z-clm-0693-guard29-hardening/README.md
+- **Deployment:** none — تقويةُ قياسٍ محليّةٌ بلا أي أثرٍ حيٍّ (Render مجمَّدٌ · production_open=false · T1 بقرار المالك).
+
 # 2026-10-25 — CLM-0692 — حكمُ ما بعدَ الدمجِ لـ#837 (وحدةُ D6 · CLM-0691)
 
 - **Work Item(s):** M0-53 (G-S9.7 · وحدةُ D6).
@@ -9,7 +23,6 @@
 - **Not changed:** لا حالةَ ولا خطرَ ولا قرارَ إطلاقٍ — `approved=false` + `approval=null` · Render مجمَّدٌ · NO-GO · D4.3 «غيرُ منفَّذٍ» حتى قياسٍ حيٍّ بإذنِ المالكِ.
 - **Evidence:** docs/12-testing/ci-evidence/2026-10-25T113000Z-clm-0692-post-merge-verdict-837/README.md
 - **Deployment:** none — توثيقٌ فقط بلا أي أثرٍ حيٍّ.
-
 # 2026-10-25 — CLM-0691 — G-S9.7 · D6: وصلُ `buildAppWithEdge` في مدخلِ بوتِ العميلِ + الحارسُ 29
 
 - **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.11 · T1).

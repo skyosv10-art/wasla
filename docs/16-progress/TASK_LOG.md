@@ -1,3 +1,15 @@
+# 2026-10-25 — CLM-0688 — G-S9.7: اعتمادُ عقدِ `GET /search/stores` وقبولُ D4.1 بقرارِ المالك
+
+- **Work Item(s):** M0-53 (G-S9.7 · ADR-025 §6.7 D4).
+- **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
+- **Owner decision:** 2026-10-25 06:37 (+03) «اعتمادُ العقدِ ومعه D4» — #797 (issuecomment-6393032052).
+- **Kind:** decision record — توثيقٌ وحدَه؛ لا شيفرةَ.
+- **Risk(s):** none — لا يتغيّرُ خطرٌ؛ المدخلُ مغلقٌ (`production_open=false`).
+- **Changed units:** `docs/15-decisions/ADR-025-marketplace-search-read-model.md` (§6.9 بالإضافةِ) · `docs/12-testing/ci-evidence/2026-10-25T060000Z-clm-0688-search-stores-contract-d4/README.md` · `docs/16-progress/WORK_CLAIMS.md` · `docs/16-progress/TASK_LOG.md` · `ROADMAP.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md`.
+- **Declared gap:** دليلُ CLM-0684 لا يبذرُ متجرًا مؤرشَفًا (المؤرشَفُ منتجٌ)؛ القبولُ على الدليلِ كما هو.
+- **Not done:** D4.2 (نوعُ برهانِ `E-20:store-eligible` وطفراتُه) · D4.3 (T1، إذنٌ منفصلٌ).
+- **Not changed:** قائمةُ السماحِ · `blocked_until` · لا نشرَ · Render مجمَّدٌ · NO-GO · M0-53 In Progress.
+
 # 2026-10-25 — CLM-0687 — RISK-0055/#570: الخيارُ (ب) بقرارِ المالك — RISK-0072 ضيّقُ النطاقِ
 
 - **Work Item(s):** M6-18B (DR) · RISK-0055 · RISK-0072.

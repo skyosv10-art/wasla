@@ -2062,6 +2062,10 @@
         {
           "file": "bots/customer-bot/src/__tests__/edge-composition.test.ts",
           "mode": "direct"
+        },
+        {
+          "file": "bots/customer-bot/src/__tests__/main-entry-wiring.test.ts",
+          "mode": "direct"
         }
       ],
       "note_ar": "الغياب ليس إخفاقًا بل القاعدة: تركيب الحدّ معطّل افتراضيًا ولا يُقرأ إلا بقيمة \"true\" صريحة."

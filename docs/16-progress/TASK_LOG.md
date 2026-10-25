@@ -4,6 +4,7 @@
 - **Status:** Active (يُدمَجُ بعدَ 43/43 على الرأسِ).
 - **Owner decision:** 2026-10-25 06:37 (+03) «الخيارُ (ب) كما هو مقترح» — #797 (issuecomment-6393032052) · المراجعةُ في #570 (issuecomment-6392373977).
 - **Kind:** risk register — توثيقٌ وحدَه؛ لا تغييرَ في الشيفرةِ ولا في البنيةِ.
+- **Risk(s):** RISK-0072 → open (جديدٌ) · RISK-0055 → closed (بلا تغييرٍ في الحالةِ؛ ملاحظةُ نطاقٍ فقط).
 - **Changed units:** `docs/07-security/RISK_REGISTER.md` (RISK-0072 جديدٌ `open`/`high` · ملاحظةُ نطاقٍ على RISK-0055 بالإضافةِ والحالةُ تبقى `closed`) · `docs/12-testing/BASELINE.json` · `docs/12-testing/BASELINE.txt` (إعادةُ توليدٍ — `risks_not_closed` 26→27) · السجلُّ الخامُّ · الدليلُ · `docs/16-progress/TASK_LOG.md` · `ROADMAP.md` · `docs/16-progress/LAUNCH_EXECUTION_BOARD.md` · `docs/16-progress/WORK_CLAIMS.md`.
 - **Correction recorded:** مراجعةُ 2026-10-25 الأولى في #570 قالتْ إنّ كلَّ الاستعاداتِ محليّةٌ؛ والصحيحُ أنّ CLM-0436/CLM-0450 قاسا استعادةً إلى مشروعٍ بديلٍ حقيقيٍّ (RTO بياناتٍ 471.1 ث · كاملٌ 541.7 ث) لكنّه قياسٌ غيرُ معتمَدٍ وغيرُ محدَّثٍ.
 - **After merge:** إغلاقُ #570 بتعليقٍ يربطُ السببَ الجذريَّ المعالَجَ (CLM-0415 · CLM-0482) — بتفويضِ المالكِ نفسِه.

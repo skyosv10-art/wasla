@@ -1,0 +1,19 @@
+# CLM-0576 — طفرةُ GH_TOKEN في الخطوةِ الموجبةِ وحدَها · 2026-10-16T06:13:54Z · branch head before change 28e802b8
+# mutation (sed): /^          GH_TOKEN: ${{ github.token }}$/{N;/ATTEST_EVIDENCE_DIR/s/^[^\n]*\n//}
+
+## guard=new (this change)
+diff (original → mutated):
+  984d983
+  <           GH_TOKEN: ${{ github.token }}
+GH_TOKEN lines remaining in ci.yml after mutation: 3 (live-step + other jobs)
+exit=1
+    ✗ ci.yml: GH_TOKEN: ${{ github.token }} غائبٌ عن خطوةِ التحقّقِ الموجبةِ نفسِها (verify-sbom-attestations.sh) — وجودُه في خطوةٍ أخرى لا يُغني؛ gh يفشلُ بلا مصادقة (CLM-0576).
+  ✗ رفضُ سلسلةِ توريدِ سيرِ العملِ. المرجع: اللوحة M0-31 · docs/00-rules/VERIFY_COMMAND.md
+
+## guard=old (HEAD 28e802b8 before change)
+diff (original → mutated):
+  984d983
+  <           GH_TOKEN: ${{ github.token }}
+GH_TOKEN lines remaining in ci.yml after mutation: 3 (live-step + other jobs)
+exit=0
+  ✓ سلسلةُ توريدِ سيرِ العملِ: 17 سيرَ عملٍ مُعلَناً · 0 فعلَ طرفٍ ثالثٍ كلُّها مُثبَّتةٌ ببصمةٍ (0) · لا pull_request_target · صلاحيّةٌ صريحةٌ في كلٍّ · إعلانُ الأسرارِ والكتابةِ مطابقٌ للمقيسِ.

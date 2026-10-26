@@ -1567,6 +1567,31 @@ _wf_sed()    { local R; R="$(_wf_root)"; sed -i "$1" "$R/.github/workflows/$2"; 
 _wf_append() { local R; R="$(_wf_root)"; printf '%s' "$2" >> "$R/.github/workflows/$1"; bash "$WFG" "$R" >/dev/null 2>&1; }
 _wf_rm()     { local R; R="$(_wf_root)"; rm -f "$R/.github/workflows/$1"; bash "$WFG" "$R" >/dev/null 2>&1; }
 _wf_new()    { local R; R="$(_wf_root)"; printf 'name: sneak\non: [push]\npermissions:\n  contents: read\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: "true"\n' > "$R/.github/workflows/$1"; bash "$WFG" "$R" >/dev/null 2>&1; }
+# _wf_why <sed> <ملفّ> <نصُّ السببِ المتوقَّع> — طفرةٌ يجبُ أن تُرفَضَ **لسببٍ واحدٍ بعينه**:
+# الطفرةُ غيّرت الملفَّ فعلًا · الحارسُ خرجَ غيرَ صفر · السببُ المتوقَّعُ مطبوع ·
+# ولا رفضَ آخرَ لـ ci.yml. يعيدُ 0 فقط إن تحقّقَ كلُّ ذلك (فيُستعملُ مع pass).
+_wf_why() {
+  local R out rc=0; R="$(_wf_root)"
+  sed -i "$1" "$R/.github/workflows/$2"
+  cmp -s "$T/.github/workflows/$2" "$R/.github/workflows/$2" && { echo "الطفرةُ لم تُغيّر الملفّ"; return 1; }
+  out="$(bash "$WFG" "$R" 2>&1)" || rc=$?
+  (( rc != 0 )) || { echo "الحارسُ قبِلَ الطفرة"; return 1; }
+  grep -qF "$3" <<< "$out" || { echo "السببُ المتوقَّعُ غائب:"; printf '%s\n' "$out"; return 1; }
+  [[ "$(grep -c "✗.*$2:" <<< "$out")" == 1 ]] || { echo "رفضٌ لأكثرَ من سبب:"; printf '%s\n' "$out"; return 1; }
+  printf '%s\n' "$out" | grep "✗.*$2:"
+}
+# _live_step_has_token <sed> — بعدَ الطفرة: خطوةُ الحالاتِ الحيّةِ ما تزالُ تحملُ GH_TOKEN (سطرٌ واحد).
+_live_step_has_token() {
+  local R; R="$(_wf_root)"; sed -i "$1" "$R/.github/workflows/ci.yml"
+  awk '/^      - /{inlive=0} /^      - name: "تحقُّقُ الإثباتِ — حالاتٌ موجبةٌ وسالبةٌ حيّة/{inlive=1} inlive && /^[[:space:]]+GH_TOKEN:[[:space:]]*\$\{\{[[:space:]]*github\.token[[:space:]]*\}\}/{n++} END{exit !(n==1)}' "$R/.github/workflows/ci.yml"
+}
+
+# _pos_step_has_token <sed> — بعدَ الطفرة: خطوةُ «تحقُّقٌ من الإثباتِ» الموجبةُ ما تزالُ
+# تحملُ GH_TOKEN: ${{ github.token }} (سطرٌ واحد) — فالرفضُ لا يأتي من غيابِ الرمز.
+_pos_step_has_token() {
+  local R; R="$(_wf_root)"; sed -i "$1" "$R/.github/workflows/ci.yml"
+  awk '/^      - /{inpos=0} /^      - name: "تحقُّقٌ من الإثباتِ"[[:space:]]*$/{inpos=1} inpos && /^[[:space:]]+GH_TOKEN:[[:space:]]*\$\{\{[[:space:]]*github\.token[[:space:]]*\}\}[[:space:]]*$/{n++} END{exit !(n==1)}' "$R/.github/workflows/ci.yml"
+}
 
 # (1) الحالةُ الموجبةُ: الشجرةُ كما هي تمرُّ — فلو أخفقت لكانَ كلُّ رفضٍ بعدَها بلا معنى.
 t "الحارسُ يمرُّ على شجرةِ المستودعِ" pass bash "$WFG" "$T"
@@ -1628,7 +1653,108 @@ t "ذكرُ النمطِ في تعليقٍ يمرُّ" pass _wf_append roadmap.y
 t "حذفُ خطوةِ إثباتِ أصلِ البناءِ يُرفَض" fail \
   _wf_sed '/actions\/attest-build-provenance/d' ci.yml
 t "حذفُ خطوةِ تحقُّقِ الإثباتِ يُرفَض" fail \
-  _wf_sed '/gh attestation verify/d' ci.yml
+  _wf_sed '/bash scripts\/ci\/verify-sbom-attestations.sh/d' ci.yml
+
+# (17)–(22) CLM-0576: التحقّقُ يتحقّقُ فعلًا — لا قناعَ، لا ملفَّ ناقصًا، لا رمزَ غائبًا،
+# لا continue-on-error. (العيبُ الذي اكتُشفَ بعدَ دمجِ CLM-0575: `|| echo WARN` بلا GH_TOKEN.)
+t "قناعُ '|| echo WARN' على تحقُّقِ الإثباتِ يُرفَض" fail \
+  _wf_sed 's|            artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json \\$|            artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json \|\| echo "WARN: attestation verify requires gh CLI 2.50+" \\|' ci.yml
+t "قناعُ '|| true' على تحقُّقِ الإثباتِ يُرفَض" fail \
+  _wf_sed 's|bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \\$|bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \|\| true \\|' ci.yml
+t "تحقُّقٌ من الملفِّ الأوّلِ وحدَه يُرفَض" fail \
+  _wf_sed 's|            artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json \\$|            artifacts/sbom/pass1.cdx.json \\|' ci.yml
+t "غيابُ GH_TOKEN عن خطوةِ التحقّقِ يُرفَض" fail \
+  _wf_sed '/GH_TOKEN: ${{ github.token }}/d' ci.yml
+t "continue-on-error في image-supply-chain يُرفَض" fail \
+  _wf_sed 's|^    name: image-supply-chain$|    name: image-supply-chain\n    continue-on-error: true|' ci.yml
+t "سيرُ توقيعٍ غيرُ ci.yml في التحقّقِ يُرفَض" fail \
+  _wf_sed 's|verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml|verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/other.yml|' ci.yml
+
+# (23)–(24) CLM-0576 (مراجعةُ المالك): الرمزُ يُقاسُ في خطوةِ التحقّقِ الموجبةِ نفسِها.
+# الطفرةُ تحذفُه منها وحدَها وتُبقيه في الخطوةِ الحيّة (وفي وظائفَ أخرى من ci.yml)؛
+# الحارسُ السابقُ (بحثٌ في الملفِّ كلِّه) كان يقبلُها. يجبُ أن يُرفَضَ لهذا السببِ تحديدًا.
+POS_TOKEN_MUT='/^          GH_TOKEN: ${{ github.token }}$/{N;/ATTEST_EVIDENCE_DIR/s/^[^\n]*\n//}'
+t "طفرةُ الرمزِ تُبقيه في الخطوةِ الحيّة" pass _live_step_has_token "$POS_TOKEN_MUT"
+t "غيابُ GH_TOKEN عن الخطوةِ الموجبةِ وحدَها يُرفَضُ لهذا السبب" pass \
+  _wf_why "$POS_TOKEN_MUT" ci.yml "غائبٌ عن خطوةِ التحقّقِ الموجبةِ نفسِها"
+
+# (25)–(28) CLM-0576 (مراجعةُ المالك): الاستدعاءُ التنفيذيُّ يُقاس، لا ظهورُ الاسم.
+# الطفرةُ تحوّلُ سطرَ استدعاءِ السكربتِ إلى تعليقِ shell داخلَ run:، وتُبقي
+# GH_TOKEN: ${{ github.token }} في الخطوةِ نفسِها ⇒ يجبُ أن يُرفَضَ لغيابِ الاستدعاءِ
+# التنفيذيِّ وحدَه (لا للرمزِ ولا لغيرِه). والحارسُ السابقُ كان يقبلُ صيغتَي echo
+# والتعليقِ اللاحقِ (exit 0)، ويرفضُ التعليقَ الكاملَ بثلاثةِ أسبابٍ متشابكة.
+CALL_COMMENT_MUT='s|^          bash scripts/ci/verify-sbom-attestations.sh|          # bash scripts/ci/verify-sbom-attestations.sh|'
+t "طفرةُ التعليقِ تُبقي GH_TOKEN في الخطوةِ الموجبة" pass _pos_step_has_token "$CALL_COMMENT_MUT"
+t "استدعاءُ التحقّقِ المعلَّقُ يُرفَضُ لغيابِ الاستدعاءِ التنفيذيّ" pass \
+  _wf_why "$CALL_COMMENT_MUT" ci.yml "لا استدعاءَ تنفيذيَّ لـ scripts/ci/verify-sbom-attestations.sh داخلَ run:"
+# (27) عُدِّلَ توقُّعُه في التصحيحِ الثالث: ذكرُ المسارِ في سطرٍ تنفيذيٍّ بغيرِ الصيغةِ المعلَنة
+# صارَ «صيغةً غيرَ مدعومة» (fail-closed) — رفضٌ أدقُّ من «لا استدعاء».
+t "اسمُ السكربتِ في نصِّ echo يُرفَضُ صيغةً غيرَ مدعومة" pass \
+  _wf_why 's|^          bash scripts/ci/verify-sbom-attestations.sh|          echo scripts/ci/verify-sbom-attestations.sh|' ci.yml \
+  "بصيغةٍ غيرِ مدعومةٍ في الخطوة"
+t "الاستدعاءُ في تعليقٍ لاحقٍ (true # …) يُرفَضُ لغيابِ الاستدعاءِ التنفيذيّ" pass \
+  _wf_why 's|^          bash scripts/ci/verify-sbom-attestations.sh|          true  # bash scripts/ci/verify-sbom-attestations.sh|' ci.yml \
+  "لا استدعاءَ تنفيذيَّ لـ scripts/ci/verify-sbom-attestations.sh داخلَ run:"
+
+# (29)–(40) CLM-0576 (مراجعةُ المالك، التصحيحُ الثالث): خطوةُ التحقّقِ الموجبةُ بصيغةٍ ضيّقةٍ
+# معلَنة، والقرارُ fail-closed. المشغّلاتُ الشرطيّةُ التي قد تبتلعُ فشلَ التحقّق
+# (&& · ; · || · if)، والسطورُ والمفاتيحُ ومتغيّراتُ البيئةِ الزائدة، ونقصُ pipefail —
+# كلُّها تُرفَضُ بسببِها. والحارسُ السابقُ (4bb60023) كان يقبلُ 11 منها (exit 0).
+_ATT_TEE='            2>\&1 | tee artifacts/attestation-verify/positive-both.txt'
+_ATT_TEE_RE='^            2>&1 | tee artifacts/attestation-verify/positive-both.txt$'
+_ATT_CALL='^          bash scripts/ci/verify-sbom-attestations.sh'
+_ATT_UNSUP="قد يحوّلُ فشلَ التحقّقِ نجاحًا نهائيًّا"
+t "النسخةُ السليمةُ تُقبَل: المحلّلُ يُخرجُ OK لخطوةِ التحقّقِ الموجبة" pass \
+  bash -c 'o="$(python3 "$1/scripts/checks/lib/attest_verify_step.py" "$1/.github/workflows/ci.yml")" && [[ "$o" =~ ^OK\ step=[0-9]+$ ]]' _ "$T"
+t "true && bash …; true يُرفَضُ لاحتمالِ تحوّلِ الفشلِ نجاحًا" pass \
+  _wf_why "s#${_ATT_CALL}#          true \\&\\& bash scripts/ci/verify-sbom-attestations.sh#;s#${_ATT_TEE_RE}#${_ATT_TEE}; true#" ci.yml "$_ATT_UNSUP"
+t "bash … && true; true يُرفَضُ لاحتمالِ تحوّلِ الفشلِ نجاحًا" pass \
+  _wf_why "s#${_ATT_TEE_RE}#${_ATT_TEE} \\&\\& true; true#" ci.yml "$_ATT_UNSUP"
+t "bash … || true يُرفَضُ صيغةً غيرَ مدعومة" pass \
+  _wf_why "s#${_ATT_TEE_RE}#${_ATT_TEE} || true#" ci.yml "$_ATT_UNSUP"
+t "bash …; true يُرفَضُ صيغةً غيرَ مدعومة" pass \
+  _wf_why "s#${_ATT_TEE_RE}#${_ATT_TEE}; true#" ci.yml "$_ATT_UNSUP"
+t "if bash …; then :; fi يُرفَضُ صيغةً غيرَ مدعومة" pass \
+  _wf_why "s#${_ATT_CALL}#          if bash scripts/ci/verify-sbom-attestations.sh#;s#${_ATT_TEE_RE}#${_ATT_TEE}; then :; fi#" ci.yml "$_ATT_UNSUP"
+t "سطرُ exit 0 بعدَ الاستدعاءِ يُرفَض" pass \
+  _wf_why "s#${_ATT_TEE_RE}#${_ATT_TEE}\\n          exit 0#" ci.yml "سطرٌ غيرُ مدعومٍ بعدَ الاستدعاءِ"
+t "غيابُ pipefail (set -eu) يُرفَض" pass \
+  _wf_why 's#^          set -euo pipefail$#          set -eu#' ci.yml "ليس «set -euo pipefail»"
+t "set +e قبلَ الاستدعاءِ يُرفَض" pass \
+  _wf_why 's#^          mkdir -p artifacts/attestation-verify$#          set +e#' ci.yml "سطرٌ غيرُ مدعومٍ قبلَ الاستدعاءِ"
+t "if: على خطوةِ التحقّقِ الموجبةِ يُرفَض" pass \
+  _wf_why 's#^      - name: "تحقُّقٌ من الإثباتِ"$#      - name: "تحقُّقٌ من الإثباتِ"\n        if: false#' ci.yml "مفاتيحَ غيرَ مدعومة: if"
+t "BASH_ENV في خطوةِ التحقّقِ الموجبةِ يُرفَض" pass \
+  _wf_why 's#^          ATTEST_EVIDENCE_DIR: artifacts/attestation-verify/positive$#          ATTEST_EVIDENCE_DIR: artifacts/attestation-verify/positive\n          BASH_ENV: /tmp/x#' ci.yml "متغيّراتُ بيئةٍ غيرُ مدعومةٍ"
+t "shell: sh في خطوةِ التحقّقِ الموجبةِ يُرفَض" pass \
+  _wf_why '/^      - name: "تحقُّقٌ من الإثباتِ"$/{n;s#^        shell: bash$#        shell: sh#}' ci.yml "بلا «shell: bash» حرفيًّا"
+t "if: على مستوى وظيفةِ image-supply-chain يُرفَض" pass \
+  _wf_why 's#^    name: image-supply-chain$#    name: image-supply-chain\n    if: false#' ci.yml "مشروطةٌ بـ if: على مستوى الوظيفة"
+
+# (42)–(47) CLM-0576 (مراجعةُ المالك، التصحيحُ الرابع): مفاتيحُ YAML المكرَّرةُ في خطوةِ التحقّق.
+# YAML يأخذُ آخرَ قيمةٍ للمفتاحِ المكرَّر، فيُنفَّذُ غيرُ ما قِيس؛ المحلّلُ يتعقّبُ كلَّ مفتاحٍ
+# قبلَ إدخالِه ويرفضُ التكرارَ (run · env · shell · متغيّرٌ داخلَ env) — لا يستبدلُ ولا يجمع.
+# كلُّ طفرةٍ تُبقي الرمزَ والوسائطَ؛ فالرفضُ بسببِ التكرارِ وحدَه (والحارسُ السابقُ 52b1a712 قبِلَها).
+_ATT_DUP="مفتاحُ YAML مكرَّرٌ في خطوةِ التحقّق"
+_ATT_ENV_RE='^          ATTEST_EVIDENCE_DIR: artifacts\/attestation-verify\/positive$'
+_dup_keeps_token_and_call() {  # $1=sed — الطفرةُ تُبقي GH_TOKEN وسطرَ الاستدعاءِ ووسائطَه
+  local R; R="$(_wf_root)"; sed -i "$1" "$R/.github/workflows/ci.yml"
+  local blk; blk="$(sed -n '/^      - name: "تحقُّقٌ من الإثباتِ"$/,/positive-both.txt$/p' "$R/.github/workflows/ci.yml")"
+  [[ "$blk" == *'GH_TOKEN: ${{ github.token }}'* && "$blk" == *'bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml'* \
+     && "$blk" == *'artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json'* ]]
+}
+_ATT_DUP_RUN="/${_ATT_ENV_RE}/{n;s#^        run: |\$#        run: |\\n          set -euo pipefail\\n        run: |#}"
+t "طفرةُ run: المكرَّرِ تُبقي GH_TOKEN والاستدعاءَ ووسائطَه" pass _dup_keeps_token_and_call "$_ATT_DUP_RUN"
+t "run: مكرَّرٌ (set -euo pipefail ثمّ الاستدعاء) يُرفَضُ لتكرارِ مفتاحِ YAML" pass \
+  _wf_why "$_ATT_DUP_RUN" ci.yml "$_ATT_DUP"
+t "env: مكرَّرٌ (يحملُ GH_TOKEN نفسَه) يُرفَضُ لتكرارِ مفتاحِ YAML" pass \
+  _wf_why "/${_ATT_ENV_RE}/{s#\$#\\n        env:\\n          GH_TOKEN: \${{ github.token }}#}" ci.yml "$_ATT_DUP"
+t "shell: مكرَّرٌ يُرفَضُ لتكرارِ مفتاحِ YAML" pass \
+  _wf_why '/^      - name: "تحقُّقٌ من الإثباتِ"$/{n;s#^        shell: bash$#        shell: bash\n        shell: bash#}' ci.yml "$_ATT_DUP"
+t "GH_TOKEN مكرَّرٌ داخلَ env (الأخيرُ فارغ) يُرفَضُ لتكرارِ مفتاحِ YAML" pass \
+  _wf_why '/^          GH_TOKEN: ${{ github.token }}$/{N;/ATTEST_EVIDENCE_DIR/s#$#\n          GH_TOKEN: ""#}' ci.yml "$_ATT_DUP"
+t "run: true بعدَ كتلةِ الاستدعاءِ يُرفَضُ لتكرارِ مفتاحِ YAML" pass \
+  _wf_why '/^            2>&1 | tee artifacts\/attestation-verify\/positive-both.txt$/{s#$#\n        run: true#}' ci.yml "$_ATT_DUP"
 
 printf '\n\033[1m[ي] تدقيقُ الاعتمادياتِ والثغرات (M0-06)\033[0m\n'
 # الحارسُ يسأل مُسجَّلَ npm عبرَ الشبكةِ، ويقرأ `package.json` و`SECURITY_RULES.md`.

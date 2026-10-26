@@ -1,0 +1,126 @@
+# CLM-0576 — الصيغةُ المعلَنةُ لخطوةِ التحقّقِ الموجبة (fail-closed) · 2026-10-16T07:50:33Z · قبلَ التغيير: الرأس 4bb60023
+
+## (أ) النسخةُ السليمة — ci.yml كما هو
+خطوةُ التحقّقِ الموجبة:
+        - name: "تحقُّقٌ من الإثباتِ"
+          shell: bash
+          env:
+            GH_TOKEN: ${{ github.token }}
+            ATTEST_EVIDENCE_DIR: artifacts/attestation-verify/positive
+          run: |
+            set -euo pipefail
+            mkdir -p artifacts/attestation-verify
+            bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+              artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json \
+              2>&1 | tee artifacts/attestation-verify/positive-both.txt
+parser: OK step=12
+guard exit=0
+  ✓ سلسلةُ توريدِ سيرِ العملِ: 17 سيرَ عملٍ مُعلَناً · 0 فعلَ طرفٍ ثالثٍ كلُّها مُثبَّتةٌ ببصمةٍ (0) · لا pull_request_target · صلاحيّةٌ صريحةٌ في كلٍّ · إعلانُ الأسرارِ والكتابةِ مطابقٌ للمقيسِ.
+
+## (ب) مصفوفةُ الطفرات — الحارسُ الجديد (هذا التغيير)
+[and-prefix] exit=1 reasons=1
+    diff <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    diff >           true && bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    diff <             2>&1 | tee artifacts/attestation-verify/positive-both.txt
+    diff >             2>&1 | tee artifacts/attestation-verify/positive-both.txt; true
+    ✗ ci.yml: استدعاءُ scripts/ci/verify-sbom-attestations.sh بصيغةٍ غيرِ مدعومةٍ في الخطوة 12: «true && bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json 2>&1 | tee artifacts/attestation-verify/positive-both.txt; true» — مشغّلٌ شرطيٌّ أو تركيبٌ (&& · || · ; · if · echo · وسيطٌ مختلف) قد يحوّلُ فشلَ التحقّقِ نجاحًا نهائيًّا. المقبولُ سطرُ الاستدعاءِ المعلَنُ وحدَه.
+[and-suffix] exit=1 reasons=1
+    diff <             2>&1 | tee artifacts/attestation-verify/positive-both.txt
+    diff >             2>&1 | tee artifacts/attestation-verify/positive-both.txt && true; true
+    ✗ ci.yml: استدعاءُ scripts/ci/verify-sbom-attestations.sh بصيغةٍ غيرِ مدعومةٍ في الخطوة 12: «bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json 2>&1 | tee artifacts/attestation-verify/positive-both.txt && true; true» — مشغّلٌ شرطيٌّ أو تركيبٌ (&& · || · ; · if · echo · وسيطٌ مختلف) قد يحوّلُ فشلَ التحقّقِ نجاحًا نهائيًّا. المقبولُ سطرُ الاستدعاءِ المعلَنُ وحدَه.
+[or-true] exit=1 reasons=1
+    diff <             2>&1 | tee artifacts/attestation-verify/positive-both.txt
+    diff >             2>&1 | tee artifacts/attestation-verify/positive-both.txt || true
+    ✗ ci.yml: استدعاءُ scripts/ci/verify-sbom-attestations.sh بصيغةٍ غيرِ مدعومةٍ في الخطوة 12: «bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json 2>&1 | tee artifacts/attestation-verify/positive-both.txt || true» — مشغّلٌ شرطيٌّ أو تركيبٌ (&& · || · ; · if · echo · وسيطٌ مختلف) قد يحوّلُ فشلَ التحقّقِ نجاحًا نهائيًّا. المقبولُ سطرُ الاستدعاءِ المعلَنُ وحدَه.
+[semicolon-true] exit=1 reasons=1
+    diff <             2>&1 | tee artifacts/attestation-verify/positive-both.txt
+    diff >             2>&1 | tee artifacts/attestation-verify/positive-both.txt; true
+    ✗ ci.yml: استدعاءُ scripts/ci/verify-sbom-attestations.sh بصيغةٍ غيرِ مدعومةٍ في الخطوة 12: «bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json 2>&1 | tee artifacts/attestation-verify/positive-both.txt; true» — مشغّلٌ شرطيٌّ أو تركيبٌ (&& · || · ; · if · echo · وسيطٌ مختلف) قد يحوّلُ فشلَ التحقّقِ نجاحًا نهائيًّا. المقبولُ سطرُ الاستدعاءِ المعلَنُ وحدَه.
+[if-wrap] exit=1 reasons=1
+    diff <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    diff >           if bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    diff <             2>&1 | tee artifacts/attestation-verify/positive-both.txt
+    diff >             2>&1 | tee artifacts/attestation-verify/positive-both.txt; then :; fi
+    ✗ ci.yml: استدعاءُ scripts/ci/verify-sbom-attestations.sh بصيغةٍ غيرِ مدعومةٍ في الخطوة 12: «if bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json 2>&1 | tee artifacts/attestation-verify/positive-both.txt; then :; fi» — مشغّلٌ شرطيٌّ أو تركيبٌ (&& · || · ; · if · echo · وسيطٌ مختلف) قد يحوّلُ فشلَ التحقّقِ نجاحًا نهائيًّا. المقبولُ سطرُ الاستدعاءِ المعلَنُ وحدَه.
+[extra-line-after] exit=1 reasons=1
+    diff >           exit 0
+    ✗ ci.yml: سطرٌ غيرُ مدعومٍ بعدَ الاستدعاءِ في خطوةِ التحقّقِ الموجبة: «exit 0» — قد يحوّلُ النتيجةَ النهائيّة.
+[no-pipefail] exit=1 reasons=1
+    diff <           set -euo pipefail
+    diff >           set -eu
+    diff <           set -euo pipefail
+    diff >           set -eu
+    diff <           set -euo pipefail
+    diff >           set -eu
+    ✗ ci.yml: أوّلُ أمرٍ في خطوةِ التحقّقِ الموجبةِ ليس «set -euo pipefail» — بلا pipefail يبتلعُ tee الفشل.
+[set-plus-e] exit=1 reasons=1
+    diff <           mkdir -p artifacts/attestation-verify
+    diff >           set +e
+    diff <           mkdir -p artifacts/attestation-verify
+    diff >           set +e
+    ✗ ci.yml: سطرٌ غيرُ مدعومٍ قبلَ الاستدعاءِ في خطوةِ التحقّقِ الموجبة: «set +e».
+[step-if] exit=1 reasons=1
+    diff >         if: false
+    ✗ ci.yml: خطوةُ التحقّقِ الموجبةُ تحملُ مفاتيحَ غيرَ مدعومة: if — (if · continue-on-error · working-directory …) قد تتخطّاها أو تُقنِّعُ فشلَها.
+[step-coe] exit=1 reasons=2
+    diff >         continue-on-error: true
+    ✗ ci.yml: خطوةُ التحقّقِ الموجبةُ تحملُ مفاتيحَ غيرَ مدعومة: continue-on-error — (if · continue-on-error · working-directory …) قد تتخطّاها أو تُقنِّعُ فشلَها.
+    ✗ ci.yml: continue-on-error في وظيفةِ image-supply-chain — فشلُ التحقّقِ لا يُفشِلُ الوظيفة (CLM-0576).
+[bash-env] exit=1 reasons=1
+    diff >           BASH_ENV: /tmp/x
+    ✗ ci.yml: متغيّراتُ بيئةٍ غيرُ مدعومةٍ في خطوةِ التحقّقِ الموجبة: BASH_ENV — (مثلُ BASH_ENV) قد تغيّرُ سلوكَ الصدفة.
+[shell-sh] exit=1 reasons=1
+    diff <         shell: bash
+    diff >         shell: sh
+    ✗ ci.yml: خطوةُ التحقّقِ الموجبةُ بلا «shell: bash» حرفيًّا (القيمة: 'sh').
+[commented] exit=1 reasons=1
+    diff <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    diff >           # bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    ✗ ci.yml: لا استدعاءَ تنفيذيَّ لـ scripts/ci/verify-sbom-attestations.sh داخلَ run: في خطوةٍ من image-supply-chain — ظهورُ اسمِه في تعليقِ YAML أو shell أو نصٍّ ليس تحقّقًا (CLM-0576).
+[echo-string] exit=1 reasons=1
+    diff <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    diff >           echo scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    ✗ ci.yml: استدعاءُ scripts/ci/verify-sbom-attestations.sh بصيغةٍ غيرِ مدعومةٍ في الخطوة 12: «echo scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json 2>&1 | tee artifacts/attestation-verify/positive-both.txt» — مشغّلٌ شرطيٌّ أو تركيبٌ (&& · || · ; · if · echo · وسيطٌ مختلف) قد يحوّلُ فشلَ التحقّقِ نجاحًا نهائيًّا. المقبولُ سطرُ الاستدعاءِ المعلَنُ وحدَه.
+[inline-comment] exit=1 reasons=1
+    diff <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    diff >           true  # bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    ✗ ci.yml: لا استدعاءَ تنفيذيَّ لـ scripts/ci/verify-sbom-attestations.sh داخلَ run: في خطوةٍ من image-supply-chain — ظهورُ اسمِه في تعليقِ YAML أو shell أو نصٍّ ليس تحقّقًا (CLM-0576).
+[pos-token] exit=1 reasons=1
+    diff <           GH_TOKEN: ${{ github.token }}
+    ✗ ci.yml: GH_TOKEN: ${{ github.token }} غائبٌ عن خطوةِ التحقّقِ الموجبةِ نفسِها (verify-sbom-attestations.sh) — وجودُه في خطوةٍ أخرى لا يُغني؛ gh يفشلُ بلا مصادقة (CLM-0576).
+[only-pass1] exit=1 reasons=1
+    diff <             artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json \
+    diff >             artifacts/sbom/pass1.cdx.json \
+    ✗ ci.yml: استدعاءُ scripts/ci/verify-sbom-attestations.sh بصيغةٍ غيرِ مدعومةٍ في الخطوة 12: «bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml artifacts/sbom/pass1.cdx.json 2>&1 | tee artifacts/attestation-verify/positive-both.txt» — مشغّلٌ شرطيٌّ أو تركيبٌ (&& · || · ; · if · echo · وسيطٌ مختلف) قد يحوّلُ فشلَ التحقّقِ نجاحًا نهائيًّا. المقبولُ سطرُ الاستدعاءِ المعلَنُ وحدَه.
+[other-wf] exit=1 reasons=1
+    diff <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    diff >           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/other.yml \
+    ✗ ci.yml: استدعاءُ scripts/ci/verify-sbom-attestations.sh بصيغةٍ غيرِ مدعومةٍ في الخطوة 12: «bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/other.yml artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json 2>&1 | tee artifacts/attestation-verify/positive-both.txt» — مشغّلٌ شرطيٌّ أو تركيبٌ (&& · || · ; · if · echo · وسيطٌ مختلف) قد يحوّلُ فشلَ التحقّقِ نجاحًا نهائيًّا. المقبولُ سطرُ الاستدعاءِ المعلَنُ وحدَه.
+[deleted] exit=1 reasons=1
+    diff <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+    ✗ ci.yml: لا استدعاءَ تنفيذيَّ لـ scripts/ci/verify-sbom-attestations.sh داخلَ run: في خطوةٍ من image-supply-chain — ظهورُ اسمِه في تعليقِ YAML أو shell أو نصٍّ ليس تحقّقًا (CLM-0576).
+[job-if] exit=1 reasons=1
+    diff >     if: false
+    ✗ ci.yml: image-supply-chain مشروطةٌ بـ if: على مستوى الوظيفة — قد تُتخطّى فيُعَدُّ تخطّيها نجاحًا.
+
+## (ج) المصفوفةُ نفسُها — الحارسُ السابق (4bb60023)
+[and-prefix] exit=0 reasons=0
+[and-suffix] exit=0 reasons=0
+[or-true] exit=1 reasons=1
+[semicolon-true] exit=0 reasons=0
+[if-wrap] exit=1 reasons=1
+[extra-line-after] exit=0 reasons=0
+[no-pipefail] exit=0 reasons=0
+[set-plus-e] exit=0 reasons=0
+[step-if] exit=0 reasons=0
+[step-coe] exit=1 reasons=1
+[bash-env] exit=0 reasons=0
+[shell-sh] exit=0 reasons=0
+[commented] exit=1 reasons=1
+[echo-string] exit=1 reasons=1
+[inline-comment] exit=1 reasons=1
+[pos-token] exit=1 reasons=1
+[only-pass1] exit=1 reasons=1
+[other-wf] exit=1 reasons=1
+[deleted] exit=1 reasons=1
+[job-if] exit=0 reasons=0

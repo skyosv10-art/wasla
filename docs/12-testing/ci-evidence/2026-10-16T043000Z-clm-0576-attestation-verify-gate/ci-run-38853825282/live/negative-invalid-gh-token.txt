@@ -1,0 +1,10 @@
+gh 2.102.0 (≥ 2.50.0) · repo=skyosv10-art/wasla · signer-workflow=skyosv10-art/wasla/.github/workflows/ci.yml · predicate-type=https://slsa.dev/provenance/v1
+✗ artifacts/sbom/pass1.cdx.json (sha256:929b96eb4292103df3c2824094b52d6aa87a4bbe569360216202861b728c19b3): gh attestation verify خرجَ بـ1:
+    
+    Error: HTTP 401: Bad credentials (https://api.github.com/repos/skyosv10-art/wasla/attestations/sha256:929b96eb4292103df3c2824094b52d6aa87a4bbe569360216202861b728c19b3?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+✗ artifacts/sbom/pass2.cdx.json (sha256:c91ce259be4d2d7ed0983b92f60ee75271f099cc15228aabcaaff022274ac3a2): gh attestation verify خرجَ بـ1:
+    
+    Error: HTTP 401: Bad credentials (https://api.github.com/repos/skyosv10-art/wasla/attestations/sha256:c91ce259be4d2d7ed0983b92f60ee75271f099cc15228aabcaaff022274ac3a2?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+✗ تحقُّقُ الإثبات: 0/2 — فشلَ 2.
+
+# exit=1 · expected=fail

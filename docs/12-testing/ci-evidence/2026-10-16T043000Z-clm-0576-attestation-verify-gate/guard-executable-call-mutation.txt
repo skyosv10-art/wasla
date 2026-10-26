@@ -1,0 +1,50 @@
+# CLM-0576 — الاستدعاءُ التنفيذيُّ لـ verify-sbom-attestations.sh · 2026-10-16T07:03:01Z · قبلَ التغيير: الرأس 62745cb9
+
+## (أ) النسخةُ السليمة — ci.yml كما هو
+parser (scripts/checks/lib/attest_verify_step.py):
+  STEP 12 token=1 args=- mask=0
+  CALLS 1
+guard exit=0
+  ✓ سلسلةُ توريدِ سيرِ العملِ: 17 سيرَ عملٍ مُعلَناً · 0 فعلَ طرفٍ ثالثٍ كلُّها مُثبَّتةٌ ببصمةٍ (0) · لا pull_request_target · صلاحيّةٌ صريحةٌ في كلٍّ · إعلانُ الأسرارِ والكتابةِ مطابقٌ للمقيسِ.
+
+## (ب) طفرة: commented — sed: s|^          bash scripts/ci/verify-sbom-attestations.sh|          # bash scripts/ci/verify-sbom-attestations.sh|
+diff:
+  989c989
+  <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+  ---
+  >           # bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+GH_TOKEN في الخطوةِ الموجبةِ بعدَ الطفرة: 1 سطر
+parser:
+  CALLS 0
+guard=new (this change) exit=1 · reasons=1
+    ✗ ci.yml: لا استدعاءَ تنفيذيَّ لـ scripts/ci/verify-sbom-attestations.sh داخلَ run: في خطوةٍ من image-supply-chain — ظهورُ اسمِه في تعليقِ YAML أو shell أو نصٍّ ليس تحقّقًا (CLM-0576).
+guard=prev (HEAD 62745cb9) exit=1 · reasons=3
+    ✗ ci.yml: خطوةُ تحقُّقِ الإثباتِ (scripts/ci/verify-sbom-attestations.sh) مفقودةٌ — الإثباتُ بلا تحقُّقٍ بيانٌ لا ضمانٌ.
+    ✗ ci.yml: لا خطوةَ في image-supply-chain تستدعي scripts/ci/verify-sbom-attestations.sh (CLM-0576).
+    ✗ ci.yml: GH_TOKEN: ${{ github.token }} غائبٌ عن خطوةِ التحقّقِ الموجبةِ نفسِها (verify-sbom-attestations.sh) — وجودُه في خطوةٍ أخرى لا يُغني؛ gh يفشلُ بلا مصادقة (CLM-0576).
+
+## (ب) طفرة: echo-string — sed: s|^          bash scripts/ci/verify-sbom-attestations.sh|          echo scripts/ci/verify-sbom-attestations.sh|
+diff:
+  989c989
+  <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+  ---
+  >           echo scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+GH_TOKEN في الخطوةِ الموجبةِ بعدَ الطفرة: 1 سطر
+parser:
+  CALLS 0
+guard=new (this change) exit=1 · reasons=1
+    ✗ ci.yml: لا استدعاءَ تنفيذيَّ لـ scripts/ci/verify-sbom-attestations.sh داخلَ run: في خطوةٍ من image-supply-chain — ظهورُ اسمِه في تعليقِ YAML أو shell أو نصٍّ ليس تحقّقًا (CLM-0576).
+guard=prev (HEAD 62745cb9) exit=0 · reasons=0
+
+## (ب) طفرة: inline-comment — sed: s|^          bash scripts/ci/verify-sbom-attestations.sh|          true  # bash scripts/ci/verify-sbom-attestations.sh|
+diff:
+  989c989
+  <           bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+  ---
+  >           true  # bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+GH_TOKEN في الخطوةِ الموجبةِ بعدَ الطفرة: 1 سطر
+parser:
+  CALLS 0
+guard=new (this change) exit=1 · reasons=1
+    ✗ ci.yml: لا استدعاءَ تنفيذيَّ لـ scripts/ci/verify-sbom-attestations.sh داخلَ run: في خطوةٍ من image-supply-chain — ظهورُ اسمِه في تعليقِ YAML أو shell أو نصٍّ ليس تحقّقًا (CLM-0576).
+guard=prev (HEAD 62745cb9) exit=0 · reasons=0

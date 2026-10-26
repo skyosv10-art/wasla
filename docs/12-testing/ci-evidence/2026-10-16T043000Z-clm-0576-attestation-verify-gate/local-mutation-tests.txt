@@ -1,0 +1,4 @@
+mutation: s/^  exit 1$/  exit 0/ => اختباراتُ verify-sbom-attestations: 8 نجح · 8 فشل
+mutation: s/^  if ! python3 - \(.*\)$/  if false \&\& python3 - \1/ => اختباراتُ verify-sbom-attestations: 12 نجح · 4 فشل
+mutation: s/|| die 2 "GH_TOKEN/|| echo "GH_TOKEN/ => اختباراتُ verify-sbom-attestations: 14 نجح · 2 فشل
+mutation: s/|| die 3 "gh \$GH_VER أقدمُ/|| echo "gh $GH_VER أقدمُ/ => اختباراتُ verify-sbom-attestations: 15 نجح · 1 فشل

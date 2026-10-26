@@ -956,6 +956,15 @@ jobs:
         run: |
           docker --version
           python3 --version
+          gh --version
+      # CLM-0576 — بوّابةُ التحقّقِ نفسُها مُختبَرةٌ قبلَ البناء: gh مُصطنَعٌ يخرجُ 0 بتحذيرٍ،
+      # أو ببصمةٍ أخرى، أو بإصدارٍ قديم، أو بلا رمز — كلُّها يجبُ أن تفشل.
+      - name: "اختباراتُ وحدةٍ لبوّابةِ تحقُّقِ الإثباتِ (CLM-0576)"
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/attestation-verify
+          bash scripts/ci/test-verify-sbom-attestations.sh 2>&1 | tee artifacts/attestation-verify/unit-tests.txt
       - name: "بناءٌ (1)"
         run: bash scripts/container/build-image.sh wasla:ci-pass1
       - name: "عقدُ الصورةِ — غيرُ جِذرٍ · عقدةٌ مُثبَّتةٌ · كلُّ حزمةٍ لها مدخلٌ"
@@ -989,7 +998,36 @@ jobs:
           subject-path: |
             artifacts/sbom/pass1.cdx.json
             artifacts/sbom/pass2.cdx.json
+      # CLM-0576 — تحقُّقٌ صارمٌ: الملفّانِ كلاهما · المستودعُ نفسُه · سيرُ التوقيعِ ci.yml
+      # · نوعُ SLSA provenance v1 · إصدارُ gh مُتحقَّقٌ صراحةً. غيابُ الرمزِ أو فشلُ
+      # المصادقةِ أو غيابُ الإثباتِ أو فشلُ التحقّقِ يُفشِلُ الوظيفة — لا تحذيرَ يُمرِّر.
+      # GH_TOKEN لهذه الخطوةِ والتي تليها فقط؛ الصلاحيّاتُ أعلاه بلا توسيع.
       - name: "تحقُّقٌ من الإثباتِ"
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ATTEST_EVIDENCE_DIR: artifacts/attestation-verify/positive
         run: |
-          gh attestation verify artifacts/sbom/pass1.cdx.json \
-            --repo ${{ github.repository }} || echo "WARN: attestation verify requires gh CLI 2.50+"
+          set -euo pipefail
+          mkdir -p artifacts/attestation-verify
+          bash scripts/ci/verify-sbom-attestations.sh "${{ github.repository }}" .github/workflows/ci.yml \
+            artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json \
+            2>&1 | tee artifacts/attestation-verify/positive-both.txt
+      # CLM-0576 — اختباراتٌ سلبيّةٌ بـ gh الحقيقيِّ والإثباتِ الحقيقيّ: كلُّ حالةِ فشلٍ
+      # يجبُ أن تفشلَ فعلًا؛ وإن نجحت حالةٌ منها فشلت الوظيفة.
+      - name: "تحقُّقُ الإثباتِ — حالاتٌ موجبةٌ وسالبةٌ حيّة (CLM-0576)"
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          bash scripts/ci/test-verify-sbom-attestations-live.sh "${{ github.repository }}" .github/workflows/ci.yml \
+            artifacts/sbom/pass1.cdx.json artifacts/sbom/pass2.cdx.json artifacts/attestation-verify/live
+      - name: "رفعُ أدلّةِ تحقُّقِ الإثباتِ (CLM-0576)"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-supply-chain-attestation-verify-evidence
+          path: artifacts/attestation-verify/
+          retention-days: 30
+          if-no-files-found: error

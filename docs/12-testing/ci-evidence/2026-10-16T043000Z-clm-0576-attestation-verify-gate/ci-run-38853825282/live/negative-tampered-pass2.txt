@@ -1,0 +1,7 @@
+gh 2.102.0 (≥ 2.50.0) · repo=skyosv10-art/wasla · signer-workflow=skyosv10-art/wasla/.github/workflows/ci.yml · predicate-type=https://slsa.dev/provenance/v1
+✗ /tmp/tmp.OlWKsagJaw/pass2.cdx.json (sha256:048321f39d0cb175393328fba1e2777e140a0f40104b679f0a957bba049c1864): gh attestation verify خرجَ بـ1:
+    
+    Error: HTTP 404: Not Found (https://api.github.com/repos/skyosv10-art/wasla/attestations/sha256:048321f39d0cb175393328fba1e2777e140a0f40104b679f0a957bba049c1864?per_page=30&predicate_type=https%3A%2F%2Fslsa.dev%2Fprovenance%2Fv1)
+✗ تحقُّقُ الإثبات: 0/1 — فشلَ 1.
+
+# exit=1 · expected=fail

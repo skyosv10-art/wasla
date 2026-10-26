@@ -1,0 +1,6 @@
+gh 2.102.0 (≥ 2.50.0) · repo=skyosv10-art/wasla · signer-workflow=skyosv10-art/wasla/.github/workflows/ci.yml · predicate-type=https://slsa.dev/provenance/v1
+    signer=https://github.com/skyosv10-art/wasla/.github/workflows/ci.yml@refs/pull/730/merge run=https://github.com/skyosv10-art/wasla/actions/runs/38853825282/attempts/1
+✓ VERIFIED artifacts/sbom/pass1.cdx.json (sha256:929b96eb4292103df3c2824094b52d6aa87a4bbe569360216202861b728c19b3)
+✓ تحقُّقُ الإثبات: 1/1.
+
+# exit=0 · expected=pass

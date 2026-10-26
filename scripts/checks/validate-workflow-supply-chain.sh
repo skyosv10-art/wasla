@@ -37,6 +37,7 @@ set -uo pipefail
 
 ROOT="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 WF_DIR="$ROOT/.github/workflows"
+GUARD_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib"
 
 # ── الجردُ المُعلَنُ ───────────────────────────────────────────────────────
 # الصيغةُ: <الملفُّ>|<secrets=yes|no>|<write=yes|no>|<الغرضُ والمسؤوليّةُ>
@@ -173,8 +174,35 @@ for f in "${ON_DISK[@]}"; do
   if [[ "$f" == "ci.yml" ]]; then
     grep -Eq 'actions/attest-build-provenance' <<< "$LIVE" \
       || fail "$f: خطوةُ إثباتِ أصلِ البناءِ (actions/attest-build-provenance) مفقودةٌ — M6-19C يتطلّبُ توقيعَ قوائمِ الموادِ."
-    grep -Eq 'gh attestation verify' <<< "$LIVE" \
-      || fail "$f: خطوةُ تحقُّقِ الإثباتِ (gh attestation verify) مفقودةٌ — الإثباتُ بلا تحقُّقٍ بيانٌ لا ضمانٌ."
+    # CLM-0576 — التحقّقُ يجبُ أن يتحقّقَ فعلًا: البوّابةُ الصارمةُ مستدعاةٌ للملفَّينِ
+    # كليهما مقيّدةً بـ ci.yml، والرمزُ ممرَّرٌ، ولا قناعَ (|| echo · || true · || :)
+    # ولا continue-on-error يحوّلُ فشلَها أخضرَ. (العيبُ الذي اكتُشفَ بعدَ دمجِ CLM-0575.)
+    JOINED="$(sed -e ':a' -e '/\\$/N; s/\\\n/ /; ta' <<< "$LIVE")"
+    # قناعُ `gh attestation verify` الخامِ (العيبُ الأصليّ). استدعاءُ البوّابةِ نفسِها يُقاسُ أدناه بالصيغةِ المعلَنة.
+    grep -Eq 'gh attestation verify[^#]*\|\|' <<< "$JOINED" \
+      && fail "$f: تحقُّقُ الإثباتِ مقنَّعٌ بـ '||' — فشلُه يصيرُ أخضرَ. يُحذَفُ القناعُ (CLM-0576)."
+    grep -Eq 'WARN: attestation verify' <<< "$LIVE" \
+      && fail "$f: تحذيرُ الإصدارِ يُمرِّرُ فشلَ التحقّق — ممنوعٌ (CLM-0576)."
+    ISC="$(awk '/^  image-supply-chain:/{on=1; next} on && /^  [A-Za-z0-9_-]+:[[:space:]]*$/{on=0} on' <<< "$LIVE")"
+    # خطوةُ التحقّقِ الموجبةُ بصيغةٍ ضيّقةٍ معلَنة، والقرارُ fail-closed (CLM-0576 · مراجعةُ المالك):
+    # lib/attest_verify_step.py يقبلُ خطوةً واحدةً بشكلٍ واحد — shell: bash · env فيه
+    # GH_TOKEN: ${{ github.token }} (وATTEST_EVIDENCE_DIR اختياريًّا) · run: يبدأُ بـ
+    # set -euo pipefail ثمّ سطرُ الاستدعاءِ المعلَنُ حرفيًّا (مع `| tee` اختياريًّا) — ويرفضُ
+    # كلَّ ما سواه: مشغّلاتٍ شرطيّة (&& · || · ; · if)، وسطورًا زائدة، ومفاتيحَ (if ·
+    # continue-on-error)، ومتغيّراتِ بيئةٍ أخرى، واستدعاءً معلَّقًا أو داخلَ نصّ. لا يُعَدُّ
+    # قبولًا إلا سطرُ «OK» بلا أيِّ «REASON»؛ وخطأُ المحلّلِ أو مخرَجٌ غيرُ متوقَّعٍ رفض.
+    POS_RC=0; POS="$(python3 "$GUARD_LIB/attest_verify_step.py" "$P" 2>&1)" || POS_RC=$?
+    if (( POS_RC != 0 )); then
+      fail "$f: تعذّرَ قياسُ خطوةِ التحقّقِ الموجبة (exit $POS_RC) — يُرفَضُ احتياطًا: $POS"
+    elif grep -q '^REASON ' <<< "$POS"; then
+      while IFS= read -r r; do
+        fail "$f: ${r#REASON * }"
+      done < <(grep '^REASON ' <<< "$POS")
+    elif ! grep -Eq '^OK step=[0-9]+$' <<< "$POS"; then
+      fail "$f: مخرَجُ قياسِ خطوةِ التحقّقِ الموجبةِ غيرُ متوقَّع — يُرفَضُ احتياطًا: $POS"
+    fi
+    grep -Eq '^[[:space:]]*continue-on-error:[[:space:]]*true' <<< "$ISC" \
+      && fail "$f: continue-on-error في وظيفةِ image-supply-chain — فشلُ التحقّقِ لا يُفشِلُ الوظيفة (CLM-0576)."
   fi
 done
 

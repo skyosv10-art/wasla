@@ -1,0 +1,1292 @@
+[
+  {
+    "cursor": "adXD0iBl4_gybnVpMHBoczczYmM0NWNn",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T16:14:27.864709Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3s2nui0phs73bc45cg",
+      "id": "srv-db3s2nui0phs73bc45cg",
+      "name": "wasla-alertmanager",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": "infra/observability",
+          "dockerfilePath": "infra/observability/Dockerfile.alertmanager"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "oregon",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3s2nui0phs73bc45cg@ssh.oregon.render.com",
+        "url": "https://wasla-alertmanager-6hhq.onrender.com"
+      },
+      "slug": "wasla-alertmanager-6hhq",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:58:40.551307Z"
+    }
+  },
+  {
+    "cursor": "adXD0iBl4_gybXVpMHBoczczYmM0MnNn",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T16:14:23.084911Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3s2mui0phs73bc42sg",
+      "id": "srv-db3s2mui0phs73bc42sg",
+      "name": "wasla-prometheus",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": "infra/observability",
+          "dockerfilePath": "infra/observability/Dockerfile.prometheus"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "oregon",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3s2mui0phs73bc42sg@ssh.oregon.render.com",
+        "url": "https://wasla-prometheus-p80v.onrender.com"
+      },
+      "slug": "wasla-prometheus-p80v",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:10.371375Z"
+    }
+  },
+  {
+    "cursor": "4nTIRFynF0NmdGJ0cWI4czczZW43bzIw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T11:01:12.911757Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3nftbtqb8s73en7o20",
+      "id": "srv-db3nftbtqb8s73en7o20",
+      "name": "wasla-partner-bot",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3nftbtqb8s73en7o20@ssh.singapore.render.com",
+        "url": "https://wasla-partner-bot-tri8.onrender.com"
+      },
+      "slug": "wasla-partner-bot-tri8",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T03:00:18.806229Z"
+    }
+  },
+  {
+    "cursor": "4nTIRFynF0NmcjdhdnI0YzczYWdxOXMw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T11:01:04.558774Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3nfr7avr4c73agq9s0",
+      "id": "srv-db3nfr7avr4c73agq9s0",
+      "name": "wasla-driver-bot",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3nfr7avr4c73agq9s0@ssh.singapore.render.com",
+        "url": "https://wasla-driver-bot-d8dv.onrender.com"
+      },
+      "slug": "wasla-driver-bot-d8dv",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:53.280098Z"
+    }
+  },
+  {
+    "cursor": "4nTIRFynF0MwOGdtN2twczczZmI4OTUw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:27:50.111546Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3n08gm7kps73fb8950",
+      "id": "srv-db3n08gm7kps73fb8950",
+      "name": "wasla-customer-bot",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3n08gm7kps73fb8950@ssh.singapore.render.com",
+        "url": "https://wasla-customer-bot-fw29.onrender.com"
+      },
+      "slug": "wasla-customer-bot-fw29",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:39.241082Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2cm0wdGJjYzczODZnb2cw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:26:54.927627Z",
+      "dashboardUrl": "https://dashboard.render.com/static/srv-db3mvrm0tbcc7386gog0",
+      "id": "srv-db3mvrm0tbcc7386gog0",
+      "name": "wasla-admin-app",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildCommand": "npm install --global pnpm@9.15.9 && pnpm install --frozen-lockfile && pnpm --filter @wasla/admin-portal build",
+        "buildPlan": "starter",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "previews": {
+          "generation": "off"
+        },
+        "publishPath": "apps/admin-portal/dist",
+        "pullRequestPreviewsEnabled": "no",
+        "renderSubdomainPolicy": "enabled",
+        "url": "https://wasla-admin-app-p36w.onrender.com"
+      },
+      "slug": "wasla-admin-app-p36w",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "static_site",
+      "updatedAt": "2026-10-16T02:58:42.511079Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2cGVnZWt0czczZmVoYjgw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:26:46.424257Z",
+      "dashboardUrl": "https://dashboard.render.com/static/srv-db3mvpegekts73fehb80",
+      "id": "srv-db3mvpegekts73fehb80",
+      "name": "wasla-driver-app",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildCommand": "npm install --global pnpm@9.15.9 && pnpm install --frozen-lockfile && pnpm --filter @wasla/driver-mini-app build",
+        "buildPlan": "starter",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "previews": {
+          "generation": "off"
+        },
+        "publishPath": "apps/driver-mini-app/dist",
+        "pullRequestPreviewsEnabled": "no",
+        "renderSubdomainPolicy": "enabled",
+        "url": "https://wasla-driver-app-1opi.onrender.com"
+      },
+      "slug": "wasla-driver-app-1opi",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "static_site",
+      "updatedAt": "2026-10-16T02:58:53.20511Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2bjdsazFtYzczYzZqbXYw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:26:37.228764Z",
+      "dashboardUrl": "https://dashboard.render.com/static/srv-db3mvn7lk1mc73c6jmv0",
+      "id": "srv-db3mvn7lk1mc73c6jmv0",
+      "name": "wasla-customer-app",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildCommand": "npm install --global pnpm@9.15.9 && pnpm install --frozen-lockfile && pnpm --filter @wasla/customer-mini-app build",
+        "buildPlan": "starter",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "previews": {
+          "generation": "off"
+        },
+        "publishPath": "apps/customer-mini-app/dist",
+        "pullRequestPreviewsEnabled": "no",
+        "renderSubdomainPolicy": "enabled",
+        "url": "https://wasla-customer-app-4jsv.onrender.com"
+      },
+      "slug": "wasla-customer-app-4jsv",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "static_site",
+      "updatedAt": "2026-10-16T02:58:44.642971Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2aHVnZWt0czczZmVnbjFn",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:26:18.456778Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mvhugekts73fegn1g",
+      "id": "srv-db3mvhugekts73fegn1g",
+      "name": "wasla-dispatch",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mvhugekts73fegn1g@ssh.singapore.render.com",
+        "url": "https://wasla-dispatch-bsba.onrender.com"
+      },
+      "slug": "wasla-dispatch-bsba",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:42.819099Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2Z21pMHBoczczYXIwZWQw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:26:14.044237Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mvgmi0phs73ar0ed0",
+      "id": "srv-db3mvgmi0phs73ar0ed0",
+      "name": "wasla-customers",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mvgmi0phs73ar0ed0@ssh.singapore.render.com",
+        "url": "https://wasla-customers-nzgs.onrender.com"
+      },
+      "slug": "wasla-customers-nzgs",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:40.399677Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2Zmp0cWI4czczZWxkNDQw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:26:09.498659Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mvfjtqb8s73eld440",
+      "id": "srv-db3mvfjtqb8s73eld440",
+      "name": "wasla-delivery",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mvfjtqb8s73eld440@ssh.singapore.render.com",
+        "url": "https://wasla-delivery-3rm5.onrender.com"
+      },
+      "slug": "wasla-delivery-3rm5",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:41.431891Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2ZW5hdnI0YzczYWYwN28w",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:26:05.226756Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mvenavr4c73af07o0",
+      "id": "srv-db3mvenavr4c73af07o0",
+      "name": "wasla-matching",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mvenavr4c73af07o0@ssh.singapore.render.com",
+        "url": "https://wasla-matching-h26c.onrender.com"
+      },
+      "slug": "wasla-matching-h26c",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:59.450547Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2ZGpuY2ppczczYjJlcjJn",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:26:00.652563Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mvdjncjis73b2er2g",
+      "id": "srv-db3mvdjncjis73b2er2g",
+      "name": "wasla-geography",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mvdjncjis73b2er2g@ssh.singapore.render.com",
+        "url": "https://wasla-geography-ossq.onrender.com"
+      },
+      "slug": "wasla-geography-ossq",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:55.855743Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2Y25sazFtYzczYzZpZjcw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:56.979103Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mvcnlk1mc73c6if70",
+      "id": "srv-db3mvcnlk1mc73c6if70",
+      "name": "wasla-marketplace",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mvcnlk1mc73c6if70@ssh.singapore.render.com",
+        "url": "https://wasla-marketplace-qa01.onrender.com"
+      },
+      "slug": "wasla-marketplace-qa01",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:53.263222Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2Ym5hdnI0YzczYWV2c3Vn",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:52.79109Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mvbnavr4c73aevsug",
+      "id": "srv-db3mvbnavr4c73aevsug",
+      "name": "wasla-audit",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "./Dockerfile"
+        },
+        "healthCheckPath": "/health",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mvbnavr4c73aevsug@ssh.singapore.render.com",
+        "url": "https://wasla-audit-pz7l.onrender.com"
+      },
+      "slug": "wasla-audit-pz7l",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:38.739568Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2YWdtN2twczczZmI0aXZn",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:48.585364Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mvagm7kps73fb4ivg",
+      "id": "srv-db3mvagm7kps73fb4ivg",
+      "name": "wasla-subscriptions",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mvagm7kps73fb4ivg@ssh.singapore.render.com",
+        "url": "https://wasla-subscriptions-5t78.onrender.com"
+      },
+      "slug": "wasla-subscriptions-5t78",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T03:00:18.896221Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2OW1pMHBoczczYXF2Zm8w",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:44.611313Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mv9mi0phs73aqvfo0",
+      "id": "srv-db3mv9mi0phs73aqvfo0",
+      "name": "wasla-negotiations",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mv9mi0phs73aqvfo0@ssh.singapore.render.com",
+        "url": "https://wasla-negotiations-i32q.onrender.com"
+      },
+      "slug": "wasla-negotiations-i32q",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T03:00:00.193601Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2OHUwdGJjYzczODZlbXVn",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:41.286855Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mv8u0tbcc7386emug",
+      "id": "srv-db3mv8u0tbcc7386emug",
+      "name": "wasla-reputation",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mv8u0tbcc7386emug@ssh.singapore.render.com",
+        "url": "https://wasla-reputation-a0ph.onrender.com"
+      },
+      "slug": "wasla-reputation-a0ph",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T03:00:05.175859Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2OGUwdGJjYzczODZlanJn",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:38.507859Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mv8e0tbcc7386ejrg",
+      "id": "srv-db3mv8e0tbcc7386ejrg",
+      "name": "wasla-drivers",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mv8e0tbcc7386ejrg@ssh.singapore.render.com",
+        "url": "https://wasla-drivers-1bwi.onrender.com"
+      },
+      "slug": "wasla-drivers-1bwi",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:50.201509Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2N2puY2ppczczYjJlMG5n",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:35.797027Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mv7jncjis73b2e0ng",
+      "id": "srv-db3mv7jncjis73b2e0ng",
+      "name": "wasla-search",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mv7jncjis73b2e0ng@ssh.singapore.render.com",
+        "url": "https://wasla-search-wjcz.onrender.com"
+      },
+      "slug": "wasla-search-wjcz",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T03:00:38.624101Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2NzQ5djdlczczZG45Z24w",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:33.319418Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mv749v7es73dn9gn0",
+      "id": "srv-db3mv749v7es73dn9gn0",
+      "name": "wasla-orders",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mv749v7es73dn9gn0@ssh.singapore.render.com",
+        "url": "https://wasla-orders-9p85.onrender.com"
+      },
+      "slug": "wasla-orders-9p85",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:57.987898Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2NmFqOXFwczczOGFlZ2Uw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:31.038618Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mv6aj9qps738aege0",
+      "id": "srv-db3mv6aj9qps738aege0",
+      "name": "wasla-identity",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mv6aj9qps738aege0@ssh.singapore.render.com",
+        "url": "https://wasla-identity-rl0b.onrender.com"
+      },
+      "slug": "wasla-identity-rl0b",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:51.155651Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh2NW9tN2twczczZmI0Mzkw",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:25:28.297188Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mv5om7kps73fb4390",
+      "id": "srv-db3mv5om7kps73fb4390",
+      "name": "wasla-otel-collector",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": "infra/observability",
+          "dockerfilePath": "infra/observability/Dockerfile.otel-collector"
+        },
+        "healthCheckPath": "",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mv5om7kps73fb4390@ssh.singapore.render.com",
+        "url": "https://wasla-otel-collector-c33v.onrender.com"
+      },
+      "slug": "wasla-otel-collector-c33v",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:10.423084Z"
+    }
+  },
+  {
+    "cursor": "IO8ksw39jlh1Y2lqOXFwczczOGFiaXBn",
+    "service": {
+      "autoDeploy": "no",
+      "autoDeployTrigger": "off",
+      "branch": "main",
+      "createdAt": "2026-10-08T10:23:47.441126Z",
+      "dashboardUrl": "https://dashboard.render.com/web/srv-db3mucij9qps738abipg",
+      "id": "srv-db3mucij9qps738abipg",
+      "name": "wasla-observability",
+      "notifyOnFail": "default",
+      "ownerId": "tea-db0vtkpsrm7s739dm5c0",
+      "repo": "https://github.com/skyosv10-art/wasla",
+      "rootDir": "",
+      "serviceDetails": {
+        "buildPlan": "starter",
+        "cache": {
+          "profile": "no-cache"
+        },
+        "env": "docker",
+        "envSpecificDetails": {
+          "dockerCommand": "",
+          "dockerContext": ".",
+          "dockerfilePath": "Dockerfile"
+        },
+        "healthCheckPath": "/healthz",
+        "ipAllowList": [
+          {
+            "cidrBlock": "0.0.0.0/0",
+            "description": "everywhere"
+          }
+        ],
+        "maintenanceMode": {
+          "enabled": false,
+          "uri": ""
+        },
+        "numInstances": 1,
+        "openPorts": [],
+        "plan": "free",
+        "previews": {
+          "generation": "off"
+        },
+        "pullRequestPreviewsEnabled": "no",
+        "region": "singapore",
+        "renderSubdomainPolicy": "enabled",
+        "runtime": "docker",
+        "sshAddress": "srv-db3mucij9qps738abipg@ssh.singapore.render.com",
+        "url": "https://wasla-observability-kmxe.onrender.com"
+      },
+      "slug": "wasla-observability-kmxe",
+      "suspended": "not_suspended",
+      "suspenders": [],
+      "type": "web_service",
+      "updatedAt": "2026-10-16T02:59:51.484486Z"
+    }
+  }
+]

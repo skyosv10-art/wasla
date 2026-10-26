@@ -1,0 +1,7 @@
+gh 2.102.0 (≥ 2.50.0) · repo=cli/cli · signer-workflow=cli/cli/.github/workflows/ci.yml · predicate-type=https://slsa.dev/provenance/v1
+✗ artifacts/sbom/pass1.cdx.json (sha256:929b96eb4292103df3c2824094b52d6aa87a4bbe569360216202861b728c19b3): gh attestation verify خرجَ بـ1:
+    
+    Error: no attestations found
+✗ تحقُّقُ الإثبات: 0/1 — فشلَ 1.
+
+# exit=1 · expected=fail
